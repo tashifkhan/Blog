@@ -1,0 +1,258 @@
+---
+// src/pages/index.astro
+// Suggested code may be subject to a license. Learn more: ~LicenseLog:2792492471.
+// Suggested code may be subject to a license. Learn more: ~LicenseLog:3150623614.
+import Layout from '../layouts/BlogPost.astro';
+import '../styles/global.css'
+
+---
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CryptoNews - Latest Cryptocurrency Updates</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-100">
+  <div class="max-w-7xl mx-auto p-4 bg-white rounded-3xl my-8 shadow-lg relative overflow-hidden">
+    <!-- Gradient border effect -->
+    <div class="absolute inset-0 bg-gradient-to-br from-purple-200 to-blue-200 opacity-50 rounded-3xl"></div>
+    
+    <!-- Main content container -->
+    <div class="relative">
+      <!-- Navigation bar -->
+      <header class="flex justify-between items-center py-4 px-2">
+        <div class="flex items-center space-x-6">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span class="font-semibold">Cryptonews</span>
+          </div>
+          
+          <nav class="hidden md:flex space-x-2">
+            <button class="px-2 py-1 text-sm font-medium">All</button>
+            <button class="px-2 py-1 text-sm font-medium flex items-center">
+              News
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </button>
+            <button class="px-2 py-1 text-sm font-medium flex items-center">
+              Exclusives
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </button>
+            <button class="px-2 py-1 text-sm font-medium flex items-center">
+              Guides
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </button>
+            <button class="px-2 py-1 text-sm font-medium flex items-center">
+              Recommended
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </button>
+          </nav>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <button class="px-3 py-1 text-sm font-medium border rounded-md flex items-center">
+              En
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+          
+          <div class="relative">
+            <div class="flex items-center bg-gray-100 rounded-full px-3 py-2">
+              <input 
+                type="text" 
+                placeholder="Article name, tag, category..." 
+                class="bg-transparent border-none outline-none text-sm w-48 md:w-64"
+              >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Featured article section (spans 2 columns) -->
+        <div class="lg:col-span-2">
+          <div class="bg-gray-50 p-8 rounded-xl relative overflow-hidden">
+            <div class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded inline-block mb-4">
+              BEST OF THE WEEK
+            </div>
+            
+            <div class="text-xs text-gray-500 mb-2">
+              <span class="mr-2">Blockchain News</span>
+              <span>4 hours ago</span>
+            </div>
+            
+            <h1 class="text-2xl md:text-3xl font-bold mb-4">
+              Top Analyst Unveils Ethereum Catalyst That Could Trigger Nearly 50% Surge for ETH – Here's His Outlook
+            </h1>
+            
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="text-xs text-gray-500">#Ethereum</span>
+              <span class="text-xs text-gray-500">#Analytics</span>
+            </div>
+            
+            <button class="bg-white px-4 py-2 rounded-md text-sm font-medium flex items-center shadow-sm hover:shadow">
+              Read article
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+            
+            <!-- Circular gradient image -->
+            <div class="absolute right-0 top-0 w-64 h-64 transform translate-x-1/4 -translate-y-1/4">
+              <div class="w-full h-full bg-gradient-to-r from-blue-200 via-purple-200 to-red-200 rounded-full opacity-70"></div>
+            </div>
+          </div>
+          
+          <!-- Bottom news grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <!-- News item 1 -->
+            <div class="bg-gray-50 p-4 rounded-xl">
+              <div class="text-xs text-gray-500 mb-2">
+                <span class="mr-2">Blockchain News</span>
+                <span>4 hours ago</span>
+              </div>
+              <h2 class="text-sm font-bold mb-2">
+                Top Analyst Unveils Ethereum Catalyst That Could Trigger Nearly 50%...
+              </h2>
+            </div>
+            
+            <!-- News item 2 -->
+            <div class="bg-gray-50 p-4 rounded-xl">
+              <div class="text-xs text-gray-500 mb-2">
+                <span class="mr-2">Blockchain News</span>
+                <span>4 hours ago</span>
+              </div>
+              <h2 class="text-sm font-bold mb-2">
+                Over 65% of Crypto-Related Tweets and 84% of Conversations on Red...
+              </h2>
+            </div>
+            
+            <!-- News item 3 -->
+            <div class="bg-gray-50 p-4 rounded-xl">
+              <div class="text-xs text-gray-500 mb-2">
+                <span class="mr-2">Blockchain News</span>
+                <span>4 hours ago</span>
+              </div>
+              <h2 class="text-sm font-bold mb-2">
+                STX Price Prediction: After 126% Price Jump in December, What's in Sto...
+              </h2>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recommended news section -->
+        <div class="lg:col-span-1">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-semibold">Recommended</h2>
+            <button class="text-sm flex items-center">
+              View all
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Recommended article with image -->
+          <div class="bg-gray-50 rounded-xl overflow-hidden mb-4">
+            <div class="h-40 bg-gray-200 relative">
+              <!-- Placeholder for image -->
+              <div class="absolute bottom-2 left-2 text-xs text-gray-500 bg-white/80 px-2 py-1 rounded">
+                <span class="mr-2">Blockchain News</span>
+                <span>4 hours ago</span>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="font-medium text-sm">
+                US-Approved Spot Bitcoin ETFs Could Surpass Entire $50 Billion Crypto ETP Market: BitMEX
+              </h3>
+            </div>
+          </div>
+          
+          <!-- Recommended news list -->
+          <div class="space-y-4">
+            <!-- News item with small image -->
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <div class="text-xs text-gray-500 mb-1">
+                  <span class="mr-2">Blockchain News</span>
+                  <span>4 hours ago</span>
+                </div>
+                <h3 class="text-sm font-medium">
+                  Over 65% of Crypto-Related Tweets and 84% of Conversations on Reddit Were Positive in 2023
+                </h3>
+              </div>
+              <div class="w-16 h-16 bg-gray-200 rounded-md flex-shrink-0"></div>
+            </div>
+            
+            <!-- News item with small image -->
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <div class="text-xs text-gray-500 mb-1">
+                  <span class="mr-2">Blockchain News</span>
+                  <span>4 hours ago</span>
+                </div>
+                <h3 class="text-sm font-medium">
+                  STX Price Prediction: After 126% Price Jump in December, What's in Store for 2024?
+                </h3>
+              </div>
+              <div class="w-16 h-16 bg-gray-200 rounded-md flex-shrink-0"></div>
+            </div>
+            
+            <!-- News item with small image -->
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <div class="text-xs text-gray-500 mb-1">
+                  <span class="mr-2">Blockchain News</span>
+                  <span>4 hours ago</span>
+                </div>
+                <h3 class="text-sm font-medium">
+                  US-Approved Spot Bitcoin ETFs Could Surpass Entire $50 Billion Crypto ETP Market: BitMEX
+                </h3>
+              </div>
+              <div class="w-16 h-16 bg-gray-200 rounded-md flex-shrink-0"></div>
+            </div>
+            
+            <!-- News item with small image -->
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <div class="text-xs text-gray-500 mb-1">
+                  <span class="mr-2">Blockchain News</span>
+                  <span>4 hours ago</span>
+                </div>
+                <h3 class="text-sm font-medium">
+                  Former FTX CEO Sam Bankman-Fried and Debtors Reach Settlement in Embed Proceeding
+                </h3>
+              </div>
+              <div class="w-16 h-16 bg-gray-200 rounded-md flex-shrink-0"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</body>
+</html>
