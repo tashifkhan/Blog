@@ -1,50 +1,29 @@
 import React from "react";
-import {
-	macClassicTheme,
-	macOSXTheme,
-	darkTheme,
-	setTheme,
-	activeTheme,
-} from "@/lib/theme-config";
-import { useEffect, useState } from "react";
-import { MenubarItem } from "./ui/menubar";
+import { allThemes, setTheme } from "@/lib/theme-config";
 
 export default function ThemeSwitcher() {
-	const [currentTheme, setCurrentTheme] = useState(activeTheme);
-
-	const changeTheme = (theme: typeof activeTheme) => {
-		setTheme(theme);
-		setCurrentTheme(theme);
-		// Force re-render of components that use the theme
-		window.dispatchEvent(new Event("themechange"));
+	const handleThemeChange = (themeName: string) => {
+		setTheme(themeName);
 	};
 
 	return (
-		<div className="flex flex-col">
-			<MenubarItem
-				onClick={() => changeTheme(macClassicTheme)}
-				className={
-					currentTheme === macClassicTheme ? "bg-[#0058AE] text-white" : ""
-				}
-			>
-				Mac OS Classic
-			</MenubarItem>
-
-			<MenubarItem
-				onClick={() => changeTheme(macOSXTheme)}
-				className={
-					currentTheme === macOSXTheme ? "bg-[#1E7BF6] text-white" : ""
-				}
-			>
-				Mac OS X Aqua
-			</MenubarItem>
-
-			<MenubarItem
-				onClick={() => changeTheme(darkTheme)}
-				className={currentTheme === darkTheme ? "bg-[#0D84FF] text-white" : ""}
-			>
-				Dark Mode
-			</MenubarItem>
+		<div className="theme-switcher">
+			<div className="grid grid-cols-2 gap-1">
+				{Object.entries(allThemes).map(([key, theme]) => (
+					<button
+						key={key}
+						className="p-1 text-xs rounded hover:bg-opacity-80"
+						style={{
+							backgroundColor: theme.backgroundColor,
+							color: theme.textColor,
+							border: `1px solid ${theme.borderColor}`,
+						}}
+						onClick={() => handleThemeChange(key)}
+					>
+						{theme.name}
+					</button>
+				))}
+			</div>
 		</div>
 	);
 }
