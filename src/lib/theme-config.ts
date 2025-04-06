@@ -247,11 +247,16 @@ export const neoBrutalismTheme: ThemeConfig = {
   fontFamily: "'Archivo Black', 'Arial Black', sans-serif",
 };
 
-// Active theme - set default to Mac Classic
-export let activeTheme: ThemeConfig = macClassicTheme;
-
-// Define valid theme names as a type
-export type ThemeName = keyof typeof allThemes;
+// Get the stored theme from localStorage or default to macClassic
+function getStoredTheme(): ThemeConfig {
+  if (typeof window !== 'undefined') {
+    const storedThemeName = localStorage.getItem('blog-theme-preference');
+    if (storedThemeName && storedThemeName in allThemes) {
+      return allThemes[storedThemeName as ThemeName];
+    }
+  }
+  return macClassicTheme;
+}
 
 // List of all available themes
 export const allThemes = {
@@ -265,10 +270,21 @@ export const allThemes = {
   neoBrutalism: neoBrutalismTheme
 };
 
+// Define valid theme names as a type
+export type ThemeName = keyof typeof allThemes;
+
+// Active theme - set from localStorage or default to Mac Classic
+export let activeTheme: ThemeConfig = getStoredTheme();
+
 // Function to change the active theme
 export function setTheme(themeName: string) {
   const newTheme = allThemes[themeName as ThemeName] || macClassicTheme;
   activeTheme = newTheme;
+  
+  // Save theme preference to localStorage
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('blog-theme-preference', themeName);
+  }
   
   // Dispatch an event to notify components that theme has changed
   const event = new CustomEvent('themechange', { detail: newTheme });

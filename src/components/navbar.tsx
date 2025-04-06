@@ -33,11 +33,14 @@ export default function Navbar() {
 		}
 	}, [searchQuery]);
 
-	// Update theme when it changes
+	// Update theme when it changes or on initial load
 	useEffect(() => {
 		const handleThemeChange = () => {
 			setTheme(activeTheme);
 		};
+
+		// Apply theme from localStorage on initial load
+		setTheme(activeTheme);
 
 		window.addEventListener("themechange", handleThemeChange);
 		return () => window.removeEventListener("themechange", handleThemeChange);
