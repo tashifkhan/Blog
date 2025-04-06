@@ -7,6 +7,7 @@ interface SearchBarProps {
 	theme: any;
 	isNeoBrutalism?: boolean;
 	isUbuntu?: boolean;
+	inputRef?: React.RefObject<HTMLInputElement>; // Added inputRef prop
 }
 
 export function SearchBar({
@@ -15,6 +16,7 @@ export function SearchBar({
 	theme,
 	isNeoBrutalism = false,
 	isUbuntu = false,
+	inputRef, // Added inputRef
 }: SearchBarProps) {
 	let searchBarStyle = {};
 
@@ -74,6 +76,7 @@ export function SearchBar({
 				onChange={(e) => setSearchQuery(e.target.value)}
 				className={`ml-2 p-2 flex-1 ${isNeoBrutalism ? "uppercase" : ""}`}
 				style={searchBarStyle}
+				ref={inputRef} // Added ref to the input element
 			/>
 		</div>
 	);

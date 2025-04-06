@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { activeTheme } from "@/lib/theme-config";
 import { MenuBar } from "./menu/menu-bar";
 import { MainWindow } from "./main-window";
@@ -12,10 +12,12 @@ export default function Navbar() {
 	const [theme, setTheme] = useState(activeTheme);
 	const [currentTime, setCurrentTime] = useState(new Date());
 	const [windowTitle, setWindowTitle] = useState("Blog - Home");
-	const [showRecentPosts, setShowRecentPosts] = useState(false);
+	// Changed default value to true to show recent posts on load
+	const [showRecentPosts, setShowRecentPosts] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [searchResults, setSearchResults] = useState<Post[]>([]);
 	const [recentPosts, setRecentPosts] = useState<Post[]>([]);
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	// Load posts on component mount
 	useEffect(() => {
@@ -54,6 +56,13 @@ export default function Navbar() {
 		setShowRecentPosts(!showRecentPosts);
 	};
 
+	// Focus search input when search button is clicked
+	const focusSearch = () => {
+		if (searchInputRef.current) {
+			searchInputRef.current.focus();
+		}
+	};
+
 	return (
 		<div
 			className="w-full flex flex-col items-center min-h-screen"
@@ -68,6 +77,7 @@ export default function Navbar() {
 				theme={theme}
 				currentTime={currentTime}
 				toggleRecentPosts={toggleRecentPosts}
+				focusSearch={focusSearch}
 				recentPosts={recentPosts}
 				setWindowTitle={setWindowTitle}
 			/>
@@ -83,10 +93,11 @@ export default function Navbar() {
 						setSearchQuery={setSearchQuery}
 						searchResults={searchResults}
 						setWindowTitle={setWindowTitle}
+						searchInputRef={searchInputRef}
 					/>
 				</div>
 
-				{/* Recent Posts Window */}
+				{/* Recent Posts Window - always visible */}
 				{showRecentPosts && (
 					<RecentPosts
 						posts={recentPosts}

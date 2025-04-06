@@ -12,6 +12,7 @@ interface MainWindowProps {
 	setSearchQuery: (query: string) => void;
 	searchResults: any[];
 	setWindowTitle: (title: string) => void;
+	searchInputRef: React.RefObject<HTMLInputElement>; // Added searchInputRef prop
 }
 
 export function MainWindow({
@@ -21,6 +22,7 @@ export function MainWindow({
 	setSearchQuery,
 	searchResults,
 	setWindowTitle,
+	searchInputRef, // Added searchInputRef
 }: MainWindowProps) {
 	// Check theme types
 	const isNeoBrutalism = theme.name === "neoBrutalism";
@@ -148,6 +150,7 @@ export function MainWindow({
 					theme={theme}
 					isNeoBrutalism={isNeoBrutalism}
 					isUbuntu={isUbuntu}
+					inputRef={searchInputRef} // Pass the ref to SearchBar
 				/>
 				<SearchResults
 					results={searchResults}
