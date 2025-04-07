@@ -1,0 +1,27 @@
+---
+// Simple fallback component shown during server-side rendering before hydration
+---
+
+<div
+	class="w-full flex flex-col items-center justify-center min-h-screen bg-[#FDFD96] text-black p-4"
+>
+	<div class="animate-pulse">
+		<h1 class="text-2xl font-bold">Blog OS</h1>
+		<p class="mt-2">Loading the blog experience...</p>
+	</div>
+</div>
+
+<style>
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
+	}
+	.animate-pulse {
+		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	}
+</style>

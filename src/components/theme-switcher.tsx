@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { allThemes, setTheme, activeTheme } from "@/lib/theme-config";
 import { motion } from "framer-motion";
+interface ThemeSwitcherProps {
+	theme: any;
+}
 
-export default function ThemeSwitcher() {
+export default function ThemeSwitcher({ theme }: ThemeSwitcherProps) {
 	const [hoveredTheme, setHoveredTheme] = useState<string | null>(null);
 
 	const handleThemeChange = (themeName: string) => {

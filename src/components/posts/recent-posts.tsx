@@ -1,7 +1,21 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { WindowControls } from "../ui/window-controls";
-import type { Post } from "@/types/post";
+
+// Define Post interface inline
+interface Post {
+	id: string;
+	slug: string;
+	title: string;
+	excerpt: string;
+	content: string;
+	date: string;
+	imageUrl?: string;
+	author: {
+		name: string;
+		avatar?: string;
+	};
+	tags: string[];
+}
 
 interface RecentPostsProps {
 	posts: Post[];
@@ -10,242 +24,85 @@ interface RecentPostsProps {
 	windowState: "normal" | "minimized" | "maximized";
 	onMinimize: () => void;
 	onMaximize: () => void;
+	isMobile?: boolean;
 }
 
-export function RecentPosts({
+export const RecentPosts: React.FC<RecentPostsProps> = ({
 	posts,
 	theme,
 	onClose,
 	windowState,
 	onMinimize,
 	onMaximize,
-}: RecentPostsProps) {
-	// Get window style based on theme
-	const getWindowStyle = () => {
-		const baseStyle = {
-			background: theme.windowBackground,
-			borderRadius: theme.borderRadius,
-			boxShadow: theme.boxShadow,
-			border: `${theme.borderWidth}px solid ${theme.borderColor}`,
-			overflow: "hidden",
-		};
-
-		// NeoBrutalism specific styling
-		if (theme.name === "neoBrutalism") {
-			return {
-				...baseStyle,
-				boxShadow: "5px 5px 0px #000, 0 15px 25px rgba(0,0,0,0.1)",
-				border: "2px solid #000",
-				borderRadius: "0px",
-			};
-		}
-
-		// Cyberpunk styling
-		if (theme.name === "cyberpunk") {
-			return {
-				...baseStyle,
-				borderWidth: "1px",
-				borderStyle: "solid",
-				borderImage: "linear-gradient(135deg, #00ffff, #ff00ff) 1",
-				boxShadow:
-					"0 0 20px rgba(255, 0, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5)",
-			};
-		}
-
-		// Neon styling
-		if (theme.name === "neon") {
-			return {
-				...baseStyle,
-				background: "rgba(10, 10, 30, 0.85)",
-				boxShadow: `0 0 20px ${
-					theme.accentColor || "#00ffff"
-				}, 0 10px 30px rgba(0, 0, 0, 0.7)`,
-				backdropFilter: "blur(10px)",
-			};
-		}
-
-		// Enhanced default shadow for all other themes
-		return {
-			...baseStyle,
-			boxShadow:
-				theme.boxShadow ||
-				"0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05)",
-		};
-	};
-
-	// Get title bar style based on theme
-	const getTitleBarStyle = () => {
-		const baseStyle = {
-			background: theme.titleBarBackground || theme.accentColor,
-			borderBottom: `${theme.borderWidth}px solid ${theme.borderColor}`,
-		};
-
-		if (theme.name === "neoBrutalism") {
-			return {
-				...baseStyle,
-				background: theme.accentColor || "#ff90e8",
-				borderBottom: "2px solid #000",
-			};
-		}
-
-		if (theme.name === "cyberpunk") {
-			return {
-				...baseStyle,
-				background: "linear-gradient(90deg, #00ffff, #ff00ff)",
-				borderBottom: "1px solid rgba(255, 255, 255, 0.3)",
-			};
-		}
-
-		if (theme.name === "neon") {
-			return {
-				...baseStyle,
-				background: "rgba(20, 20, 40, 0.9)",
-				borderBottom: `1px solid ${theme.accentColor || "#00ffff"}`,
-			};
-		}
-
-		return baseStyle;
-	};
-
-	// Window animation variants
-	const windowVariants = {
-		minimized: {
-			height: "40px",
-			opacity: 1,
-		},
-		normal: {
-			height: "auto",
-			opacity: 1,
-		},
-		maximized: {
-			height: "auto",
-			opacity: 1,
-		},
-	};
-
-	// Content animation variants
-	const contentVariants = {
-		hidden: {
-			opacity: 0,
-			height: 0,
-		},
-		visible: {
-			opacity: 1,
-			height: "auto",
-			transition: {
-				opacity: { duration: 0.3 },
-				height: { duration: 0.4 },
-			},
-		},
-	};
-
-	// Get post card style based on theme
-	const getPostCardStyle = (index: number) => {
-		const baseStyle = {
-			background: theme.cardBackground || theme.windowBackground,
-			border: `${theme.borderWidth}px solid ${theme.borderColor}`,
-			cursor: "pointer",
-			transition: "transform 0.2s, box-shadow 0.3s",
-			boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-		};
-
-		if (theme.name === "neoBrutalism") {
-			return {
-				...baseStyle,
-				border: "2px solid #000",
-				boxShadow: "4px 4px 0 #000, 0 5px 10px rgba(0,0,0,0.1)",
-				borderRadius: "0",
-			};
-		}
-
-		if (theme.name === "cyberpunk") {
-			return {
-				...baseStyle,
-				background: `rgba(20, 20, 40, ${0.7 + index * 0.05})`,
-				borderImage: "linear-gradient(135deg, #00ffff, #ff00ff) 1",
-				borderWidth: "1px",
-				borderStyle: "solid",
-				boxShadow:
-					"0 3px 15px rgba(0, 255, 255, 0.15), 0 2px 5px rgba(0,0,0,0.2)",
-			};
-		}
-
-		if (theme.name === "neon") {
-			const colors = ["#00ffff", "#ff00ff", "#00ff00", "#ffff00"];
-			return {
-				...baseStyle,
-				background: "rgba(10, 10, 30, 0.6)",
-				boxShadow: `0 0 10px ${
-					colors[index % colors.length]
-				}, 0 5px 15px rgba(0,0,0,0.3)`,
-				border: `1px solid ${colors[index % colors.length]}`,
-			};
-		}
-
-		// Enhanced drop shadow for all other themes
-		return {
-			...baseStyle,
-			boxShadow:
-				theme.cardBoxShadow ||
-				"0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.1)",
-		};
-	};
-
-	// Get hover effect for post cards based on theme
-	const getHoverEffect = (index: number) => {
-		const baseEffect = {
-			scale: 1.02,
-			boxShadow:
-				theme.hoverBoxShadow ||
-				"0 8px 25px rgba(0,0,0,0.15), 0 5px 10px rgba(0,0,0,0.1)",
-		};
-
-		if (theme.name === "neoBrutalism") {
-			return {
-				...baseEffect,
-				y: -4,
-				boxShadow: "6px 6px 0 #000, 0 8px 15px rgba(0,0,0,0.15)",
-			};
-		}
-
-		if (theme.name === "cyberpunk") {
-			return {
-				...baseEffect,
-				scale: 1.03,
-				boxShadow: "0 0 15px #ff00ff, 0 8px 25px rgba(0,0,0,0.25)",
-			};
-		}
-
-		if (theme.name === "neon") {
-			const colors = ["#00ffff", "#ff00ff", "#00ff00", "#ffff00"];
-			return {
-				...baseEffect,
-				scale: 1.03,
-				boxShadow: `0 0 20px ${
-					colors[index % colors.length]
-				}, 0 10px 30px rgba(0,0,0,0.4)`,
-			};
-		}
-
-		return baseEffect;
-	};
+	isMobile = false,
+}) => {
+	// If window is minimized, only show the title bar
+	if (windowState === "minimized") {
+		return (
+			<div
+				className={`rounded-lg overflow-hidden ${isMobile ? "w-full" : ""}`}
+				style={{
+					backgroundColor: theme.windowBackground,
+					boxShadow: theme.boxShadow,
+					border: theme.name === "neoBrutalism" ? "3px solid #000" : undefined,
+					transform: theme.name === "neoBrutalism" ? "rotate(1deg)" : undefined,
+				}}
+			>
+				<div
+					className={`flex items-center justify-between px-3 py-2 ${
+						theme.name === "neoBrutalism" ? "bg-white" : ""
+					}`}
+					style={{
+						backgroundColor:
+							theme.name !== "neoBrutalism"
+								? theme.windowHeaderBackground
+								: undefined,
+					}}
+				>
+					<WindowControls
+						theme={theme}
+						onClose={onClose}
+						onMinimize={onMinimize}
+						onMaximize={onMaximize}
+					/>
+					<span
+						className="text-center flex-1 font-bold text-sm"
+						style={{
+							color:
+								theme.name === "neoBrutalism" ? "#000" : theme.windowHeaderText,
+						}}
+					>
+						Recent Posts
+					</span>
+					<div className="w-[50px]"></div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
-		<motion.div
-			className="w-full"
-			variants={windowVariants}
-			animate={windowState}
-			transition={{
-				type: "spring",
-				stiffness: 300,
-				damping: 25,
+		<div
+			className={`rounded-lg overflow-hidden max-w-full ${
+				windowState === "maximized" ? "w-full h-full" : ""
+			} ${isMobile ? "w-full" : ""}`}
+			style={{
+				backgroundColor: theme.windowBackground,
+				boxShadow: theme.boxShadow,
+				border: theme.name === "neoBrutalism" ? "3px solid #000" : undefined,
+				transform: theme.name === "neoBrutalism" ? "rotate(1deg)" : undefined,
 			}}
-			style={getWindowStyle()}
 		>
-			{/* Window title bar */}
+			{/* Window header */}
 			<div
-				className="p-2 flex items-center justify-between"
-				style={getTitleBarStyle()}
+				className={`flex items-center justify-between px-3 py-2 ${
+					theme.name === "neoBrutalism" ? "bg-white" : ""
+				}`}
+				style={{
+					backgroundColor:
+						theme.name !== "neoBrutalism"
+							? theme.windowHeaderBackground
+							: undefined,
+				}}
 			>
 				<WindowControls
 					theme={theme}
@@ -253,209 +110,120 @@ export function RecentPosts({
 					onMinimize={onMinimize}
 					onMaximize={onMaximize}
 				/>
-
 				<span
-					className={`flex-grow text-center font-bold ${
-						theme.name === "neoBrutalism" ? "text-black" : ""
-					}`}
+					className="text-center flex-1 font-bold text-sm truncate mx-2"
 					style={{
-						color: theme.titleColor,
-						textShadow:
-							theme.name === "neon" ? `0 0 5px ${theme.accentColor}` : "none",
+						color:
+							theme.name === "neoBrutalism" ? "#000" : theme.windowHeaderText,
 					}}
 				>
 					Recent Posts
 				</span>
-
-				<div className="w-16 flex justify-end">
-					{/* Empty div for symmetrical spacing */}
-				</div>
+				<div className="w-[50px]"></div>
 			</div>
 
-			<AnimatePresence>
-				{windowState !== "minimized" && (
-					<motion.div
-						className={`p-4 ${theme.name === "neoBrutalism" ? "pt-6" : ""}`}
-						variants={contentVariants}
-						initial="hidden"
-						animate="visible"
-						exit="hidden"
-					>
-						<h2
-							className={`text-xl font-bold mb-3 ${
-								theme.name === "neoBrutalism"
-									? "uppercase tracking-wider"
-									: theme.name === "cyberpunk"
-									? "font-mono tracking-wide"
-									: ""
-							}`}
-							style={{
-								color: theme.headingColor || theme.textColor,
-								textShadow:
-									theme.name === "neon"
-										? `0 0 5px ${theme.accentColor}`
-										: "none",
-							}}
-						>
-							Latest Articles
-						</h2>
-
-						{posts.length > 0 ? (
-							<div className="space-y-4">
-								{posts.map((post, index) => (
-									<motion.div
-										key={post.id}
-										initial={{ opacity: 0, y: 10 }}
-										animate={{ opacity: 1, y: 0 }}
-										transition={{ delay: index * 0.1 }}
-										className={`p-3 ${
-											theme.name === "neoBrutalism"
-												? "rounded-none"
-												: "rounded-md"
-										}`}
-										style={getPostCardStyle(index)}
-										whileHover={getHoverEffect(index)}
-									>
-										<h3
-											className={`text-lg font-semibold mb-1 ${
-												theme.name === "cyberpunk" ? "font-mono" : ""
-											}`}
-											style={{
-												color: theme.accentColor,
-												textShadow:
-													theme.name === "neon"
-														? "0 0 5px currentColor"
-														: "none",
-											}}
-										>
-											{post.title}
-										</h3>
-										<div
-											className="text-sm"
-											style={{
-												color: theme.mutedTextColor || theme.textColor,
-												opacity: theme.name === "neon" ? 0.8 : 1,
-											}}
-										>
-											{new Date(post.date).toLocaleDateString()}
-										</div>
-
-										{/* Show description when maximized or for first post */}
-										<AnimatePresence>
-											{(windowState === "maximized" || index === 0) && (
-												<motion.div
-													initial={{ opacity: 0, height: 0 }}
-													animate={{ opacity: 1, height: "auto" }}
-													exit={{ opacity: 0, height: 0 }}
-													className="mt-2"
-													transition={{ duration: 0.3 }}
-												>
-													<div
-														className="text-sm mt-2"
-														style={{
-															color: theme.textColor,
-															lineHeight: "1.5",
-														}}
-													>
-														{post.excerpt}
-													</div>
-
-													{windowState === "maximized" && (
-														<div className="mt-3">
-															<span
-																className={`text-sm font-semibold px-2 py-1 ${
-																	theme.name === "neoBrutalism"
-																		? "rounded-none"
-																		: "rounded"
-																}`}
-																style={{
-																	background:
-																		theme.tagBackground || theme.accentColor,
-																	color:
-																		theme.tagTextColor ||
-																		theme.windowBackground,
-																	boxShadow:
-																		theme.name === "neoBrutalism"
-																			? "2px 2px 0 #000"
-																			: theme.name === "neon"
-																			? `0 0 10px ${theme.accentColor}`
-																			: "none",
-																	border:
-																		theme.name === "neoBrutalism"
-																			? "1px solid #000"
-																			: "none",
-																}}
-															>
-																{post.category}
-															</span>
-
-															{post.tags && post.tags.length > 0 && (
-																<div className="mt-2 flex flex-wrap gap-1">
-																	{post.tags.map((tag) => (
-																		<span
-																			key={tag}
-																			className={`text-xs px-2 py-0.5 ${
-																				theme.name === "neoBrutalism"
-																					? "rounded-none"
-																					: "rounded"
-																			}`}
-																			style={{
-																				background:
-																					theme.secondaryTagBackground ||
-																					theme.mutedTextColor,
-																				color:
-																					theme.secondaryTagTextColor ||
-																					theme.windowBackground,
-																				border:
-																					theme.name === "neoBrutalism"
-																						? "1px solid #000"
-																						: "none",
-																				boxShadow:
-																					theme.name === "neoBrutalism"
-																						? "1px 1px 0 #000"
-																						: "none",
-																				opacity:
-																					theme.name === "neon" ? 0.9 : 1,
-																			}}
-																		>
-																			{tag}
-																		</span>
-																	))}
-																</div>
-															)}
-														</div>
-													)}
-												</motion.div>
-											)}
-										</AnimatePresence>
-									</motion.div>
-								))}
-							</div>
-						) : (
+			{/* Window content */}
+			<div className={`${isMobile ? "p-3" : "p-4"}`}>
+				<div className="space-y-3">
+					{posts.slice(0, 5).map((post) => (
+						<a href={`/post/${post.slug}`} key={post.id}>
 							<div
-								className={`p-3 ${
+								className={`${
+									isMobile ? "p-2" : "p-3"
+								} rounded transition-transform hover:scale-[1.02] cursor-pointer ${
 									theme.name === "neoBrutalism"
-										? "rounded-none border-2 border-black"
-										: "rounded-md"
+										? "border-2 border-black bg-white"
+										: ""
 								}`}
 								style={{
-									background: theme.cardBackground || theme.windowBackground,
-									border:
-										theme.name !== "neoBrutalism"
-											? `${theme.borderWidth}px solid ${theme.borderColor}`
-											: undefined,
+									backgroundColor:
+										theme.name === "neoBrutalism"
+											? "#fff"
+											: theme.cardBackground || "#ffffff10",
+									color:
+										theme.name === "neoBrutalism" ? "#000" : theme.textColor,
 									boxShadow:
 										theme.name === "neoBrutalism"
 											? "3px 3px 0 #000"
 											: undefined,
 								}}
 							>
-								No recent posts found.
+								<div className="flex items-start">
+									{post.imageUrl && (
+										<div
+											className={`${
+												isMobile ? "w-16 h-16" : "w-20 h-20"
+											} rounded overflow-hidden mr-3 flex-shrink-0`}
+										>
+											<img
+												src={post.imageUrl}
+												alt={post.title}
+												className="w-full h-full object-cover"
+											/>
+										</div>
+									)}
+									<div className="flex-1 min-w-0">
+										<h3
+											className={`${
+												isMobile ? "text-sm" : "text-base"
+											} font-bold mb-1 truncate`}
+											style={{
+												color:
+													theme.name === "neoBrutalism"
+														? "#000"
+														: theme.headingColor || theme.textColor,
+											}}
+										>
+											{post.title}
+										</h3>
+										<p
+											className={`${
+												isMobile
+													? "text-xs line-clamp-2"
+													: "text-sm line-clamp-3"
+											} opacity-70`}
+										>
+											{post.excerpt}
+										</p>
+										<div
+											className={`mt-1 flex items-center ${
+												isMobile ? "text-xs" : "text-sm"
+											}`}
+										>
+											<span className="opacity-70">
+												{new Date(post.date).toLocaleDateString()}
+											</span>
+										</div>
+									</div>
+								</div>
 							</div>
-						)}
-					</motion.div>
-				)}
-			</AnimatePresence>
-		</motion.div>
+						</a>
+					))}
+				</div>
+
+				<div className="mt-4 text-center">
+					<a href="/archive">
+						<button
+							className={`px-4 py-2 text-sm rounded ${
+								theme.name === "neoBrutalism"
+									? "border-2 border-black bg-white"
+									: ""
+							}`}
+							style={{
+								backgroundColor:
+									theme.name === "neoBrutalism"
+										? "#fff"
+										: theme.buttonBackground || theme.accentColor + "40",
+								color: theme.textColor,
+								boxShadow:
+									theme.name === "neoBrutalism" ? "3px 3px 0 #000" : undefined,
+							}}
+						>
+							View All Posts
+						</button>
+					</a>
+				</div>
+			</div>
+		</div>
 	);
-}
+};
