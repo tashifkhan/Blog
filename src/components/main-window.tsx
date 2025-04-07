@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaTimesCircle } from "react-icons/fa";
 import { PostList } from "./posts/post-list";
@@ -91,44 +91,56 @@ export function MainWindow({
 	const getWindowStyle = () => {
 		const baseStyle = {
 			background: theme.windowBackground,
-			borderRadius: theme.borderRadius,
-			boxShadow: theme.boxShadow,
-			border: `${theme.borderWidth}px solid ${theme.borderColor}`,
+			borderRadius: theme.windowRadius || theme.borderRadius || "8px",
+			border: `${theme.borderWidth || 1}px solid ${theme.borderColor}`,
 			overflow: "hidden",
+			boxShadow: theme.boxShadow || "0 10px 25px rgba(0, 0, 0, 0.1)",
 		};
 
 		// NeoBrutalism specific styling
 		if (theme.name === "neoBrutalism") {
 			return {
 				...baseStyle,
-				boxShadow: "5px 5px 0px #000",
+				boxShadow: "8px 8px 0px #000, 0 15px 30px rgba(0,0,0,0.1)",
 				border: "2px solid #000",
 				borderRadius: "0px",
 			};
 		}
 
-		// Cyberpunk styling
-		if (theme.name === "cyberpunk") {
+		// Win95 specific styling
+		if (theme.name === "win95") {
 			return {
 				...baseStyle,
-				borderWidth: "1px",
-				borderStyle: "solid",
-				borderImage: "linear-gradient(45deg, #ff00ff, #00ffff) 1",
-				boxShadow: "0 0 20px rgba(0, 255, 255, 0.6)",
+				boxShadow:
+					"inset -1px -1px 0 #0a0a0a, inset 1px 1px 0 #ffffff, 4px 4px 8px rgba(0,0,0,0.2)",
+				borderRadius: "0",
 			};
 		}
 
-		// Neon styling
-		if (theme.name === "neon") {
+		// Modern MacOS styling
+		if (theme.name === "modernMacOS") {
 			return {
 				...baseStyle,
-				background: "rgba(10, 10, 30, 0.85)",
-				boxShadow: `0 0 20px ${theme.accentColor}`,
-				backdropFilter: "blur(10px)",
+				boxShadow: "0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+				borderRadius: "10px",
+				border: "1px solid rgba(0,0,0,0.1)",
 			};
 		}
 
-		return baseStyle;
+		// Dark theme styling
+		if (theme.name === "dark") {
+			return {
+				...baseStyle,
+				boxShadow: "0 15px 35px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2)",
+				border: "1px solid rgba(255,255,255,0.1)",
+			};
+		}
+
+		// Return enhanced default shadow
+		return {
+			...baseStyle,
+			boxShadow: "0 12px 28px rgba(0,0,0,0.12), 0 5px 10px rgba(0,0,0,0.08)",
+		};
 	};
 
 	// Get title bar style based on theme
@@ -163,6 +175,71 @@ export function MainWindow({
 		}
 
 		return baseStyle;
+	};
+
+	// Get card style based on theme
+	const getCardStyle = (index: number) => {
+		const baseStyle = {
+			background: theme.cardBackground || theme.windowBackground,
+			border: `${theme.borderWidth || 1}px solid ${theme.borderColor}`,
+			borderRadius: theme.borderRadius || "8px",
+			boxShadow: "0 2px 5px rgba(0,0,0,0.04)",
+			transition: "transform 0.2s, box-shadow 0.3s",
+		};
+
+		// NeoBrutalism specific styling
+		if (theme.name === "neoBrutalism") {
+			return {
+				...baseStyle,
+				boxShadow: "4px 4px 0px #000",
+				border: "2px solid #000",
+				borderRadius: "0px",
+			};
+		}
+
+		// Win95 specific styling
+		if (theme.name === "win95") {
+			return {
+				...baseStyle,
+				boxShadow: "inset -1px -1px 0 #0a0a0a, inset 1px 1px 0 #ffffff",
+				borderRadius: "0",
+			};
+		}
+
+		// Return enhanced drop shadow for all other themes
+		return {
+			...baseStyle,
+			boxShadow: "0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08)",
+		};
+	};
+
+	// Hover effects for cards
+	const getHoverEffect = (index: number) => {
+		const baseEffect = {
+			scale: 1.01,
+			boxShadow: "0 8px 20px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.08)",
+		};
+
+		// NeoBrutalism specific hover
+		if (theme.name === "neoBrutalism") {
+			return {
+				...baseEffect,
+				boxShadow: "6px 6px 0px #000",
+				y: -4,
+			};
+		}
+
+		// Win95 specific hover
+		if (theme.name === "win95") {
+			return {
+				...baseEffect,
+				scale: 1.01,
+				boxShadow:
+					"inset -1px -1px 0 #0a0a0a, inset 1px 1px 0 #ffffff, 0 3px 3px rgba(0,0,0,0.2)",
+			};
+		}
+
+		return baseEffect;
 	};
 
 	return (

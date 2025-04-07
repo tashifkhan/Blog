@@ -17,6 +17,7 @@ export type ThemeConfig = {
   windowBackground: string;
   windowBorder: string;
   windowTitlebarBg: string;
+  windowRadius: string; // Border radius for windows
   
   // Control buttons
   closeButtonColor: string;
@@ -29,6 +30,11 @@ export type ThemeConfig = {
   
   // Typography
   fontFamily: string;
+  
+  // Shadow effects
+  boxShadow?: string; // Default box shadow for windows
+  cardBoxShadow?: string; // Box shadow for cards
+  hoverBoxShadow?: string; // Box shadow for hover states
 };
 
 // Classic Mac OS 9 theme (System 8/9)
@@ -47,6 +53,7 @@ export const macClassicTheme: ThemeConfig = {
   windowBackground: "#FFFFFF",
   windowBorder: "#888888",
   windowTitlebarBg: "linear-gradient(180deg, #DDDDDD 0%, #AAAAAA 100%)",
+  windowRadius: "6px",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
@@ -56,6 +63,10 @@ export const macClassicTheme: ThemeConfig = {
   statusBarBorder: "#888888",
   
   fontFamily: "'Chicago', 'Charcoal', 'Geneva', sans-serif",
+  
+  boxShadow: "0 6px 16px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12)",
+  cardBoxShadow: "0 3px 8px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)",
+  hoverBoxShadow: "0 10px 24px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.1)",
 };
 
 // Mac OS X Aqua theme
@@ -74,6 +85,7 @@ export const macOSXTheme: ThemeConfig = {
   windowBackground: "#FFFFFF",
   windowBorder: "#CCCCCC",
   windowTitlebarBg: "linear-gradient(180deg, #F8F8F8 0%, #E2E2E2 100%)",
+  windowRadius: "8px",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
@@ -83,6 +95,10 @@ export const macOSXTheme: ThemeConfig = {
   statusBarBorder: "#D0D0D0",
   
   fontFamily: "'Lucida Grande', 'Helvetica Neue', sans-serif",
+  
+  boxShadow: "0 10px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06)",
+  cardBoxShadow: "0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
+  hoverBoxShadow: "0 15px 35px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.08)",
 };
 
 // Modern macOS Big Sur theme
@@ -101,6 +117,7 @@ export const modernMacOSTheme: ThemeConfig = {
   windowBackground: "#FFFFFF",
   windowBorder: "rgba(0, 0, 0, 0.08)",
   windowTitlebarBg: "rgba(255, 255, 255, 0.95)",
+  windowRadius: "10px",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
@@ -110,6 +127,10 @@ export const modernMacOSTheme: ThemeConfig = {
   statusBarBorder: "rgba(0, 0, 0, 0.05)",
   
   fontFamily: "'SF Pro', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif",
+  
+  boxShadow: "0 12px 32px rgba(0,0,0,0.1), 0 2px 15px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03)",
+  cardBoxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 5px rgba(0,0,0,0.02)",
+  hoverBoxShadow: "0 18px 40px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.05)",
 };
 
 // Dark mode theme (macOS inspired)
@@ -128,6 +149,7 @@ export const darkTheme: ThemeConfig = {
   windowBackground: "#262626",
   windowBorder: "#323232",
   windowTitlebarBg: "rgba(42, 42, 42, 0.9)",
+  windowRadius: "10px",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
@@ -137,6 +159,10 @@ export const darkTheme: ThemeConfig = {
   statusBarBorder: "rgba(255, 255, 255, 0.1)",
   
   fontFamily: "'SF Pro', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif",
+  
+  boxShadow: "0 15px 35px rgba(0,0,0,0.4), 0 5px 20px rgba(0,0,0,0.3)",
+  cardBoxShadow: "0 8px 16px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2)",
+  hoverBoxShadow: "0 20px 45px rgba(0,0,0,0.45), 0 10px 25px rgba(0,0,0,0.35)",
 };
 
 // Windows 95 theme
@@ -155,6 +181,7 @@ export const win95Theme: ThemeConfig = {
   windowBackground: "#C0C0C0",
   windowBorder: "#808080",
   windowTitlebarBg: "linear-gradient(90deg, #000080 0%, #1084d0 100%)",
+  windowRadius: "0px", // Squared corners for Win95
   
   closeButtonColor: "#C0C0C0",
   minimizeButtonColor: "#C0C0C0",
@@ -164,6 +191,10 @@ export const win95Theme: ThemeConfig = {
   statusBarBorder: "#808080",
   
   fontFamily: "'MS Sans Serif', 'Tahoma', sans-serif",
+  
+  boxShadow: "2px 2px 0 rgba(255,255,255,0.7) inset, -2px -2px 0 rgba(0,0,0,0.7) inset, 4px 4px 5px rgba(0,0,0,0.15)",
+  cardBoxShadow: "1px 1px 0 rgba(255,255,255,0.7) inset, -1px -1px 0 rgba(0,0,0,0.7) inset",
+  hoverBoxShadow: "2px 2px 0 rgba(255,255,255,0.7) inset, -2px -2px 0 rgba(0,0,0,0.7) inset, 6px 6px 8px rgba(0,0,0,0.2)",
 };
 
 // Windows XP theme
@@ -182,6 +213,7 @@ export const winXPTheme: ThemeConfig = {
   windowBackground: "#ECE9D8",
   windowBorder: "#0054E3",
   windowTitlebarBg: "linear-gradient(180deg, #2A80D2 0%, #1557B6 50%, #0D47A9 100%)",
+  windowRadius: "4px", // Slight rounded corners for XP
   
   closeButtonColor: "#FF0000",
   minimizeButtonColor: "#FFFF00",
@@ -191,6 +223,10 @@ export const winXPTheme: ThemeConfig = {
   statusBarBorder: "#ACA899",
   
   fontFamily: "'Tahoma', 'Arial', sans-serif",
+  
+  boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 5px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,84,227,0.5)",
+  cardBoxShadow: "0 1px 5px rgba(0,0,0,0.2), 0 0 2px rgba(0,0,0,0.1)",
+  hoverBoxShadow: "0 5px 15px rgba(0,0,0,0.35), 0 0 8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,84,227,0.7)",
 };
 
 // Ubuntu theme
@@ -209,6 +245,7 @@ export const ubuntuTheme: ThemeConfig = {
   windowBackground: "#2C001E",
   windowBorder: "#E95420",
   windowTitlebarBg: "linear-gradient(to bottom, #E95420, #CD4116)", // Ubuntu orange gradient
+  windowRadius: "8px",
   
   closeButtonColor: "#E95420",
   minimizeButtonColor: "#F9BC2D",
@@ -218,6 +255,10 @@ export const ubuntuTheme: ThemeConfig = {
   statusBarBorder: "#2C001E",
   
   fontFamily: "'Ubuntu', 'Noto Sans', 'Liberation Sans', sans-serif",
+  
+  boxShadow: "0 10px 25px rgba(0,0,0,0.4), 0 5px 10px rgba(0,0,0,0.25)",
+  cardBoxShadow: "0 4px 12px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2)",
+  hoverBoxShadow: "0 15px 30px rgba(0,0,0,0.5), 0 8px 15px rgba(0,0,0,0.3)",
 };
 
 // Neobrutalism theme
@@ -236,6 +277,7 @@ export const neoBrutalismTheme: ThemeConfig = {
   windowBackground: "#FFFFFF",
   windowBorder: "#000000",
   windowTitlebarBg: "#4DEEEA", // Bright cyan/blue
+  windowRadius: "12px",
   
   closeButtonColor: "#FF0000",
   minimizeButtonColor: "#FFFF00",
@@ -245,6 +287,10 @@ export const neoBrutalismTheme: ThemeConfig = {
   statusBarBorder: "#000000",
   
   fontFamily: "'Archivo Black', 'Arial Black', sans-serif",
+  
+  boxShadow: "6px 6px 0px #000000, 0 15px 25px rgba(0,0,0,0.08)",
+  cardBoxShadow: "4px 4px 0px #000000",
+  hoverBoxShadow: "8px 8px 0px #000000, 0 8px 15px rgba(0,0,0,0.05)",
 };
 
 // Get the stored theme from localStorage or default to macClassic

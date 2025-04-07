@@ -34,7 +34,7 @@ export function RecentPosts({
 		if (theme.name === "neoBrutalism") {
 			return {
 				...baseStyle,
-				boxShadow: "5px 5px 0px #000",
+				boxShadow: "5px 5px 0px #000, 0 15px 25px rgba(0,0,0,0.1)",
 				border: "2px solid #000",
 				borderRadius: "0px",
 			};
@@ -47,7 +47,8 @@ export function RecentPosts({
 				borderWidth: "1px",
 				borderStyle: "solid",
 				borderImage: "linear-gradient(135deg, #00ffff, #ff00ff) 1",
-				boxShadow: "0 0 20px rgba(255, 0, 255, 0.6)",
+				boxShadow:
+					"0 0 20px rgba(255, 0, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5)",
 			};
 		}
 
@@ -56,12 +57,20 @@ export function RecentPosts({
 			return {
 				...baseStyle,
 				background: "rgba(10, 10, 30, 0.85)",
-				boxShadow: `0 0 20px ${theme.accentColor || "#00ffff"}`,
+				boxShadow: `0 0 20px ${
+					theme.accentColor || "#00ffff"
+				}, 0 10px 30px rgba(0, 0, 0, 0.7)`,
 				backdropFilter: "blur(10px)",
 			};
 		}
 
-		return baseStyle;
+		// Enhanced default shadow for all other themes
+		return {
+			...baseStyle,
+			boxShadow:
+				theme.boxShadow ||
+				"0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05)",
+		};
 	};
 
 	// Get title bar style based on theme
@@ -136,14 +145,15 @@ export function RecentPosts({
 			background: theme.cardBackground || theme.windowBackground,
 			border: `${theme.borderWidth}px solid ${theme.borderColor}`,
 			cursor: "pointer",
-			transition: "transform 0.2s, box-shadow 0.2s",
+			transition: "transform 0.2s, box-shadow 0.3s",
+			boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
 		};
 
 		if (theme.name === "neoBrutalism") {
 			return {
 				...baseStyle,
 				border: "2px solid #000",
-				boxShadow: "4px 4px 0 #000",
+				boxShadow: "4px 4px 0 #000, 0 5px 10px rgba(0,0,0,0.1)",
 				borderRadius: "0",
 			};
 		}
@@ -155,6 +165,8 @@ export function RecentPosts({
 				borderImage: "linear-gradient(135deg, #00ffff, #ff00ff) 1",
 				borderWidth: "1px",
 				borderStyle: "solid",
+				boxShadow:
+					"0 3px 15px rgba(0, 255, 255, 0.15), 0 2px 5px rgba(0,0,0,0.2)",
 			};
 		}
 
@@ -163,26 +175,36 @@ export function RecentPosts({
 			return {
 				...baseStyle,
 				background: "rgba(10, 10, 30, 0.6)",
-				boxShadow: `0 0 10px ${colors[index % colors.length]}`,
+				boxShadow: `0 0 10px ${
+					colors[index % colors.length]
+				}, 0 5px 15px rgba(0,0,0,0.3)`,
 				border: `1px solid ${colors[index % colors.length]}`,
 			};
 		}
 
-		return baseStyle;
+		// Enhanced drop shadow for all other themes
+		return {
+			...baseStyle,
+			boxShadow:
+				theme.cardBoxShadow ||
+				"0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.1)",
+		};
 	};
 
 	// Get hover effect for post cards based on theme
 	const getHoverEffect = (index: number) => {
 		const baseEffect = {
 			scale: 1.02,
-			boxShadow: theme.hoverBoxShadow || theme.boxShadow,
+			boxShadow:
+				theme.hoverBoxShadow ||
+				"0 8px 25px rgba(0,0,0,0.15), 0 5px 10px rgba(0,0,0,0.1)",
 		};
 
 		if (theme.name === "neoBrutalism") {
 			return {
 				...baseEffect,
 				y: -4,
-				boxShadow: "6px 6px 0 #000",
+				boxShadow: "6px 6px 0 #000, 0 8px 15px rgba(0,0,0,0.15)",
 			};
 		}
 
@@ -190,7 +212,7 @@ export function RecentPosts({
 			return {
 				...baseEffect,
 				scale: 1.03,
-				boxShadow: "0 0 15px #ff00ff",
+				boxShadow: "0 0 15px #ff00ff, 0 8px 25px rgba(0,0,0,0.25)",
 			};
 		}
 
@@ -199,7 +221,9 @@ export function RecentPosts({
 			return {
 				...baseEffect,
 				scale: 1.03,
-				boxShadow: `0 0 20px ${colors[index % colors.length]}`,
+				boxShadow: `0 0 20px ${
+					colors[index % colors.length]
+				}, 0 10px 30px rgba(0,0,0,0.4)`,
 			};
 		}
 
