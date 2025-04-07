@@ -16,7 +16,7 @@ export function SearchBar({
 	theme,
 	isNeoBrutalism = false,
 	isUbuntu = false,
-	inputRef, // Added inputRef
+	inputRef,
 }: SearchBarProps) {
 	let searchBarStyle = {};
 
@@ -76,7 +76,7 @@ export function SearchBar({
 				onChange={(e) => setSearchQuery(e.target.value)}
 				className={`ml-2 p-2 flex-1 ${isNeoBrutalism ? "uppercase" : ""}`}
 				style={searchBarStyle}
-				ref={inputRef} // Added ref to the input element
+				ref={inputRef}
 			/>
 		</div>
 	);

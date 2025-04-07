@@ -1,9 +1,10 @@
 import React from "react";
-import { Window } from "./ui/window";
-import { SearchBar } from "./search/search-bar";
-import { SearchResults } from "./search/search-results";
-import { NeoButton } from "./ui/neo-button";
-import { UbuntuButton } from "./ui/ubuntu-button";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaSearch, FaTimesCircle } from "react-icons/fa";
+import { PostList } from "./posts/post-list";
+import { WindowControls } from "./ui/window-controls";
+import { AboutSection } from "./sections/about-section";
+import { ProjectsSection } from "./sections/projects-section";
 
 interface MainWindowProps {
 	theme: any;
@@ -12,7 +13,11 @@ interface MainWindowProps {
 	setSearchQuery: (query: string) => void;
 	searchResults: any[];
 	setWindowTitle: (title: string) => void;
-	searchInputRef: React.RefObject<HTMLInputElement>; // Added searchInputRef prop
+	searchInputRef: React.RefObject<HTMLInputElement>;
+	windowState: "normal" | "minimized" | "maximized";
+	onClose: () => void;
+	onMinimize: () => void;
+	onMaximize: () => void;
 }
 
 export function MainWindow({
@@ -22,143 +27,367 @@ export function MainWindow({
 	setSearchQuery,
 	searchResults,
 	setWindowTitle,
-	searchInputRef, // Added searchInputRef
+	searchInputRef,
+	windowState,
+	onClose,
+	onMinimize,
+	onMaximize,
 }: MainWindowProps) {
-	// Check theme types
-	const isNeoBrutalism = theme.name === "neoBrutalism";
-	const isUbuntu = theme.name === "ubuntu";
+	// Window animation variants based on theme
+	const getWindowVariants = () => {
+		const baseVariants = {
+			minimized: {
+				height: "40px",
+				opacity: 1,
+			},
+			normal: {
+				height: "auto",
+				opacity: 1,
+			},
+			maximized: {
+				height: "auto",
+				opacity: 1,
+			},
+		};
 
-	// Determine menu item colors for neobrutalism
-	const neoColors = ["#4DEEEA", "#FF498B", "#FFC857", "#74EE15"];
+		// Add extra styling for cyberpunk/neon themes
+		if (theme.name === "cyberpunk" || theme.name === "neon") {
+			return {
+				minimized: {
+					...baseVariants.minimized,
+					boxShadow: "0 0 15px rgba(0, 255, 255, 0.5)",
+				},
+				normal: {
+					...baseVariants.normal,
+					boxShadow: "0 0 20px rgba(0, 255, 255, 0.5)",
+				},
+				maximized: {
+					...baseVariants.maximized,
+					boxShadow: "0 0 30px rgba(0, 255, 255, 0.7)",
+				},
+			};
+		}
 
-	// Ubuntu variant colors
-	const ubuntuVariants = ["primary", "secondary", "action"];
+		return baseVariants;
+	};
+
+	// Content animation variants
+	const contentVariants = {
+		hidden: {
+			opacity: 0,
+			height: 0,
+		},
+		visible: {
+			opacity: 1,
+			height: "auto",
+			transition: {
+				opacity: { duration: 0.3 },
+				height: { duration: 0.4 },
+			},
+		},
+	};
+
+	// Get window style based on theme
+	const getWindowStyle = () => {
+		const baseStyle = {
+			background: theme.windowBackground,
+			borderRadius: theme.borderRadius,
+			boxShadow: theme.boxShadow,
+			border: `${theme.borderWidth}px solid ${theme.borderColor}`,
+			overflow: "hidden",
+		};
+
+		// NeoBrutalism specific styling
+		if (theme.name === "neoBrutalism") {
+			return {
+				...baseStyle,
+				boxShadow: "5px 5px 0px #000",
+				border: "2px solid #000",
+				borderRadius: "0px",
+			};
+		}
+
+		// Cyberpunk styling
+		if (theme.name === "cyberpunk") {
+			return {
+				...baseStyle,
+				borderWidth: "1px",
+				borderStyle: "solid",
+				borderImage: "linear-gradient(45deg, #ff00ff, #00ffff) 1",
+				boxShadow: "0 0 20px rgba(0, 255, 255, 0.6)",
+			};
+		}
+
+		// Neon styling
+		if (theme.name === "neon") {
+			return {
+				...baseStyle,
+				background: "rgba(10, 10, 30, 0.85)",
+				boxShadow: `0 0 20px ${theme.accentColor}`,
+				backdropFilter: "blur(10px)",
+			};
+		}
+
+		return baseStyle;
+	};
+
+	// Get title bar style based on theme
+	const getTitleBarStyle = () => {
+		const baseStyle = {
+			background: theme.titleBarBackground || theme.accentColor,
+			borderBottom: `${theme.borderWidth}px solid ${theme.borderColor}`,
+		};
+
+		if (theme.name === "neoBrutalism") {
+			return {
+				...baseStyle,
+				background: theme.accentColor || "#ff90e8",
+				borderBottom: "2px solid #000",
+			};
+		}
+
+		if (theme.name === "cyberpunk") {
+			return {
+				...baseStyle,
+				background: "linear-gradient(90deg, #ff00ff, #00ffff)",
+				borderBottom: "1px solid rgba(255, 255, 255, 0.3)",
+			};
+		}
+
+		if (theme.name === "neon") {
+			return {
+				...baseStyle,
+				background: "rgba(20, 20, 40, 0.9)",
+				borderBottom: `1px solid ${theme.accentColor}`,
+			};
+		}
+
+		return baseStyle;
+	};
 
 	return (
-		<Window title={windowTitle} theme={theme}>
+		<motion.div
+			className="w-full"
+			variants={getWindowVariants()}
+			animate={windowState}
+			transition={{
+				type: "spring",
+				stiffness: 300,
+				damping: 25,
+			}}
+			style={getWindowStyle()}
+		>
+			{/* Window Title Bar */}
 			<div
-				className={`text-4xl font-bold mb-8 text-center py-6 px-4 ${
-					isNeoBrutalism
-						? "transform rotate-1"
-						: isUbuntu
-						? "rounded"
-						: "shadow-inner"
-				}`}
-				style={{
-					backgroundColor: isNeoBrutalism
-						? "#FFFFFF"
-						: isUbuntu
-						? "#3C3B37"
-						: `${theme.backgroundColor}20`,
-					border: isNeoBrutalism
-						? `3px solid ${theme.borderColor}`
-						: isUbuntu
-						? `1px solid ${theme.windowBorder}`
-						: `2px solid ${theme.borderColor}`,
-					borderRadius: isNeoBrutalism ? "0" : isUbuntu ? "4px" : "4px",
-					color: theme.textColor,
-					boxShadow: isNeoBrutalism
-						? "5px 5px 0px #000000"
-						: isUbuntu
-						? "0 2px 4px rgba(0,0,0,0.3)"
-						: "none",
-				}}
+				className="p-2 flex items-center justify-between"
+				style={getTitleBarStyle()}
 			>
-				{isNeoBrutalism
-					? "WELCOME TO MY BRUTALIST BLOG"
-					: isUbuntu
-					? "Welcome to Ubuntu Blog"
-					: "Welcome to My Retro Blog"}
+				<WindowControls
+					theme={theme}
+					onClose={onClose}
+					onMinimize={onMinimize}
+					onMaximize={onMaximize}
+				/>
+
+				<span
+					className={`flex-grow text-center font-bold ${
+						theme.name === "neoBrutalism" ? "text-black" : ""
+					}`}
+					style={{ color: theme.titleColor }}
+				>
+					{windowTitle}
+				</span>
+
+				<div className="w-16 flex justify-end">
+					{/* Empty div for symmetrical spacing */}
+				</div>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				{["Blog", "Projects", "About"].map((item, index) =>
-					isNeoBrutalism ? (
-						<NeoButton
-							key={item}
-							color={neoColors[index % neoColors.length]}
-							onClick={() => {
-								setWindowTitle(`Blog - ${item}`);
-							}}
-							className="flex flex-col items-center justify-center h-28"
-						>
-							<h2 className="text-xl font-black mb-2">{item.toUpperCase()}</h2>
-							<p className="text-sm font-bold">
-								{item === "Blog" && "READ MY LATEST ARTICLES"}
-								{item === "Projects" && "SEE MY LATEST WORK"}
-								{item === "About" && "LEARN MORE ABOUT ME"}
-							</p>
-						</NeoButton>
-					) : isUbuntu ? (
-						<div
-							key={item}
-							className="bg-opacity-20 rounded p-4 flex flex-col"
-							style={{
-								backgroundColor: "rgba(255, 255, 255, 0.1)",
-								border: "1px solid rgba(255,255,255,0.1)",
-								boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-							}}
-						>
-							<h2 className="text-xl font-medium mb-2">{item}</h2>
-							<p className="text-sm text-gray-300 mb-4">
-								{item === "Blog" && "Read my latest thoughts and articles"}
-								{item === "Projects" && "Browse my latest work and creations"}
-								{item === "About" && "Learn more about me and my background"}
-							</p>
-							<UbuntuButton
-								variant={ubuntuVariants[index % ubuntuVariants.length] as any}
-								onClick={() => {
-									setWindowTitle(`Blog - ${item}`);
+			<AnimatePresence>
+				{windowState !== "minimized" && (
+					<motion.div
+						className={`p-4 ${theme.name === "neoBrutalism" ? "pt-6" : ""}`}
+						variants={contentVariants}
+						initial="hidden"
+						animate="visible"
+						exit="hidden"
+					>
+						{/* Search Bar */}
+						<div className="mb-4 relative">
+							<div
+								className={`flex items-center p-2 rounded-md ${
+									theme.name === "neoBrutalism"
+										? "rounded-none border-2 border-black"
+										: ""
+								}`}
+								style={{
+									background: theme.inputBackground || theme.cardBackground,
+									border:
+										theme.name !== "neoBrutalism"
+											? `${theme.borderWidth}px solid ${theme.borderColor}`
+											: undefined,
+									boxShadow:
+										theme.name === "neoBrutalism"
+											? "3px 3px 0 #000"
+											: theme.name === "neon"
+											? `0 0 8px ${theme.accentColor}`
+											: undefined,
 								}}
-								className="mt-auto self-end"
 							>
-								Open {item}
-							</UbuntuButton>
+								<FaSearch
+									className="mr-2"
+									style={{
+										color: theme.iconColor || theme.accentColor,
+										filter:
+											theme.name === "neon"
+												? "drop-shadow(0 0 2px currentColor)"
+												: undefined,
+									}}
+								/>
+								<input
+									ref={searchInputRef}
+									type="text"
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									placeholder="Search posts..."
+									className="bg-transparent outline-none w-full"
+									style={{
+										color: theme.textColor,
+										fontFamily: theme.fontFamily,
+									}}
+								/>
+								{searchQuery && (
+									<FaTimesCircle
+										className="cursor-pointer"
+										onClick={() => setSearchQuery("")}
+										style={{
+											color: theme.iconColor || theme.accentColor,
+											filter:
+												theme.name === "neon"
+													? "drop-shadow(0 0 2px currentColor)"
+													: undefined,
+										}}
+									/>
+								)}
+							</div>
 						</div>
-					) : (
-						<a
-							key={item}
-							href={`/${item.toLowerCase()}`}
-							className="block p-4 hover:bg-opacity-80 transition-colors shadow-sm"
-							style={{
-								backgroundColor: `${theme.backgroundColor}50`,
-								border: `1px solid ${theme.borderColor}`,
-								borderRadius: "4px",
-								color: theme.textColor,
-							}}
-							onClick={(e) => {
-								e.preventDefault();
-								setWindowTitle(`Blog - ${item}`);
-							}}
-						>
-							<h2 className="text-xl font-bold mb-2">{item}</h2>
-							<p className="text-sm">
-								{item === "Blog" && "Read my latest thoughts and articles"}
-								{item === "Projects" && "Browse my latest work and creations"}
-								{item === "About" && "Learn more about me and my background"}
-							</p>
-						</a>
-					)
-				)}
-			</div>
 
-			{/* Search bar */}
-			<div className="mt-8">
-				<SearchBar
-					searchQuery={searchQuery}
-					setSearchQuery={setSearchQuery}
-					theme={theme}
-					isNeoBrutalism={isNeoBrutalism}
-					isUbuntu={isUbuntu}
-					inputRef={searchInputRef} // Pass the ref to SearchBar
-				/>
-				<SearchResults
-					results={searchResults}
-					theme={theme}
-					isNeoBrutalism={isNeoBrutalism}
-					isUbuntu={isUbuntu}
-				/>
-			</div>
-		</Window>
+						{/* Search Results or Default Content */}
+						{searchQuery ? (
+							<div>
+								<h2
+									className={`text-2xl font-bold mb-4 ${
+										theme.name === "neoBrutalism"
+											? "uppercase tracking-wider"
+											: ""
+									}`}
+									style={{
+										color: theme.headingColor || theme.textColor,
+										textShadow:
+											theme.name === "neon"
+												? `0 0 5px ${theme.accentColor}`
+												: undefined,
+									}}
+								>
+									Search Results
+								</h2>
+								{searchResults.length > 0 ? (
+									<PostList
+										posts={searchResults}
+										theme={theme}
+										setWindowTitle={setWindowTitle}
+									/>
+								) : (
+									<div
+										className={`p-4 rounded-md ${
+											theme.name === "neoBrutalism"
+												? "rounded-none border-2 border-black"
+												: ""
+										}`}
+										style={{
+											background:
+												theme.cardBackground || theme.windowBackground,
+											border:
+												theme.name !== "neoBrutalism"
+													? `${theme.borderWidth}px solid ${theme.borderColor}`
+													: undefined,
+											boxShadow:
+												theme.name === "neoBrutalism"
+													? "3px 3px 0 #000"
+													: undefined,
+										}}
+									>
+										No results found for &quot;{searchQuery}&quot;
+									</div>
+								)}
+							</div>
+						) : (
+							<div>
+								<h1
+									className={`text-3xl font-bold mb-6 ${
+										theme.name === "neoBrutalism"
+											? "uppercase tracking-wider"
+											: theme.name === "cyberpunk"
+											? "font-mono tracking-wide"
+											: ""
+									}`}
+									style={{
+										color: theme.headingColor || theme.textColor,
+										textShadow:
+											theme.name === "neon"
+												? `0 0 8px ${theme.accentColor}`
+												: undefined,
+									}}
+								>
+									Welcome to my Blog
+								</h1>
+								<div
+									className={`p-4 rounded-md mb-4 ${
+										theme.name === "neoBrutalism"
+											? "rounded-none border-2 border-black"
+											: ""
+									}`}
+									style={{
+										background: theme.cardBackground || theme.windowBackground,
+										border:
+											theme.name !== "neoBrutalism"
+												? `${theme.borderWidth}px solid ${theme.borderColor}`
+												: undefined,
+										boxShadow:
+											theme.name === "neoBrutalism"
+												? "3px 3px 0 #000"
+												: theme.name === "neon"
+												? `0 0 15px ${theme.accentColor}`
+												: undefined,
+									}}
+								>
+									<p className="mb-2">
+										This is a neobrutalist blog template showcasing various UI
+										components and interactions.
+									</p>
+									<p>
+										Use the menu above to navigate or try the search
+										functionality.
+									</p>
+								</div>
+
+								{/* Additional content shown only when maximized */}
+								{windowState === "maximized" && (
+									<motion.div
+										initial={{ opacity: 0, y: 20 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{ delay: 0.2 }}
+										className="space-y-6"
+									>
+										<ProjectsSection theme={theme} />
+										<AboutSection theme={theme} />
+									</motion.div>
+								)}
+							</div>
+						)}
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</motion.div>
 	);
 }

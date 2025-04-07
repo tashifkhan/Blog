@@ -1,35 +1,74 @@
-import type { Post } from "../types/post";
+import type { Post } from "@/types/post";
 
-// Sample post data - in a real app, this would likely come from an API
+// Sample posts data
 const posts: Post[] = [
-  { id: 1, title: "Getting Started with React", date: "2023-10-15", excerpt: "Learn the basics of React and how to create your first component." },
-  { id: 2, title: "CSS Grid Layout", date: "2023-10-10", excerpt: "Master CSS Grid to create complex layouts with ease." },
-  { id: 3, title: "JavaScript Promises", date: "2023-10-05", excerpt: "Understanding asynchronous JavaScript with Promises." },
-  { id: 4, title: "TypeScript Basics", date: "2023-10-01", excerpt: "Why you should use TypeScript in your next project." },
-  { id: 5, title: "Web Accessibility", date: "2023-09-28", excerpt: "Making your websites accessible to everyone." },
-  { id: 6, title: "State Management with Redux", date: "2023-09-25", excerpt: "Learn how to manage complex state in your React applications." }
+  {
+    id: 1,
+    title: "Getting Started with Neobrutalism Design",
+    date: "2023-05-15",
+    excerpt: "An introduction to the bold and playful neobrutalism design trend and how to use it in web designs.",
+    category: "Design",
+    tags: ["Design", "UI/UX", "Trends"]
+  },
+  {
+    id: 2,
+    title: "Creating Custom React Hooks",
+    date: "2023-04-20",
+    excerpt: "Learn how to build your own custom React hooks to share stateful logic between components.",
+    category: "Development",
+    tags: ["React", "JavaScript", "Hooks"]
+  },
+  {
+    id: 3,
+    title: "The Power of Framer Motion",
+    date: "2023-04-05",
+    excerpt: "Exploring the capabilities of Framer Motion for creating fluid animations in React applications.",
+    category: "Development",
+    tags: ["Animation", "React", "Framer Motion"]
+  },
+  {
+    id: 4,
+    title: "Building Theme Switchers in React",
+    date: "2023-03-22",
+    excerpt: "A step-by-step guide to implementing theme switching functionality in React applications.",
+    category: "Development",
+    tags: ["React", "Theming", "CSS"]
+  },
+  {
+    id: 5,
+    title: "Designing for Accessibility",
+    date: "2023-03-10",
+    excerpt: "Best practices for creating accessible web interfaces that work for everyone.",
+    category: "Design",
+    tags: ["Accessibility", "UI/UX", "Best Practices"]
+  }
 ];
 
 export const PostService = {
+  // Get all posts
   getAllPosts: (): Post[] => {
-    return [...posts];
+    return posts;
   },
   
-  getRecentPosts: (count: number = 4): Post[] => {
-    return [...posts].slice(0, count);
+  // Get recent posts (default to 3)
+  getRecentPosts: (count: number = 3): Post[] => {
+    return [...posts].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    ).slice(0, count);
   },
   
+  // Get a post by ID
   getPostById: (id: number): Post | undefined => {
     return posts.find(post => post.id === id);
   },
   
+  // Search posts by title or content
   searchPosts: (query: string): Post[] => {
-    if (!query) return [];
-    
-    const lowercasedQuery = query.toLowerCase();
+    const lowercaseQuery = query.toLowerCase();
     return posts.filter(post => 
-      post.title.toLowerCase().includes(lowercasedQuery) || 
-      post.excerpt.toLowerCase().includes(lowercasedQuery)
+      post.title.toLowerCase().includes(lowercaseQuery) || 
+      post.excerpt.toLowerCase().includes(lowercaseQuery) ||
+      post.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery))
     );
   }
 };

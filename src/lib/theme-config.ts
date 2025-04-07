@@ -34,26 +34,26 @@ export type ThemeConfig = {
 // Classic Mac OS 9 theme (System 8/9)
 export const macClassicTheme: ThemeConfig = {
   name: "macClassic",
-  backgroundColor: "#CCCCCC",
-  borderColor: "#999999",
+  backgroundColor: "#DEDEDE",
+  borderColor: "#888888",
   textColor: "#000000",
-  accentColor: "#0058AE", // Classic blue highlight
+  accentColor: "#0060CB", // Enhanced classic blue highlight
 
-  menuBarBackground: "#CCCCCC",
-  menuBarBorder: "#999999",
-  menuItemHoverBg: "#0058AE",
+  menuBarBackground: "#DEDEDE",
+  menuBarBorder: "#888888",
+  menuItemHoverBg: "#0060CB",
   menuItemHoverText: "#FFFFFF",
   
   windowBackground: "#FFFFFF",
-  windowBorder: "#999999",
-  windowTitlebarBg: "linear-gradient(180deg, #CCCCCC 0%, #AAAAAA 100%)",
+  windowBorder: "#888888",
+  windowTitlebarBg: "linear-gradient(180deg, #DDDDDD 0%, #AAAAAA 100%)",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
   maximizeButtonColor: "#28C840",
   
-  statusBarBackground: "#CCCCCC",
-  statusBarBorder: "#999999",
+  statusBarBackground: "#DEDEDE",
+  statusBarBorder: "#888888",
   
   fontFamily: "'Chicago', 'Charcoal', 'Geneva', sans-serif",
 };
@@ -61,19 +61,19 @@ export const macClassicTheme: ThemeConfig = {
 // Mac OS X Aqua theme
 export const macOSXTheme: ThemeConfig = {
   name: "macOSX",
-  backgroundColor: "#E2E2E2",
+  backgroundColor: "#E8E8E8",
   borderColor: "#BBBBBB",
   textColor: "#000000",
-  accentColor: "#1E7BF6",
+  accentColor: "#0088FF",
 
-  menuBarBackground: "rgba(236, 236, 236, 0.8)",
+  menuBarBackground: "rgba(236, 236, 236, 0.85)",
   menuBarBorder: "#D0D0D0",
-  menuItemHoverBg: "#1E7BF6",
+  menuItemHoverBg: "rgba(0, 136, 255, 0.9)",
   menuItemHoverText: "#FFFFFF",
   
   windowBackground: "#FFFFFF",
   windowBorder: "#CCCCCC",
-  windowTitlebarBg: "linear-gradient(180deg, #F6F6F6 0%, #E2E2E2 100%)",
+  windowTitlebarBg: "linear-gradient(180deg, #F8F8F8 0%, #E2E2E2 100%)",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
@@ -89,54 +89,54 @@ export const macOSXTheme: ThemeConfig = {
 export const modernMacOSTheme: ThemeConfig = {
   name: "modernMacOS",
   backgroundColor: "#F5F5F7",
-  borderColor: "#E2E2E7",
+  borderColor: "#E5E5E7",
   textColor: "#1D1D1F",
-  accentColor: "#0071E3",
+  accentColor: "#0080FF",
 
-  menuBarBackground: "rgba(255, 255, 255, 0.7)",
-  menuBarBorder: "rgba(0, 0, 0, 0.1)",
-  menuItemHoverBg: "rgba(0, 113, 227, 0.9)",
+  menuBarBackground: "rgba(255, 255, 255, 0.85)",
+  menuBarBorder: "rgba(0, 0, 0, 0.05)",
+  menuItemHoverBg: "rgba(0, 128, 255, 0.9)",
   menuItemHoverText: "#FFFFFF",
   
   windowBackground: "#FFFFFF",
-  windowBorder: "rgba(0, 0, 0, 0.1)",
-  windowTitlebarBg: "rgba(255, 255, 255, 0.9)",
+  windowBorder: "rgba(0, 0, 0, 0.08)",
+  windowTitlebarBg: "rgba(255, 255, 255, 0.95)",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
   maximizeButtonColor: "#28C840",
   
-  statusBarBackground: "rgba(255, 255, 255, 0.8)",
-  statusBarBorder: "rgba(0, 0, 0, 0.1)",
+  statusBarBackground: "rgba(255, 255, 255, 0.9)",
+  statusBarBorder: "rgba(0, 0, 0, 0.05)",
   
   fontFamily: "'SF Pro', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif",
 };
 
-// Dark mode theme
+// Dark mode theme (macOS inspired)
 export const darkTheme: ThemeConfig = {
   name: "dark",
-  backgroundColor: "#333333",
-  borderColor: "#555555",
-  textColor: "#FFFFFF",
-  accentColor: "#0D84FF",
+  backgroundColor: "#1E1E1E",
+  borderColor: "#323232",
+  textColor: "#F5F5F7",
+  accentColor: "#0A84FF",
 
-  menuBarBackground: "#222222",
-  menuBarBorder: "#444444",
-  menuItemHoverBg: "#0D84FF",
+  menuBarBackground: "rgba(28, 28, 28, 0.85)",
+  menuBarBorder: "rgba(255, 255, 255, 0.1)",
+  menuItemHoverBg: "rgba(10, 132, 255, 0.8)",
   menuItemHoverText: "#FFFFFF",
   
-  windowBackground: "#333333",
-  windowBorder: "#555555",
-  windowTitlebarBg: "linear-gradient(180deg, #444444 0%, #333333 100%)",
+  windowBackground: "#262626",
+  windowBorder: "#323232",
+  windowTitlebarBg: "rgba(42, 42, 42, 0.9)",
   
   closeButtonColor: "#FF5F57",
   minimizeButtonColor: "#FEBC2E",
   maximizeButtonColor: "#28C840",
   
-  statusBarBackground: "#222222",
-  statusBarBorder: "#444444",
+  statusBarBackground: "rgba(28, 28, 28, 0.9)",
+  statusBarBorder: "rgba(255, 255, 255, 0.1)",
   
-  fontFamily: "'SF Mono', 'Monaco', monospace",
+  fontFamily: "'SF Pro', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif",
 };
 
 // Windows 95 theme
@@ -292,3 +292,40 @@ export function setTheme(themeName: string) {
   
   return newTheme;
 }
+
+export const themes: Record<string, any> = {
+  macClassic: macClassicTheme,
+  macOSX: macOSXTheme,
+  modernMacOS: modernMacOSTheme,
+  dark: darkTheme,
+  win95: win95Theme,
+  winXP: winXPTheme,
+  ubuntu: {
+    name: "ubuntu",
+    backgroundColor: "#300A24",
+    windowBackground: "#421934",
+    cardBackground: "#4F2043",
+    titleBarBackground: "linear-gradient(90deg, #E95420 0%, #FF8A50 100%)",
+    menuBackground: "rgba(48, 10, 36, 0.95)",
+    dropdownBackground: "rgba(66, 25, 52, 0.95)",
+    accentColor: "#FF6E33",
+    textColor: "#FFFFFF",
+    titleColor: "#FFFFFF",
+    menuTextColor: "#FFFFFF",
+    headingColor: "#FF8A50",
+    mutedTextColor: "#E0CBDD",
+    borderColor: "#662D56",
+    tagBackground: "linear-gradient(90deg, #E95420 0%, #FF8A50 100%)",
+    tagTextColor: "#FFFFFF",
+    secondaryTagBackground: "#7A306C",
+    secondaryTagTextColor: "#FFFFFF",
+    inputBackground: "rgba(79, 32, 67, 0.8)",
+    iconColor: "#FF8A50",
+    borderWidth: 1,
+    borderRadius: "12px",
+    boxShadow: "0 10px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 110, 51, 0.1)",
+    hoverBoxShadow: "0 14px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 110, 51, 0.2)",
+    fontFamily: "'Ubuntu', system-ui, sans-serif",
+  },
+  neoBrutalism: neoBrutalismTheme
+};

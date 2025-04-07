@@ -6,6 +6,7 @@ import { RecentPosts } from "./posts/recent-posts";
 import { StatusBar } from "./ui/status-bar";
 import { PostService } from "@/services/post-service";
 import type { Post } from "@/types/post";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
 	// State management
@@ -18,45 +19,90 @@ export default function Navbar() {
 	const [searchResults, setSearchResults] = useState<Post[]>([]);
 	const [recentPosts, setRecentPosts] = useState<Post[]>([]);
 	const searchInputRef = useRef<HTMLInputElement>(null);
+	
+	// Window state management
+	const [mainWindowState, setMainWindowState] = useState<"normal" | "minimized" | "maximized">("normal");
+	const [recentPostsState, setRecentPostsState] = useState<"normal" | "minimized" | "maximized">("normal");
+	
+	// Client-side only code
+	const [isMounted, setIsMounted] = useState(false);
 
-	// Load posts on component mount
+	// Run only on client-side to prevent hydration issues
 	useEffect(() => {
+		setIsMounted(true);
 		setRecentPosts(PostService.getRecentPosts());
+		
+		// Apply theme from localStorage on initial load
+		setTheme(activeTheme);
 	}, []);
 
 	// Search functionality
 	useEffect(() => {
+		if (!isMounted) return; // Skip on server-side
+		
 		if (searchQuery) {
 			setSearchResults(PostService.searchPosts(searchQuery));
 		} else {
 			setSearchResults([]);
 		}
-	}, [searchQuery]);
+	}, [searchQuery, isMounted]);
 
-	// Update theme when it changes or on initial load
+	// Update theme when it changes
 	useEffect(() => {
+		if (!isMounted) return; // Skip on server-side
+		
 		const handleThemeChange = () => {
 			setTheme(activeTheme);
 		};
 
-		// Apply theme from localStorage on initial load
-		setTheme(activeTheme);
-
 		window.addEventListener("themechange", handleThemeChange);
 		return () => window.removeEventListener("themechange", handleThemeChange);
-	}, []);
+	}, [isMounted]);
 
 	// Update clock
 	useEffect(() => {
+		if (!isMounted) return; // Skip on server-side
+		
 		const timer = setInterval(() => {
 			setCurrentTime(new Date());
 		}, 1000);
 		return () => clearInterval(timer);
-	}, []);
+	}, [isMounted]);
 
 	// Toggle recent posts window
 	const toggleRecentPosts = () => {
 		setShowRecentPosts(!showRecentPosts);
+		if (!showRecentPosts) {
+			setRecentPostsState("normal");
+		}
+	};
+
+	// Window control handlers for main window
+	const handleMainWindowClose = () => {
+		setWindowTitle("Blog - Home");
+		setSearchQuery("");
+		setSearchResults([]);
+	};
+	
+	const handleMainWindowMinimize = () => {
+		setMainWindowState("minimized");
+	};
+	
+	const handleMainWindowMaximize = () => {
+		setMainWindowState(mainWindowState === "maximized" ? "normal" : "maximized");
+	};
+	
+	// Window control handlers for recent posts
+	const handleRecentPostsClose = () => {
+		setShowRecentPosts(false);
+	};
+	
+	const handleRecentPostsMinimize = () => {
+		setRecentPostsState("minimized");
+	};
+	
+	const handleRecentPostsMaximize = () => {
+		setRecentPostsState(recentPostsState === "maximized" ? "normal" : "maximized");
 	};
 
 	// Focus search input when search button is clicked
@@ -66,13 +112,31 @@ export default function Navbar() {
 		}
 	};
 
+	// If we're rendering on the server or before client mount, use a simplified version
+	// to avoid hydration mismatch
+	if (!isMounted) {
+		return (
+			<div 
+				className="w-full flex flex-col items-center min-h-screen"
+				style={{
+					backgroundColor: "#FDFD96",
+					color: "#000000",
+					fontFamily: "'Archivo Black', 'Arial Black', sans-serif"
+				}}
+			>
+				{/* Simple loading state or initial render */}
+				<div className="p-4">Loading...</div>
+			</div>
+		);
+	}
+
 	return (
 		<div
 			className="w-full flex flex-col items-center min-h-screen"
 			style={{
-				background: theme.backgroundColor,
+				backgroundColor: theme.backgroundColor,
 				color: theme.textColor,
-				fontFamily: theme.fontFamily,
+				fontFamily: theme.fontFamily
 			}}
 		>
 			{/* Top Mac-style menubar */}
@@ -88,7 +152,7 @@ export default function Navbar() {
 			{/* Main window content area */}
 			<div className="container mx-auto my-8 flex flex-wrap gap-8">
 				{/* Main blog window */}
-				<div className="flex-1" style={{ minWidth: "60%" }}>
+					<div className="flex-1" style={{ minWidth: mainWindowState === "minimized" ? "auto" : "60%" }}>
 					<MainWindow
 						theme={theme}
 						windowTitle={windowTitle}
@@ -97,17 +161,34 @@ export default function Navbar() {
 						searchResults={searchResults}
 						setWindowTitle={setWindowTitle}
 						searchInputRef={searchInputRef}
+						windowState={mainWindowState}
+						onClose={handleMainWindowClose}
+						onMinimize={handleMainWindowMinimize}
+						onMaximize={handleMainWindowMaximize}
 					/>
 				</div>
 
-				{/* Recent Posts Window - always visible */}
-				{showRecentPosts && (
-					<RecentPosts
-						posts={recentPosts}
-						theme={theme}
-						onClose={toggleRecentPosts}
-					/>
-				)}
+				{/* Recent Posts Window */}
+				<AnimatePresence>
+					{showRecentPosts && (
+						<motion.div
+							initial={{ opacity: 0, scale: 0.9 }}
+							animate={{ opacity: 1, scale: 1 }}
+							exit={{ opacity: 0, scale: 0.9 }}
+							transition={{ type: "spring", stiffness: 300, damping: 25 }}
+							style={{ width: recentPostsState === "minimized" ? "auto" : recentPostsState === "maximized" ? "100%" : "35%" }}
+						>
+							<RecentPosts
+								posts={recentPosts}
+								theme={theme}
+								onClose={handleRecentPostsClose}
+								windowState={recentPostsState}
+								onMinimize={handleRecentPostsMinimize}
+								onMaximize={handleRecentPostsMaximize}
+							/>
+						</motion.div>
+					)}
+				</AnimatePresence>
 			</div>
 
 			{/* Status bar */}

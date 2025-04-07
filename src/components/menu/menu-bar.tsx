@@ -14,7 +14,7 @@ interface MenuBarProps {
 	theme: any;
 	currentTime: Date;
 	toggleRecentPosts: () => void;
-	focusSearch: () => void; // New prop for focusing search
+	focusSearch: () => void;
 	recentPosts: Post[];
 	setWindowTitle: (title: string) => void;
 }
@@ -23,7 +23,7 @@ export function MenuBar({
 	theme,
 	currentTime,
 	toggleRecentPosts,
-	focusSearch, // Added new prop
+	focusSearch,
 	recentPosts,
 	setWindowTitle,
 }: MenuBarProps) {
@@ -58,7 +58,7 @@ export function MenuBar({
 				<div className="ml-auto flex items-center space-x-2 mr-2">
 					<button
 						className="flex items-center text-xs"
-						onClick={focusSearch} // Changed to focus search instead of toggling
+						onClick={focusSearch}
 						style={{ color: theme.textColor }}
 					>
 						<SearchIcon size={12} className="mr-1" />
