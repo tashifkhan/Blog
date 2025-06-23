@@ -1,0 +1,57 @@
+---
+import Layout from "@/layouts/Layout.astro";
+
+type BlogPost = {
+	title?: string;
+	date?: string;
+	excerpt?: string;
+	tags?: string[];
+	url: string;
+};
+
+const posts = await Astro.glob("../../blogs/*.mdx");
+const sortedPosts = posts
+	.filter(
+		(post) =>
+			post.frontmatter && post.frontmatter.title && post.frontmatter.date
+	)
+	.map((post) => ({
+		...(post.frontmatter as BlogPost),
+		url: post.file
+			? `/blog/${post.file
+					.split("/")
+					.pop()
+					?.replace(/\\.mdx$/, "")}/`
+			: "#",
+	}))
+	.sort((a, b) =>
+		new Date(a?.date || 0).getTime() < new Date(b?.date || 0).getTime() ? 1 : -1
+	);
+---
+
+<Layout>
+	<h1>Blog</h1>
+	<ul>
+		{
+			sortedPosts.map(
+				(post: BlogPost) =>
+					post && (
+						<li>
+							<a href={post.url}>
+								<h2>{post?.title ?? "Untitled"}</h2>
+								<p>{post?.excerpt ?? ""}</p>
+								<small>{post?.date ?? ""}</small>
+								{post?.tags && (
+									<div>
+										{post.tags.map((tag: string) => (
+											<span>{tag} </span>
+										))}
+									</div>
+								)}
+							</a>
+						</li>
+					)
+			)
+		}
+	</ul>
+</Layout>

@@ -1,0 +1,52 @@
+---
+import Layout from "@/layouts/Layout.astro";
+
+export async function getStaticPaths(): Promise<
+	{ params: { slug: string } }[]
+> {
+	const posts: any[] = await Astro.glob("../../blogs/*.mdx");
+	return posts.map((post: any) => ({
+		params: {
+			slug: post.file
+				?.split("/")
+				.pop()
+				?.replace(/\.mdx$/, ""),
+		},
+	}));
+}
+
+const { slug } = Astro.params;
+const posts: any[] = await Astro.glob("../../blogs/*.mdx");
+const post = posts.find(
+	(p: any) =>
+		p.file &&
+		p.file
+			.split("/")
+			.pop()
+			?.replace(/\.mdx$/, "") === slug
+);
+---
+
+<Layout>
+	{
+		post ? (
+			<article>
+				<h1>{post.frontmatter.title}</h1>
+				<p>
+					<small>{post.frontmatter.date}</small>
+				</p>
+				{post.frontmatter.tags && (
+					<div>
+						{post.frontmatter.tags.map((tag: string) => (
+							<span>{tag} </span>
+						))}
+					</div>
+				)}
+				<p>{post.frontmatter.excerpt}</p>
+				<post.default />
+			</article>
+		) : (
+			<div>Post not found.</div>
+		)
+	}
+</Layout>
