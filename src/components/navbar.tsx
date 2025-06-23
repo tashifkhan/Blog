@@ -4,7 +4,6 @@ import { MenuBar } from "./menu/menu-bar";
 import { MainWindow } from "./main-window";
 import { RecentPosts } from "./posts/recent-posts";
 import { StatusBar } from "./ui/status-bar";
-import { PostService } from "@/services/post-service";
 import type { Post } from "@/types/post";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,6 +16,7 @@ export default function Navbar() {
 	const [showRecentPosts, setShowRecentPosts] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [searchResults, setSearchResults] = useState<Post[]>([]);
+	const [posts, setPosts] = useState<Post[]>([]);
 	const [recentPosts, setRecentPosts] = useState<Post[]>([]);
 	const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,22 +34,39 @@ export default function Navbar() {
 	// Run only on client-side to prevent hydration issues
 	useEffect(() => {
 		setIsMounted(true);
-		setRecentPosts(PostService.getRecentPosts());
-
-		// Apply theme from localStorage on initial load
+		// Fetch real posts from API
+		fetch("/api/posts.json")
+			.then((res) => res.json())
+			.then((data) => {
+				setPosts(data);
+				setRecentPosts(
+					[...data]
+						.sort(
+							(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+						)
+						.slice(0, 3)
+				);
+			});
 		setTheme(activeTheme);
 	}, []);
 
 	// Search functionality
 	useEffect(() => {
-		if (!isMounted) return; // Skip on server-side
-
+		if (!isMounted) return;
 		if (searchQuery) {
-			setSearchResults(PostService.searchPosts(searchQuery));
+			const lowercaseQuery = searchQuery.toLowerCase();
+			setSearchResults(
+				posts.filter(
+					(post) =>
+						post.title?.toLowerCase().includes(lowercaseQuery) ||
+						post.excerpt?.toLowerCase().includes(lowercaseQuery) ||
+						post.tags?.some((tag) => tag.toLowerCase().includes(lowercaseQuery))
+				)
+			);
 		} else {
 			setSearchResults([]);
 		}
-	}, [searchQuery, isMounted]);
+	}, [searchQuery, isMounted, posts]);
 
 	// Update theme when it changes
 	useEffect(() => {
@@ -203,7 +220,7 @@ export default function Navbar() {
 
 			{/* Main window content area */}
 			<div
-				className="container mx-auto my-8 flex flex-wrap gap-8"
+				className="container mx-auto my-8 flex flex-col md:flex-row flex-wrap gap-8"
 				style={getWindowContainerStyle()}
 			>
 				{/* Main blog window */}
@@ -228,7 +245,7 @@ export default function Navbar() {
 						setSearchQuery={setSearchQuery}
 						searchResults={searchResults}
 						setWindowTitle={setWindowTitle}
-						searchInputRef={searchInputRef}
+						searchInputRef={searchInputRef as React.RefObject<HTMLInputElement>}
 						windowState={mainWindowState}
 						onClose={handleMainWindowClose}
 						onMinimize={handleMainWindowMinimize}

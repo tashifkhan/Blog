@@ -43,7 +43,7 @@ export function MenuBar({
 				</div>
 				<Menubar className="border-none bg-transparent h-6 p-0 flex space-x-0">
 					<FileMenu theme={theme} />
-					<EditMenu theme={theme} />
+					<EditMenu theme={theme} /> 
 					<ViewMenu theme={theme} />
 					<NavigateMenu theme={theme} setWindowTitle={setWindowTitle} />
 					<AppearanceMenu theme={theme} />
