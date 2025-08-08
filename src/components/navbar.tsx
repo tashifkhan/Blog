@@ -6,6 +6,7 @@ import { RecentPosts } from "./posts/recent-posts";
 import { StatusBar } from "./ui/status-bar";
 import type { Post } from "@/types/post";
 import { motion, AnimatePresence } from "framer-motion";
+import SearchModal from "./search/search-modal";
 
 export default function Navbar() {
 	// State management
@@ -19,6 +20,10 @@ export default function Navbar() {
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [recentPosts, setRecentPosts] = useState<Post[]>([]);
 	const searchInputRef = useRef<HTMLInputElement>(null);
+	const [isSearchOpen, setIsSearchOpen] = useState(false);
+	// Modal search state (decoupled from main window search)
+	const [modalQuery, setModalQuery] = useState("");
+	const [modalResults, setModalResults] = useState<Post[]>([]);
 
 	// Window state management
 	const [mainWindowState, setMainWindowState] = useState<
@@ -67,6 +72,24 @@ export default function Navbar() {
 			setSearchResults([]);
 		}
 	}, [searchQuery, isMounted, posts]);
+
+	// Modal search functionality (independent of main search)
+	useEffect(() => {
+		if (!isMounted) return;
+		if (modalQuery) {
+			const lowercaseQuery = modalQuery.toLowerCase();
+			setModalResults(
+				posts.filter(
+					(post) =>
+						post.title?.toLowerCase().includes(lowercaseQuery) ||
+						post.excerpt?.toLowerCase().includes(lowercaseQuery) ||
+						post.tags?.some((tag) => tag.toLowerCase().includes(lowercaseQuery))
+				)
+			);
+		} else {
+			setModalResults([]);
+		}
+	}, [modalQuery, isMounted, posts]);
 
 	// Update theme when it changes
 	useEffect(() => {
@@ -130,11 +153,9 @@ export default function Navbar() {
 		);
 	};
 
-	// Focus search input when search button is clicked
+	// Open modal search when search is triggered from menu or button
 	const focusSearch = () => {
-		if (searchInputRef.current) {
-			searchInputRef.current.focus();
-		}
+		setIsSearchOpen(true);
 	};
 
 	// Get window container style for theme-specific styling
@@ -293,6 +314,23 @@ export default function Navbar() {
 
 			{/* Status bar */}
 			<StatusBar theme={theme} />
+
+			{/* Search modal (decoupled state) */}
+			<SearchModal
+				open={isSearchOpen}
+				theme={theme}
+				query={modalQuery}
+				setQuery={setModalQuery}
+				results={modalResults}
+				onClose={() => setIsSearchOpen(false)}
+				onSelect={(slug?: string) => {
+					setIsSearchOpen(false);
+					setModalQuery("");
+					if (slug) {
+						window.location.href = `/blog/${slug}/`;
+					}
+				}}
+			/>
 		</div>
 	);
 }
