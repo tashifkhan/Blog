@@ -33,6 +33,7 @@ export function AppearanceMenu({ theme }: AppearanceMenuProps) {
 				style={{
 					backgroundColor: theme.menuBarBackground,
 					border: `1px solid ${theme.menuBarBorder}`,
+					color: theme.textColor,
 				}}
 			>
 				<MenubarRadioGroup value={theme.name}>

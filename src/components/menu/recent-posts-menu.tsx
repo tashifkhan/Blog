@@ -9,10 +9,11 @@ import {
 } from "../ui/menubar";
 
 interface Post {
-	id: number;
-	title: string;
-	date: string;
-	excerpt: string;
+	id?: number;
+	title?: string;
+	date?: string;
+	excerpt?: string;
+	slug?: string;
 }
 
 interface RecentPostsMenuProps {
@@ -44,6 +45,7 @@ export function RecentPostsMenu({
 				style={{
 					backgroundColor: theme.menuBarBackground,
 					border: `1px solid ${theme.menuBarBorder}`,
+					color: theme.textColor,
 				}}
 			>
 				<MenubarItem
@@ -53,18 +55,29 @@ export function RecentPostsMenu({
 					Show Recent Posts
 				</MenubarItem>
 				<MenubarSeparator style={{ backgroundColor: theme.menuBarBorder }} />
-				{recentPosts.slice(0, 3).map((post) => (
+				{recentPosts.slice(0, 3).map((post, idx) => {
+					const href = post.slug ? `/blog/${post.slug}/` : "/blog/";
+					const key = post.slug || String(post.id) || String(idx);
+					return (
+						<a key={key} href={href} className="no-underline">
+							<MenubarItem
+								className="rounded-none text-xs font-medium"
+								role="menuitem"
+							>
+								{post.title || "Untitled"}
+							</MenubarItem>
+						</a>
+					);
+				})}
+				<a href="/blog/" className="no-underline">
 					<MenubarItem
-						key={post.id}
 						className="rounded-none text-xs font-medium"
+						role="menuitem"
 					>
-						{post.title}
+						View All Posts
+						<MenubarShortcut>⌘P</MenubarShortcut>
 					</MenubarItem>
-				))}
-				<MenubarItem className="rounded-none text-xs font-medium">
-					View All Posts
-					<MenubarShortcut>⌘P</MenubarShortcut>
-				</MenubarItem>
+				</a>
 			</MenubarContent>
 		</MenubarMenu>
 	);

@@ -32,20 +32,26 @@ export function NavigateMenu({ theme, setWindowTitle }: NavigateMenuProps) {
 				style={{
 					backgroundColor: theme.menuBarBackground,
 					border: `1px solid ${theme.menuBarBorder}`,
+					color: theme.textColor,
 				}}
 			>
-				<MenubarItem
-					className="rounded-none text-xs font-medium"
-					onClick={() => setWindowTitle("Blog - Home")}
-				>
-					Home
-					<MenubarShortcut>⌘H</MenubarShortcut>
-				</MenubarItem>
+				<a href="/" className="no-underline">
+					<MenubarItem
+						className="rounded-none text-xs font-medium"
+						onClick={() => setWindowTitle("Blog - Home")}
+						role="menuitem"
+					>
+						Home
+						<MenubarShortcut>⌘H</MenubarShortcut>
+					</MenubarItem>
+				</a>
 				<MenubarItem
 					className="rounded-none text-xs font-medium"
 					onClick={() => setWindowTitle("Blog - Blog")}
 				>
-					Blog
+					<a href="/blog/" className="no-underline">
+						Blog
+					</a>
 					<MenubarShortcut>⌘B</MenubarShortcut>
 				</MenubarItem>
 				<MenubarItem
@@ -63,11 +69,19 @@ export function NavigateMenu({ theme, setWindowTitle }: NavigateMenuProps) {
 					<MenubarShortcut>⌘I</MenubarShortcut>
 				</MenubarItem>
 				<MenubarSeparator style={{ backgroundColor: theme.menuBarBorder }} />
-				<MenubarItem className="rounded-none text-xs font-medium">
+				<MenubarItem
+					className="rounded-none text-xs font-medium"
+					onClick={() => window.history.back()}
+					role="menuitem"
+				>
 					Back
 					<MenubarShortcut>⌘←</MenubarShortcut>
 				</MenubarItem>
-				<MenubarItem className="rounded-none text-xs font-medium">
+				<MenubarItem
+					className="rounded-none text-xs font-medium"
+					onClick={() => window.history.forward()}
+					role="menuitem"
+				>
 					Forward
 					<MenubarShortcut>⌘→</MenubarShortcut>
 				</MenubarItem>

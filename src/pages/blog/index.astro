@@ -1,57 +1,14 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import { getAllPosts } from "@/lib/posts";
+import PostGrid from "@/components/posts/PostGrid.astro";
 
-type BlogPost = {
-	title?: string;
-	date?: string;
-	excerpt?: string;
-	tags?: string[];
-	url: string;
-};
+export const prerender = true;
 
-const posts = await Astro.glob("../../blogs/*.mdx");
-const sortedPosts = posts
-	.filter(
-		(post) =>
-			post.frontmatter && post.frontmatter.title && post.frontmatter.date
-	)
-	.map((post) => ({
-		...(post.frontmatter as BlogPost),
-		url: post.file
-			? `/blog/${post.file
-					.split("/")
-					.pop()
-					?.replace(/\\.mdx$/, "")}/`
-			: "#",
-	}))
-	.sort((a, b) =>
-		new Date(a?.date || 0).getTime() < new Date(b?.date || 0).getTime() ? 1 : -1
-	);
+const posts = await getAllPosts();
 ---
 
 <Layout>
-	<h1>Blog</h1>
-	<ul>
-		{
-			sortedPosts.map(
-				(post: BlogPost) =>
-					post && (
-						<li>
-							<a href={post.url}>
-								<h2>{post?.title ?? "Untitled"}</h2>
-								<p>{post?.excerpt ?? ""}</p>
-								<small>{post?.date ?? ""}</small>
-								{post?.tags && (
-									<div>
-										{post.tags.map((tag: string) => (
-											<span>{tag} </span>
-										))}
-									</div>
-								)}
-							</a>
-						</li>
-					)
-			)
-		}
-	</ul>
+	<h1 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center">Blog</h1>
+	<PostGrid posts={posts} />
 </Layout>

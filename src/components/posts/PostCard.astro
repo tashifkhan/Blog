@@ -1,0 +1,59 @@
+---
+const { post } = Astro.props as { post: { slug: string; frontmatter: any } };
+const href = `/blog/${post.slug}/`;
+---
+
+<a
+	href={href}
+	class="block no-underline group"
+	aria-label={post.frontmatter?.title || post.slug}
+>
+	<article
+		class="p-5 rounded-xl shadow-lg transition-transform duration-200 hover:scale-[1.02] hover:shadow-2xl bg-[var(--card)] border border-[var(--border)] text-[var(--card-foreground)]"
+	>
+		<h2
+			class="text-lg sm:text-xl font-semibold mb-1 group-hover:text-[var(--accent)] transition-colors line-clamp-2"
+		>
+			{post.frontmatter?.title ?? post.slug}
+		</h2>
+		{
+			post.frontmatter?.excerpt && (
+				<p class="text-sm opacity-80 mb-2 line-clamp-3">
+					{post.frontmatter.excerpt}
+				</p>
+			)
+		}
+		{
+			post.frontmatter?.tags && (
+				<div class="flex flex-wrap gap-1.5 mb-2">
+					{post.frontmatter.tags.map((tag: string) => (
+						<span class="px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px] sm:text-xs font-medium">
+							{tag}
+						</span>
+					))}
+				</div>
+			)
+		}
+		{
+			post.frontmatter?.date && (
+				<small class="text-[11px] opacity-60">{post.frontmatter.date}</small>
+			)
+		}
+	</article>
+
+	<style is:global>
+		/* Line clamp utility if Tailwind plugin isn't present */
+		.line-clamp-2 {
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+		.line-clamp-3 {
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+	</style>
+</a>

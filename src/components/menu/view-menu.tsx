@@ -32,6 +32,7 @@ export function ViewMenu({ theme }: ViewMenuProps) {
 				style={{
 					backgroundColor: theme.menuBarBackground,
 					border: `1px solid ${theme.menuBarBorder}`,
+					color: theme.textColor,
 				}}
 			>
 				<MenubarCheckboxItem
@@ -47,20 +48,63 @@ export function ViewMenu({ theme }: ViewMenuProps) {
 					Show Status Bar
 				</MenubarCheckboxItem>
 				<MenubarSeparator style={{ backgroundColor: theme.menuBarBorder }} />
-				<MenubarItem className="rounded-none text-xs font-medium">
+				<MenubarItem
+					className="rounded-none text-xs font-medium"
+					onClick={() =>
+						document.documentElement.style.setProperty(
+							"--zoom",
+							(
+								(parseFloat(
+									getComputedStyle(document.documentElement).getPropertyValue(
+										"--zoom"
+									)
+								) || 1) + 0.1
+							).toString()
+						)
+					}
+				>
 					Zoom In
 					<MenubarShortcut>⌘+</MenubarShortcut>
 				</MenubarItem>
-				<MenubarItem className="rounded-none text-xs font-medium">
+				<MenubarItem
+					className="rounded-none text-xs font-medium"
+					onClick={() =>
+						document.documentElement.style.setProperty(
+							"--zoom",
+							Math.max(
+								0.5,
+								(parseFloat(
+									getComputedStyle(document.documentElement).getPropertyValue(
+										"--zoom"
+									)
+								) || 1) - 0.1
+							).toString()
+						)
+					}
+				>
 					Zoom Out
 					<MenubarShortcut>⌘-</MenubarShortcut>
 				</MenubarItem>
-				<MenubarItem className="rounded-none text-xs font-medium">
+				<MenubarItem
+					className="rounded-none text-xs font-medium"
+					onClick={() =>
+						document.documentElement.style.setProperty("--zoom", "1")
+					}
+				>
 					Reset Zoom
 					<MenubarShortcut>⌘0</MenubarShortcut>
 				</MenubarItem>
 				<MenubarSeparator style={{ backgroundColor: theme.menuBarBorder }} />
-				<MenubarItem className="rounded-none text-xs font-medium">
+				<MenubarItem
+					className="rounded-none text-xs font-medium"
+					onClick={async () => {
+						if (!document.fullscreenElement) {
+							await document.documentElement.requestFullscreen();
+						} else {
+							await document.exitFullscreen();
+						}
+					}}
+				>
 					Toggle Fullscreen
 					<MenubarShortcut>F11</MenubarShortcut>
 				</MenubarItem>

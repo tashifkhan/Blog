@@ -36,14 +36,17 @@ export function MenuBar({
 	};
 
 	return (
-		<div className="w-full shadow-sm sticky top-0 z-50" style={styles.menuBar}>
+		<div
+			className="w-full shadow-sm sticky top-0 z-50"
+			style={{ ...styles.menuBar, color: theme.textColor }}
+		>
 			<div className="container mx-auto flex items-center h-6">
 				<div className="flex items-center mr-4">
 					<Apple size={16} className="text-black" />
 				</div>
 				<Menubar className="border-none bg-transparent h-6 p-0 flex space-x-0">
-					<FileMenu theme={theme} />
-					<EditMenu theme={theme} /> 
+					<FileMenu theme={theme} recentPosts={recentPosts} />
+					<EditMenu theme={theme} onFind={focusSearch} />
 					<ViewMenu theme={theme} />
 					<NavigateMenu theme={theme} setWindowTitle={setWindowTitle} />
 					<AppearanceMenu theme={theme} />

@@ -1,52 +1,52 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import { getAllPosts, getPostBySlug } from "@/lib/posts";
 
-export async function getStaticPaths(): Promise<
-	{ params: { slug: string } }[]
-> {
-	const posts: any[] = await Astro.glob("../../blogs/*.mdx");
-	return posts.map((post: any) => ({
-		params: {
-			slug: post.file
-				?.split("/")
-				.pop()
-				?.replace(/\.mdx$/, ""),
-		},
-	}));
+export const prerender = true;
+
+export async function getStaticPaths() {
+	const posts = await getAllPosts();
+	return posts.map((p) => ({ params: { slug: p.slug } }));
 }
 
 const { slug } = Astro.params;
-const posts: any[] = await Astro.glob("../../blogs/*.mdx");
-const post = posts.find(
-	(p: any) =>
-		p.file &&
-		p.file
-			.split("/")
-			.pop()
-			?.replace(/\.mdx$/, "") === slug
-);
+const post = await getPostBySlug(slug!);
 ---
 
 <Layout>
 	{
 		post ? (
-			<article>
-				<h1>{post.frontmatter.title}</h1>
-				<p>
-					<small>{post.frontmatter.date}</small>
-				</p>
-				{post.frontmatter.tags && (
-					<div>
-						{post.frontmatter.tags.map((tag: string) => (
-							<span>{tag} </span>
-						))}
-					</div>
-				)}
-				<p>{post.frontmatter.excerpt}</p>
-				<post.default />
+			<article class="max-w-3xl mx-auto p-5 sm:p-8 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-lg mt-6 sm:mt-8">
+				<header class="mb-6 sm:mb-8">
+					<h1 class="text-2xl sm:text-4xl font-bold mb-2 text-[var(--accent)]">
+						{post.frontmatter.title}
+					</h1>
+					{post.frontmatter.date && (
+						<p class="text-xs sm:text-sm opacity-70 mb-2">
+							{post.frontmatter.date}
+						</p>
+					)}
+					{post.frontmatter.tags && (
+						<div class="flex flex-wrap gap-1.5 sm:gap-2 mb-2">
+							{post.frontmatter.tags.map((tag: any) => (
+								<span class="px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px] sm:text-xs font-medium">
+									{tag}
+								</span>
+							))}
+						</div>
+					)}
+					{post.frontmatter.excerpt && (
+						<p class="text-base sm:text-lg opacity-80 mt-2">
+							{post.frontmatter.excerpt}
+						</p>
+					)}
+				</header>
+				<div class="prose prose-sm sm:prose prose-invert max-w-none text-[var(--card-foreground)]">
+					<post.Content />
+				</div>
 			</article>
 		) : (
-			<div>Post not found.</div>
+			<div class="max-w-2xl mx-auto p-8 text-center">Post not found.</div>
 		)
 	}
 </Layout>

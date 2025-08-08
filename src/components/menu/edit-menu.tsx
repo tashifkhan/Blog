@@ -10,9 +10,10 @@ import {
 
 interface EditMenuProps {
 	theme: any;
+	onFind?: () => void;
 }
 
-export function EditMenu({ theme }: EditMenuProps) {
+export function EditMenu({ theme, onFind }: EditMenuProps) {
 	return (
 		<MenubarMenu>
 			<MenubarTrigger
@@ -31,6 +32,7 @@ export function EditMenu({ theme }: EditMenuProps) {
 				style={{
 					backgroundColor: theme.menuBarBackground,
 					border: `1px solid ${theme.menuBarBorder}`,
+					color: theme.textColor,
 				}}
 			>
 				<MenubarItem className="rounded-none text-xs font-medium">
@@ -60,7 +62,11 @@ export function EditMenu({ theme }: EditMenuProps) {
 					<MenubarShortcut>⌘A</MenubarShortcut>
 				</MenubarItem>
 				<MenubarSeparator style={{ backgroundColor: theme.menuBarBorder }} />
-				<MenubarItem className="rounded-none text-xs font-medium">
+				<MenubarItem
+					className="rounded-none text-xs font-medium"
+					onClick={() => onFind?.()}
+					role="menuitem"
+				>
 					Find
 					<MenubarShortcut>⌘F</MenubarShortcut>
 				</MenubarItem>

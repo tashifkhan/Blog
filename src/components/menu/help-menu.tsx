@@ -30,6 +30,7 @@ export function HelpMenu({ theme }: HelpMenuProps) {
 				style={{
 					backgroundColor: theme.menuBarBackground,
 					border: `1px solid ${theme.menuBarBorder}`,
+					color: theme.textColor,
 				}}
 			>
 				<MenubarItem className="rounded-none text-xs font-medium">

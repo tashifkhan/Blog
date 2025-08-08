@@ -1,0 +1,28 @@
+---
+import PostCard from "./PostCard.astro";
+const { posts, ariaLabel = "Posts" } = Astro.props as {
+	posts: Array<{ slug: string; frontmatter: any }>;
+	ariaLabel?: string;
+};
+---
+
+<ul
+	role="list"
+	aria-label={ariaLabel}
+	class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+>
+	{
+		posts.map((post) => (
+			<li role="listitem">
+				<PostCard post={post} />
+			</li>
+		))
+	}
+	{
+		posts.length === 0 && (
+			<li role="listitem" class="text-sm opacity-80">
+				No posts available.
+			</li>
+		)
+	}
+</ul>
