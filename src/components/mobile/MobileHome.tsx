@@ -8,7 +8,7 @@ import type { Post } from "@/types/post";
 import SearchModal from "@/components/search/search-modal";
 
 export function MobileHome() {
-	const [theme, setThemeState] = useState(activeTheme);
+	const [theme, setThemeState] = useState<any>(activeTheme);
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [query, setQuery] = useState("");
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -345,7 +345,7 @@ export function MobileHome() {
 									Keyboard Shortcuts
 								</a>
 								<a
-									href="https://astro.build"
+									href="https://tashif.codes"
 									className="block px-2 py-1 text-xs no-underline"
 									target="_blank"
 									rel="noreferrer"

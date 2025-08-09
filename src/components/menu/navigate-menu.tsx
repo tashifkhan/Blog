@@ -54,7 +54,7 @@ export function NavigateMenu({ theme, setWindowTitle }: NavigateMenuProps) {
 						<MenubarShortcut>⌘B</MenubarShortcut>
 					</MenubarItem>
 				</a>
-				<a href="https://tashif.codes/" className="no-underline">
+				<a href="https://tashif.codes/projects" className="no-underline">
 					<MenubarItem
 						className="rounded-none text-xs font-medium"
 						role="menuitem"

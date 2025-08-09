@@ -33,9 +33,14 @@ export function HelpMenu({ theme }: HelpMenuProps) {
 					color: theme.textColor,
 				}}
 			>
-				<MenubarItem className="rounded-none text-xs font-medium">
-					Documentation
-				</MenubarItem>
+				<a href="https://tashif.codes" className="no-underline">
+					<MenubarItem
+						className="rounded-none text-xs font-medium"
+						role="menuitem"
+					>
+						Documentation
+					</MenubarItem>
+				</a>
 				<MenubarItem className="rounded-none text-xs font-medium">
 					Keyboard Shortcuts
 				</MenubarItem>
