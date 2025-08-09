@@ -20,7 +20,29 @@ export function MobilePostReader({
 
 	useEffect(() => {
 		setThemeState(activeTheme);
-		const onChange = () => setThemeState(activeTheme);
+		
+		// Sync theme variables to CSS
+		const syncThemeVars = () => {
+			if (typeof document !== "undefined") {
+				const root = document.documentElement;
+				const currentTheme = activeTheme;
+
+				root.style.setProperty("--theme-bg", currentTheme.backgroundColor);
+				root.style.setProperty("--theme-text", currentTheme.textColor);
+				root.style.setProperty("--theme-accent", currentTheme.accentColor);
+				root.style.setProperty("--theme-border", currentTheme.borderColor);
+				root.style.setProperty("--theme-window-bg", currentTheme.windowBackground);
+				root.style.setProperty("--theme-muted", currentTheme.menuBarBackground);
+				root.style.setProperty("--theme-secondary", currentTheme.statusBarBackground);
+			}
+		};
+		
+		syncThemeVars();
+		
+		const onChange = () => {
+			setThemeState(activeTheme);
+			syncThemeVars();
+		};
 		window.addEventListener("themechange", onChange);
 		return () => window.removeEventListener("themechange", onChange);
 	}, []);
@@ -113,6 +135,44 @@ export function MobilePostReader({
 	};
 
 	return (
+		<>
+			<style>
+				{`
+					.mobile-content * {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content h1,
+					.mobile-content h2,
+					.mobile-content h3,
+					.mobile-content h4,
+					.mobile-content h5,
+					.mobile-content h6 {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content p {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content li {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content strong {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content em {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content a {
+						color: var(--theme-accent) !important;
+					}
+					.mobile-content code {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content td,
+					.mobile-content th {
+						color: var(--theme-text) !important;
+					}
+				`}
+			</style>
 		<div
 			className="min-h-screen flex flex-col"
 			style={{
@@ -294,9 +354,9 @@ export function MobilePostReader({
 					</header>
 
 					<div
-						className="prose prose-sm sm:prose"
+						className="max-w-none mobile-content"
 						style={{
-							color: "var(--theme-text)",
+							color: "var(--theme-text) !important",
 							fontSize: `calc(var(--reader-font-scale, 1) * 1rem)`,
 							lineHeight: `var(--reader-line-height, 1.6)`,
 						}}
@@ -315,5 +375,6 @@ export function MobilePostReader({
 				</div>
 			</footer>
 		</div>
+		</>
 	);
 }
