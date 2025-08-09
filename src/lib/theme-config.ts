@@ -356,7 +356,7 @@ export const liquidGlassDarkTheme: ThemeConfig = {
   hoverBoxShadow: "0 18px 50px rgba(0,0,0,0.6)",
 };
 
-// Get the stored theme from localStorage or default to macClassic
+// Get the stored theme from localStorage or default to neoBrutalism
 function getStoredTheme(): ThemeConfig {
   if (typeof window !== 'undefined') {
     const storedThemeName = localStorage.getItem('blog-theme-preference');
@@ -364,7 +364,7 @@ function getStoredTheme(): ThemeConfig {
       return allThemes[storedThemeName as ThemeName];
     }
   }
-  return macClassicTheme;
+  return neoBrutalismTheme;
 }
 
 // List of all available themes
@@ -389,7 +389,7 @@ export let activeTheme: ThemeConfig = getStoredTheme();
 
 // Function to change the active theme
 export function setTheme(themeName: string) {
-  const newTheme = allThemes[themeName as ThemeName] || macClassicTheme;
+  const newTheme = allThemes[themeName as ThemeName] || neoBrutalismTheme;
   activeTheme = newTheme;
   
   // Save theme preference to localStorage
