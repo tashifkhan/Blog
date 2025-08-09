@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { activeTheme, allThemes, setTheme } from "@/lib/theme-config";
-import type { ThemeConfig } from "@/lib/theme-config";
-import { EngagementPanel } from "@/components/EngagementPanel";
 
 interface MobilePostReaderProps {
 	title?: string;
@@ -9,7 +7,6 @@ interface MobilePostReaderProps {
 	excerpt?: string;
 	tags?: string[];
 	children?: React.ReactNode;
-	slug?: string;
 }
 
 export function MobilePostReader({
@@ -18,7 +15,6 @@ export function MobilePostReader({
 	excerpt,
 	tags,
 	children,
-	slug,
 }: MobilePostReaderProps) {
 	const [theme, setThemeState] = useState(activeTheme);
 
@@ -148,32 +144,125 @@ export function MobilePostReader({
 		<>
 			<style>
 				{`
-					.mobile-content {
-						color: var(--theme-text);
+					.mobile-content * {
+						color: var(--theme-text) !important;
 					}
-					.mobile-content h1, .mobile-content h2, .mobile-content h3, .mobile-content h4, .mobile-content h5, .mobile-content h6 {
-						color: var(--theme-text);
+					.mobile-content h1,
+					.mobile-content h2,
+					.mobile-content h3,
+					.mobile-content h4,
+					.mobile-content h5,
+					.mobile-content h6 {
+						color: var(--theme-text) !important;
 					}
-					.mobile-content p, .mobile-content li, .mobile-content strong, .mobile-content em, .mobile-content td, .mobile-content th {
-						color: var(--theme-text);
+					.mobile-content p {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content li {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content strong {
+						color: var(--theme-text) !important;
+					}
+					.mobile-content em {
+						color: var(--theme-text) !important;
 					}
 					.mobile-content a {
-						color: var(--theme-accent);
+						color: var(--theme-accent) !important;
 					}
-					.mobile-content pre[class*="language-"] {
-						background-color: #282c34 !important;
-						color: #abb2bf !important;
+					.mobile-content code {
+						color: var(--theme-text) !important;
 					}
+					.mobile-content td,
+					.mobile-content th {
+						color: var(--theme-text) !important;
+					}
+					/* Make text in black code blocks always white */
+					.mobile-content pre[style*="background-color: black"] code,
+					.mobile-content pre[style*="background-color:#000"] code,
+					.mobile-content pre[style*="background: black"] code,
+					.mobile-content pre[style*="background:#000"] code,
+					.mobile-content pre[style*="background-color: rgb(0, 0, 0)"] code,
+					.mobile-content pre[style*="background: rgb(0, 0, 0)"] code,
+					.mobile-content pre.black-code-block code,
+					.mobile-content .black-code-block code,
+					.mobile-content .code-block-wrapper[style*="background: black"] pre code,
+					.mobile-content .code-block-wrapper[style*="background-color: black"] pre code,
+					.mobile-content .code-block-wrapper[style*="background:#000"] pre code,
+					.mobile-content .code-block-wrapper[style*="background-color:#000"] pre code {
+						color: white !important;
+					}
+					/* Ensure black code blocks themselves have white text */
+					.mobile-content pre[style*="background-color: black"],
+					.mobile-content pre[style*="background-color:#000"],
+					.mobile-content pre[style*="background: black"],
+					.mobile-content pre[style*="background:#000"],
+					.mobile-content pre[style*="background-color: rgb(0, 0, 0)"],
+					.mobile-content pre[style*="background: rgb(0, 0, 0)"],
+					.mobile-content pre.black-code-block,
+					.mobile-content .black-code-block,
+					.mobile-content .code-block-wrapper[style*="background: black"] pre,
+					.mobile-content .code-block-wrapper[style*="background-color: black"] pre,
+					.mobile-content .code-block-wrapper[style*="background:#000"] pre,
+					.mobile-content .code-block-wrapper[style*="background-color:#000"] pre {
+						color: white !important;
+					}
+					/* Target code blocks with black/dark backgrounds more broadly */
+					.mobile-content pre[style*="background: rgba(0, 0, 0"] code,
+					.mobile-content pre[style*="background-color: rgba(0, 0, 0"] code,
+					.mobile-content .code-block-wrapper pre[style*="background: rgba(0, 0, 0"] code,
+					.mobile-content .code-block-wrapper pre[style*="background-color: rgba(0, 0, 0"] code {
+						color: white !important;
+					}
+					/* Override all code blocks with specific dark background classes */
+					.mobile-content pre[class*="language-"],
+					.mobile-content .code-block-wrapper pre[class*="language-"] {
+						color: white !important;
+					}
+					.mobile-content pre[class*="language-"] code,
+					.mobile-content .code-block-wrapper pre[class*="language-"] code,
+					.mobile-content pre[class*="language-"] *,
+					.mobile-content .code-block-wrapper pre[class*="language-"] * {
+						color: white !important;
+					}
+					/* Specifically target prism.js classes that might have dark backgrounds */
 					.mobile-content .token.comment,
 					.mobile-content .token.prolog,
 					.mobile-content .token.doctype,
-					.mobile-content .token.cdata {
-						color: #5c6370;
+					.mobile-content .token.cdata,
+					.mobile-content .token.punctuation,
+					.mobile-content .token.string,
+					.mobile-content .token.char,
+					.mobile-content .token.attr-value,
+					.mobile-content .token.regex,
+					.mobile-content .token.variable,
+					.mobile-content .token.number,
+					.mobile-content .token.boolean,
+					.mobile-content .token.constant,
+					.mobile-content .token.symbol,
+					.mobile-content .token.deleted,
+					.mobile-content .token.operator,
+					.mobile-content .token.entity,
+					.mobile-content .token.url,
+					.mobile-content .token.function,
+					.mobile-content .token.keyword,
+					.mobile-content .token.selector,
+					.mobile-content .token.important,
+					.mobile-content .token.atrule,
+					.mobile-content .token.builtin,
+					.mobile-content .token.attr-name,
+					.mobile-content .token.inserted {
+						color: white !important;
 					}
-					.mobile-content .token.punctuation {
-						color: #abb2bf;
+					/* Additional override for ALL code blocks to ensure white text */
+					.mobile-content pre,
+					.mobile-content pre code,
+					.mobile-content .code-block-wrapper pre,
+					.mobile-content .code-block-wrapper pre code,
+					.mobile-content pre *,
+					.mobile-content .code-block-wrapper pre * {
+						color: white !important;
 					}
-					/* Other prism styles here */
 				`}
 			</style>
 			<div
@@ -373,17 +462,6 @@ export function MobilePostReader({
 							{children}
 						</div>
 					</article>
-
-					{slug && (
-						<div
-							className="mx-auto mt-4"
-							style={{
-								maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`,
-							}}
-						>
-							<EngagementPanel slug={slug} theme={theme} />
-						</div>
-					)}
 				</main>
 
 				<footer
