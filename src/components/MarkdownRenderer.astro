@@ -129,15 +129,16 @@ function enhanceHtml(rawHtml: string): string {
 
 	// Code blocks with language labels; themed with CSS variables
 	html = html.replace(
-		/<pre class="([^"]*)language-([^"]*)"([^>]*)>([\s\S]*?)<\/pre>/g,
+		/<pre(?: class="([^"]*)language-([^"]*)")?([^>]*)>([\s\S]*?)<\/pre>/g,
 		(
 			match: string,
-			classes: string,
-			language: string,
-			rest: string,
+			classes: string | undefined,
+			language: string | undefined,
+			rest: string | undefined,
 			content: string
 		) => {
-			const langLabel = language !== "text" ? language.toUpperCase() : "";
+			const lang = language || "text";
+			const langLabel = lang !== "text" ? lang.toUpperCase() : "";
 			const langLabelHtml = langLabel
 				? '<div class="language-label text-xs sm:text-sm">' +
 					langLabel +
@@ -150,11 +151,11 @@ function enhanceHtml(rawHtml: string): string {
 				langLabelHtml +
 				copyButton +
 				'<pre class="' +
-				classes +
+				(classes || "") +
 				" language-" +
-				language +
+				lang +
 				'"' +
-				rest +
+				(rest || "") +
 				">" +
 				content +
 				"</pre></div>"

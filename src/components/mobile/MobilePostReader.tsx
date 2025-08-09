@@ -20,7 +20,7 @@ export function MobilePostReader({
 
 	useEffect(() => {
 		setThemeState(activeTheme);
-		
+
 		// Sync theme variables to CSS
 		const syncThemeVars = () => {
 			if (typeof document !== "undefined") {
@@ -31,14 +31,20 @@ export function MobilePostReader({
 				root.style.setProperty("--theme-text", currentTheme.textColor);
 				root.style.setProperty("--theme-accent", currentTheme.accentColor);
 				root.style.setProperty("--theme-border", currentTheme.borderColor);
-				root.style.setProperty("--theme-window-bg", currentTheme.windowBackground);
+				root.style.setProperty(
+					"--theme-window-bg",
+					currentTheme.windowBackground
+				);
 				root.style.setProperty("--theme-muted", currentTheme.menuBarBackground);
-				root.style.setProperty("--theme-secondary", currentTheme.statusBarBackground);
+				root.style.setProperty(
+					"--theme-secondary",
+					currentTheme.statusBarBackground
+				);
 			}
 		};
-		
+
 		syncThemeVars();
-		
+
 		const onChange = () => {
 			setThemeState(activeTheme);
 			syncThemeVars();
@@ -173,208 +179,214 @@ export function MobilePostReader({
 					}
 				`}
 			</style>
-		<div
-			className="min-h-screen flex flex-col"
-			style={{
-				background: getRootBackground(),
-				color: theme.textColor,
-				fontFamily: theme.fontFamily,
-			}}
-		>
-			{/* Reader toolbar */}
-			<header
-				className="sticky top-0 z-50 border-b"
-				style={getHeaderStyle()}
-				aria-label="Reader toolbar"
+			<div
+				className="min-h-screen flex flex-col"
+				style={{
+					background: getRootBackground(),
+					color: theme.textColor,
+					fontFamily: theme.fontFamily,
+				}}
 			>
-				<div className="flex items-center justify-between px-3 h-12">
-					<a
-						href="/"
-						className="text-sm font-bold no-underline"
-						style={{ color: theme.textColor }}
-					>
-						← Home
-					</a>
-					<div className="flex items-center gap-2">
-						<details className="relative">
-							<summary
-								className="list-none text-xs px-2 py-1 rounded"
-								style={{ border: `1px solid ${theme.borderColor}` }}
-							>
-								Aa
-							</summary>
-							<div
-								className="absolute right-0 mt-2 w-60 rounded shadow border p-2"
-								style={{
-									background: theme.menuBarBackground,
-									borderColor: theme.menuBarBorder,
-								}}
-							>
-								<div className="text-[11px] opacity-70 mb-1">Appearance</div>
-								<div className="grid grid-cols-2 gap-1 max-h-40 overflow-auto mb-2">
-									{Object.entries(allThemes).map(([key, t]) => (
-										<button
-											key={key}
-											className="text-xs px-2 py-1 rounded border"
-											style={{
-												borderColor: theme.borderColor,
-												fontWeight: t.name === theme.name ? 700 : 400,
-											}}
-											onClick={() => setTheme(key)}
-										>
-											{t.name}
-										</button>
-									))}
-								</div>
-								<div className="text-[11px] opacity-70 mb-1">Typography</div>
-								<div className="flex items-center justify-between mb-2">
-									<span className="text-xs">Font size</span>
-									<div className="flex items-center gap-2">
-										<button
-											className="text-xs px-2 py-1 rounded border"
-											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												inc("--reader-font-scale", -0.05, 0.85, 1.4)
-											}
-										>
-											-
-										</button>
-										<span
-											className="text-xs w-10 text-center"
-											aria-live="polite"
-										>
-											{Math.round(getVar("--reader-font-scale", 1) * 100)}%
-										</span>
-										<button
-											className="text-xs px-2 py-1 rounded border"
-											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												inc("--reader-font-scale", 0.05, 0.85, 1.4)
-											}
-										>
-											+
-										</button>
-									</div>
-								</div>
-								<div className="flex items-center justify-between mb-2">
-									<span className="text-xs">Line height</span>
-									<div className="flex items-center gap-2">
-										<button
-											className="text-xs px-2 py-1 rounded border"
-											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												inc("--reader-line-height", -0.1, 1.3, 2.0)
-											}
-										>
-											-
-										</button>
-										<span
-											className="text-xs w-10 text-center"
-											aria-live="polite"
-										>
-											{getVar("--reader-line-height", 1.7).toFixed(1)}
-										</span>
-										<button
-											className="text-xs px-2 py-1 rounded border"
-											style={{ borderColor: theme.borderColor }}
-											onClick={() => inc("--reader-line-height", 0.1, 1.3, 2.0)}
-										>
-											+
-										</button>
-									</div>
-								</div>
-								<div className="flex items-center justify-between">
-									<span className="text-xs">Content width</span>
-									<div className="flex items-center gap-2">
-										<button
-											className="text-xs px-2 py-1 rounded border"
-											style={{ borderColor: theme.borderColor }}
-											onClick={() => inc("--reader-content-width", -2, 34, 60)}
-										>
-											-
-										</button>
-										<span
-											className="text-xs w-10 text-center"
-											aria-live="polite"
-										>
-											{getVar("--reader-content-width", 42)}ch
-										</span>
-										<button
-											className="text-xs px-2 py-1 rounded border"
-											style={{ borderColor: theme.borderColor }}
-											onClick={() => inc("--reader-content-width", 2, 34, 60)}
-										>
-											+
-										</button>
-									</div>
-								</div>
-							</div>
-						</details>
-					</div>
-				</div>
-			</header>
-
-			<main className="px-4 py-5">
-				<article
-					className="mx-auto rounded border p-3"
-					style={{
-						maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`,
-						...getArticleCardStyle(),
-					}}
+				{/* Reader toolbar */}
+				<header
+					className="sticky top-0 z-50 border-b"
+					style={getHeaderStyle()}
+					aria-label="Reader toolbar"
 				>
-					<header className="mb-4">
-						<h1
-							className="text-2xl font-extrabold mb-2"
-							style={{ color: theme.accentColor }}
+					<div className="flex items-center justify-between px-3 h-12">
+						<a
+							href="/"
+							className="text-sm font-bold no-underline"
+							style={{ color: theme.textColor }}
 						>
-							{title}
-						</h1>
-						{date && (
-							<div className="text-xs opacity-70 mb-1">
-								{new Date(date).toLocaleDateString()}
-							</div>
-						)}
-						{tags && tags.length > 0 && (
-							<div className="flex flex-wrap gap-1 mb-2">
-								{tags.map((t) => (
-									<span
-										key={t}
-										className="px-2 py-0.5 rounded text-[10px]"
-										style={{
-											background: theme.accentColor,
-											color: theme.windowBackground,
-										}}
-									>
-										{t}
-									</span>
-								))}
-							</div>
-						)}
-						{excerpt && <p className="text-sm opacity-80 italic">{excerpt}</p>}
-					</header>
+							← Home
+						</a>
+						<div className="flex items-center gap-2">
+							<details className="relative">
+								<summary
+									className="list-none text-xs px-2 py-1 rounded"
+									style={{ border: `1px solid ${theme.borderColor}` }}
+								>
+									Aa
+								</summary>
+								<div
+									className="absolute right-0 mt-2 w-60 rounded shadow border p-2"
+									style={{
+										background: theme.menuBarBackground,
+										borderColor: theme.menuBarBorder,
+									}}
+								>
+									<div className="text-[11px] opacity-70 mb-1">Appearance</div>
+									<div className="grid grid-cols-2 gap-1 max-h-40 overflow-auto mb-2">
+										{Object.entries(allThemes).map(([key, t]) => (
+											<button
+												key={key}
+												className="text-xs px-2 py-1 rounded border"
+												style={{
+													borderColor: theme.borderColor,
+													fontWeight: t.name === theme.name ? 700 : 400,
+												}}
+												onClick={() => setTheme(key)}
+											>
+												{t.name}
+											</button>
+										))}
+									</div>
+									<div className="text-[11px] opacity-70 mb-1">Typography</div>
+									<div className="flex items-center justify-between mb-2">
+										<span className="text-xs">Font size</span>
+										<div className="flex items-center gap-2">
+											<button
+												className="text-xs px-2 py-1 rounded border"
+												style={{ borderColor: theme.borderColor }}
+												onClick={() =>
+													inc("--reader-font-scale", -0.05, 0.85, 1.4)
+												}
+											>
+												-
+											</button>
+											<span
+												className="text-xs w-10 text-center"
+												aria-live="polite"
+											>
+												{Math.round(getVar("--reader-font-scale", 1) * 100)}%
+											</span>
+											<button
+												className="text-xs px-2 py-1 rounded border"
+												style={{ borderColor: theme.borderColor }}
+												onClick={() =>
+													inc("--reader-font-scale", 0.05, 0.85, 1.4)
+												}
+											>
+												+
+											</button>
+										</div>
+									</div>
+									<div className="flex items-center justify-between mb-2">
+										<span className="text-xs">Line height</span>
+										<div className="flex items-center gap-2">
+											<button
+												className="text-xs px-2 py-1 rounded border"
+												style={{ borderColor: theme.borderColor }}
+												onClick={() =>
+													inc("--reader-line-height", -0.1, 1.3, 2.0)
+												}
+											>
+												-
+											</button>
+											<span
+												className="text-xs w-10 text-center"
+												aria-live="polite"
+											>
+												{getVar("--reader-line-height", 1.7).toFixed(1)}
+											</span>
+											<button
+												className="text-xs px-2 py-1 rounded border"
+												style={{ borderColor: theme.borderColor }}
+												onClick={() =>
+													inc("--reader-line-height", 0.1, 1.3, 2.0)
+												}
+											>
+												+
+											</button>
+										</div>
+									</div>
+									<div className="flex items-center justify-between">
+										<span className="text-xs">Content width</span>
+										<div className="flex items-center gap-2">
+											<button
+												className="text-xs px-2 py-1 rounded border"
+												style={{ borderColor: theme.borderColor }}
+												onClick={() =>
+													inc("--reader-content-width", -2, 34, 60)
+												}
+											>
+												-
+											</button>
+											<span
+												className="text-xs w-10 text-center"
+												aria-live="polite"
+											>
+												{getVar("--reader-content-width", 42)}ch
+											</span>
+											<button
+												className="text-xs px-2 py-1 rounded border"
+												style={{ borderColor: theme.borderColor }}
+												onClick={() => inc("--reader-content-width", 2, 34, 60)}
+											>
+												+
+											</button>
+										</div>
+									</div>
+								</div>
+							</details>
+						</div>
+					</div>
+				</header>
 
-					<div
-						className="max-w-none mobile-content"
+				<main className="px-4 py-5">
+					<article
+						className="mx-auto rounded border p-3"
 						style={{
-							color: "var(--theme-text) !important",
-							fontSize: `calc(var(--reader-font-scale, 1) * 1rem)`,
-							lineHeight: `var(--reader-line-height, 1.6)`,
+							maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`,
+							...getArticleCardStyle(),
 						}}
 					>
-						{children}
-					</div>
-				</article>
-			</main>
+						<header className="mb-4">
+							<h1
+								className="text-2xl font-extrabold mb-2"
+								style={{ color: theme.accentColor }}
+							>
+								{title}
+							</h1>
+							{date && (
+								<div className="text-xs opacity-70 mb-1">
+									{new Date(date).toLocaleDateString()}
+								</div>
+							)}
+							{tags && tags.length > 0 && (
+								<div className="flex flex-wrap gap-1 mb-2">
+									{tags.map((t) => (
+										<span
+											key={t}
+											className="px-2 py-0.5 rounded text-[10px]"
+											style={{
+												background: theme.accentColor,
+												color: theme.windowBackground,
+											}}
+										>
+											{t}
+										</span>
+									))}
+								</div>
+							)}
+							{excerpt && (
+								<p className="text-sm opacity-80 italic">{excerpt}</p>
+							)}
+						</header>
 
-			<footer
-				className="mt-auto px-4 py-3 border-t"
-				style={{ borderColor: theme.menuBarBorder }}
-			>
-				<div className="text-[10px] opacity-70">
-					© {new Date().getFullYear()} BlogOS
-				</div>
-			</footer>
-		</div>
+						<div
+							className="max-w-none mobile-content"
+							style={{
+								color: "var(--theme-text) !important",
+								fontSize: `calc(var(--reader-font-scale, 1) * 1rem)`,
+								lineHeight: `var(--reader-line-height, 1.6)`,
+							}}
+						>
+							{children}
+						</div>
+					</article>
+				</main>
+
+				<footer
+					className="mt-auto px-4 py-3 border-t"
+					style={{ borderColor: theme.menuBarBorder }}
+				>
+					<div className="text-[10px] opacity-70">
+						© {new Date().getFullYear()} BlogOS
+					</div>
+				</footer>
+			</div>
 		</>
 	);
 }
