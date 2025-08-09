@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import vercel from "@astrojs/vercel/edge";
+import vercel from "@astrojs/vercel/serverless";
 
 // https://astro.build/config
 export default defineConfig({
@@ -22,6 +22,8 @@ export default defineConfig({
     }
   },
   site: 'https://blog.tashif.codes/',
-  adapter: vercel(),
+  adapter: vercel({
+    functionPerRoute: false
+  }),
   integrations: [react(), mdx(), sitemap()]
 });
