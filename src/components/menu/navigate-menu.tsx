@@ -45,29 +45,33 @@ export function NavigateMenu({ theme, setWindowTitle }: NavigateMenuProps) {
 						<MenubarShortcut>⌘H</MenubarShortcut>
 					</MenubarItem>
 				</a>
-				<MenubarItem
-					className="rounded-none text-xs font-medium"
-					onClick={() => setWindowTitle("Blog - Blog")}
-				>
-					<a href="/blog/" className="no-underline">
+				<a href="/blog/" className="no-underline">
+					<MenubarItem
+						className="rounded-none text-xs font-medium"
+						role="menuitem"
+					>
 						Blog
-					</a>
-					<MenubarShortcut>⌘B</MenubarShortcut>
-				</MenubarItem>
-				<MenubarItem
-					className="rounded-none text-xs font-medium"
-					onClick={() => setWindowTitle("Blog - Projects")}
-				>
-					Projects
-					<MenubarShortcut>⌘P</MenubarShortcut>
-				</MenubarItem>
-				<MenubarItem
-					className="rounded-none text-xs font-medium"
-					onClick={() => setWindowTitle("Blog - About")}
-				>
-					About
-					<MenubarShortcut>⌘I</MenubarShortcut>
-				</MenubarItem>
+						<MenubarShortcut>⌘B</MenubarShortcut>
+					</MenubarItem>
+				</a>
+				<a href="https://tashif.codes/" className="no-underline">
+					<MenubarItem
+						className="rounded-none text-xs font-medium"
+						role="menuitem"
+					>
+						Projects
+						<MenubarShortcut>⌘P</MenubarShortcut>
+					</MenubarItem>
+				</a>
+				<a href="https://tashif.codes/resume" className="no-underline">
+					<MenubarItem
+						className="rounded-none text-xs font-medium"
+						role="menuitem"
+					>
+						About
+						<MenubarShortcut>⌘I</MenubarShortcut>
+					</MenubarItem>
+				</a>
 				<MenubarSeparator style={{ backgroundColor: theme.menuBarBorder }} />
 				<MenubarItem
 					className="rounded-none text-xs font-medium"
