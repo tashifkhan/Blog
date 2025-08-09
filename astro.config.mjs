@@ -15,7 +15,12 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-
+  // Disable image optimization for Vercel serverless compatibility
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/noop'
+    }
+  },
   site: 'https://blog.tashif.codes/',
   adapter: vercel(),
   integrations: [react(), mdx(), sitemap()]
