@@ -24,12 +24,18 @@ It mimics the look and feel of classic operating systems (Mac OS, Windows 95/XP,
   - NeoBrutalism
 - OS-like UI Components:
   - Menu bar with dropdown menus
-  - Windowed content areas
+  - Windowed content areas with controls
   - Status bar with social icons
+- Modular Architecture:
+  - Reusable window components
+  - Page-specific compositions
+  - Theme-aware components
 - Search Functionality:
   - Search posts by title, excerpt, or tags
+  - Modal search interface
 - Recent Posts Window:
   - Separate animated window for latest posts
+  - Can be shown/hidden independently
 - MDX Blog Support:
   - Write posts in `.mdx` format with frontmatter
 - Smooth Animations:
@@ -46,6 +52,14 @@ It mimics the look and feel of classic operating systems (Mac OS, Windows 95/XP,
 ```
 ├── src/
 │   ├── components/         # React UI components
+│   │   ├── Desktop.tsx     # Main desktop environment
+│   │   ├── HomePage.tsx    # Home page composition
+│   │   ├── BlogPage.tsx    # Blog listing page
+│   │   ├── BlogPostWrapper.tsx # Individual blog post wrapper
+│   │   ├── WelcomeWindow.tsx   # Welcome/home content window
+│   │   ├── BlogWindow.tsx      # Blog posts window
+│   │   ├── BlogPostPage.tsx    # Individual blog post window
+│   │   ├── RecentPostsWindow.tsx # Recent posts window
 │   │   ├── menu/           # Menu bar & dropdowns
 │   │   ├── posts/          # Post list & recent posts
 │   │   ├── sections/       # About & Projects sections

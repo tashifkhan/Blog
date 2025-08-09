@@ -171,6 +171,20 @@ export function Desktop({
 
 	// Recursively inject shared props into nested React elements (avoid adding to DOM nodes)
 	const injectPropsDeep = (element: React.ReactNode): React.ReactNode => {
+		// Handle arrays of nodes at the top level
+		if (Array.isArray(element)) {
+			return element.map((child) => injectPropsDeep(child));
+		}
+
+		// Preserve null/undefined/boolean as-is
+		if (
+			element === null ||
+			element === undefined ||
+			typeof element === "boolean"
+		) {
+			return element;
+		}
+
 		if (!React.isValidElement(element)) return element;
 
 		// Always process children first
