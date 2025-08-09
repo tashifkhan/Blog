@@ -200,6 +200,20 @@ export function MobileHome() {
 								>
 									Blog
 								</a>
+								<a
+									href="https://tashif.codes/projects"
+									className="block px-2 py-1 text-xs no-underline"
+									style={{ color: theme.textColor }}
+								>
+									Projects
+								</a>
+								<a
+									href="https://tashif.codes/resume"
+									className="block px-2 py-1 text-xs no-underline"
+									style={{ color: theme.textColor }}
+								>
+									About
+								</a>
 								<button
 									className="block w-full text-left px-2 py-1 text-xs"
 									onClick={() => window.history.back()}
