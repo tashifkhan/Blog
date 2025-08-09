@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import Analytics from "@vercel/analytics/astro";
 ---
 
 <!doctype html>
@@ -41,6 +42,7 @@ import "../styles/global.css";
 		<meta name="twitter:image" content="/favicon.png" />
 	</head>
 	<body>
+		<Analytics />
 		<slot />
 		<script>
 			// Sync theme variables with CSS custom properties
