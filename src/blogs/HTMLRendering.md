@@ -1,6 +1,13 @@
 ---
 title: "How a Webpage Magically Changes the Pixels on Your Screen: The Browser's Secret Journey"
 date: 2025-06-23
+author: "Tashif Ahmad Khan"
+socials:
+  [
+    "https://www.github.com/tashifkhan",
+    "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
+    "https://tashif.codes",
+  ]
 tags: ["html", "css", "javascript", "browser", "rendering"]
 excerpt: "A deep dive into the browser's rendering process."
 ---
