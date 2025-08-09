@@ -1,12 +1,15 @@
 {
-	"functions": {
-		"api/index.py": {
-			"runtime": "vercel-python@3.11",
-			"memory": 512,
-			"maxDuration": 20
+	"version": 2,
+	"builds": [
+		{
+			"src": "./app.py",
+			"use": "@vercel/python"
 		}
-	},
-	"installCommand": "pip install -r requirements.txt",
-	"routes": [{ "src": "/(.*)", "dest": "api/index.py" }],
-	"regions": ["iad1"]
+	],
+	"routes": [
+		{
+			"src": "/(.*)",
+			"dest": "/app.py"
+		}
+	]
 }
