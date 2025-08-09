@@ -1,4 +1,6 @@
-# BlogOS – A Themed Blog Website
+<h1 align="center"> BlogOS – A Themed Blog Website </h1>
+
+<img src="./public/favicon.png" align="center">
 
 **BlogOS** is a retro-inspired, multi-theme blog platform built with **Astro**, **React**, **TailwindCSS**, and **Framer Motion**.  
 It mimics the look and feel of classic operating systems (Mac OS, Windows 95/XP, Ubuntu, NeoBrutalism, etc.) while providing a modern, responsive, and animated blogging experience.
@@ -14,70 +16,26 @@ It mimics the look and feel of classic operating systems (Mac OS, Windows 95/XP,
 ## Features
 
 - Multiple Built-in Themes:
+
   - Mac Classic (System 8/9)
   - Mac OS X Aqua
-  - Modern macOS (Big Sur style)
-  - Dark Mode
+  - Modern macOS
+  - Dark Mode macOS
   - Windows 95
   - Windows XP
   - Ubuntu
   - NeoBrutalism
+  - Liquid Glass (both light & dark)
+
 - OS-like UI Components:
+
   - Menu bar with dropdown menus
   - Windowed content areas with controls
   - Status bar with social icons
-- Modular Architecture:
-  - Reusable window components
-  - Page-specific compositions
-  - Theme-aware components
-- Search Functionality:
-  - Search posts by title, excerpt, or tags
-  - Modal search interface
-- Recent Posts Window:
-  - Separate animated window for latest posts
-  - Can be shown/hidden independently
-- MDX Blog Support:
-  - Write posts in `.mdx` format with frontmatter
-- Smooth Animations:
-  - Powered by Framer Motion
-- Responsive Design:
-  - Works on desktop, tablet, and mobile
-- Customizable:
-  - Easily add new themes or modify existing ones in `src/lib/theme-config.ts`
 
----
-
-## Project Structure
-
-```
-├── src/
-│   ├── components/         # React UI components
-│   │   ├── Desktop.tsx     # Main desktop environment
-│   │   ├── HomePage.tsx    # Home page composition
-│   │   ├── BlogPage.tsx    # Blog listing page
-│   │   ├── BlogPostWrapper.tsx # Individual blog post wrapper
-│   │   ├── WelcomeWindow.tsx   # Welcome/home content window
-│   │   ├── BlogWindow.tsx      # Blog posts window
-│   │   ├── BlogPostPage.tsx    # Individual blog post window
-│   │   ├── RecentPostsWindow.tsx # Recent posts window
-│   │   ├── menu/           # Menu bar & dropdowns
-│   │   ├── posts/          # Post list & recent posts
-│   │   ├── sections/       # About & Projects sections
-│   │   ├── search/         # Search bar & results
-│   │   └── ui/             # Reusable UI elements
-│   ├── layouts/            # Astro layouts
-│   ├── lib/                # Theme configuration & utilities
-│   ├── pages/              # Astro pages & API routes
-│   ├── styles/             # Global styles
-│   └── types/              # TypeScript types
-├── blogs/                  # Your MDX blog posts
-├── package.json
-├── astro.config.mjs
-├── tsconfig.json
-└── README.md
-```
-
----
+- Optimised Mobile Layout
+- Reader Options
+- Dynamic Likes, Comments and Views
 
 ## Getting Started
 
@@ -118,8 +76,6 @@ Preview the production build:
 npm run preview
 ```
 
----
-
 ## Writing Blog Posts
 
 1. Create a new `.mdx` file in the `blogs/` directory.
@@ -139,8 +95,6 @@ This is my first post in **BlogOS**!
 ```
 
 3. The post will automatically appear in the blog list and search results.
-
----
 
 ## Customizing Themes
 
@@ -170,11 +124,12 @@ export const allThemes = {
 };
 ```
 
----
-
 ## API Routes
 
 - `/api/posts.json` – Returns all blog posts with metadata (used for search & recent posts).
+- `/api/like/[slug]`
+- `/api/view/[slug]`
+- `/api/comment/[slug]` - addes it in a form of a graph
 
 ---
 
@@ -183,9 +138,10 @@ export const allThemes = {
 - [ ] Add drag-and-drop window positioning
 - [ ] Add projects and all
 - [ ] Add Leetcode Problems solved
-- [ ] Add more OS-inspired themes (e.g., Windows 7, macOS Ventura)
-- [ ] Add post categories & filtering
+- [x] Add more OS-inspired themes (e.g., Windows 7, macOS 26)
+- [x] Add post categories & filtering
 - [ ] Add RSS feed support
+- [ ] Likes and Views
 - [ ] Add comment system
 
 ---
