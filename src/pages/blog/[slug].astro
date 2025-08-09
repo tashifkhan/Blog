@@ -1,6 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
+import { BlogPostWrapper } from "@/components/BlogPostWrapper";
 
 export const prerender = true;
 
@@ -16,35 +17,15 @@ const post = await getPostBySlug(slug!);
 <Layout>
 	{
 		post ? (
-			<article class="max-w-3xl mx-auto p-5 sm:p-8 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-lg mt-6 sm:mt-8">
-				<header class="mb-6 sm:mb-8">
-					<h1 class="text-2xl sm:text-4xl font-bold mb-2 text-[var(--accent)]">
-						{post.frontmatter.title}
-					</h1>
-					{post.frontmatter.date && (
-						<p class="text-xs sm:text-sm opacity-70 mb-2">
-							{post.frontmatter.date}
-						</p>
-					)}
-					{post.frontmatter.tags && (
-						<div class="flex flex-wrap gap-1.5 sm:gap-2 mb-2">
-							{post.frontmatter.tags.map((tag: any) => (
-								<span class="px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px] sm:text-xs font-medium">
-									{tag}
-								</span>
-							))}
-						</div>
-					)}
-					{post.frontmatter.excerpt && (
-						<p class="text-base sm:text-lg opacity-80 mt-2">
-							{post.frontmatter.excerpt}
-						</p>
-					)}
-				</header>
-				<div class="prose prose-sm sm:prose prose-invert max-w-none text-[var(--card-foreground)]">
-					<post.Content />
-				</div>
-			</article>
+			<BlogPostWrapper
+				client:only="react"
+				title={post.frontmatter.title}
+				date={post.frontmatter.date}
+				excerpt={post.frontmatter.excerpt}
+				tags={post.frontmatter.tags}
+			>
+				<post.Content />
+			</BlogPostWrapper>
 		) : (
 			<div class="max-w-2xl mx-auto p-8 text-center">Post not found.</div>
 		)

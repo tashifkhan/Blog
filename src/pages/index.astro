@@ -1,10 +1,10 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import NavBar from "@/components/navbar";
+import { HomePage } from "@/components/HomePage";
 
 export const prerender = true;
 ---
 
 <Layout>
-	<NavBar client:load />
+	<HomePage client:only="react" showRecentPosts={true} />
 </Layout>

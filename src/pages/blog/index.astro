@@ -1,14 +1,10 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import { getAllPosts } from "@/lib/posts";
-import PostGrid from "@/components/posts/PostGrid.astro";
+import { BlogPage } from "@/components/BlogPage";
 
 export const prerender = true;
-
-const posts = await getAllPosts();
 ---
 
 <Layout>
-	<h1 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center">Blog</h1>
-	<PostGrid posts={posts} />
+	<BlogPage client:only="react" />
 </Layout>
