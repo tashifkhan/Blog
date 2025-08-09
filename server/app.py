@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import requests
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
 
@@ -201,6 +202,5 @@ async def add_comment(slug: str, payload: CommentIn):
 # Posts listing - simplified without frontmatter since it requires file access
 @app.get("/posts.json")
 async def list_posts():
-    # For now, return empty list since we can't easily access blog files in serverless
-    # The frontend can fall back to Astro's static posts.json if this returns empty
-    return []
+    posts = await requests.get("https://blog.tashif.codes/api/posts.json")  # type: ignore
+    return posts.json()
