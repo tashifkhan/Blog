@@ -315,24 +315,12 @@ export function EngagementPanel({ slug, theme }: Props) {
 						<span style={subtleText}>
 							{isLoadingViews ? <CuteLoader /> : views}
 						</span>
-						{/* Debug info */}
-						{process.env.NODE_ENV === "development" && (
-							<span style={{ fontSize: "10px", color: "red" }}>
-								{isLoadingViews ? " [LOADING]" : " [LOADED]"}
-							</span>
-						)}
 					</span>
 					<span style={tagStyle} title="Likes">
 						<FaHeart color={t?.accentColor} />{" "}
 						<span style={subtleText}>
 							{isLoadingLikes ? <CuteLoader /> : likes}
 						</span>
-						{/* Debug info */}
-						{process.env.NODE_ENV === "development" && (
-							<span style={{ fontSize: "10px", color: "red" }}>
-								{isLoadingLikes ? " [LOADING]" : " [LOADED]"}
-							</span>
-						)}
 					</span>
 					<button
 						style={buttonStyle(true)}

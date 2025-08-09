@@ -70,8 +70,9 @@ export function MobileAbout({ theme, getCardStyle }: MobileAboutProps) {
 					className="text-xs leading-relaxed mb-3"
 					style={{ color: theme.textColor }}
 				>
-					I'm a full-stack developer who wants to simplify life using code. 
-					I build real-world solutions using modern web technologies and AI integration.
+					I'm a full-stack developer who wants to simplify life using code. I
+					build real-world solutions using modern web technologies and AI
+					integration.
 				</p>
 
 				{/* Social Links */}
@@ -135,16 +136,17 @@ export function MobileAbout({ theme, getCardStyle }: MobileAboutProps) {
 						{[
 							{
 								title: "TalentSync AI",
-								description: "AI-driven platform for resume analysis and talent management",
+								description:
+									"AI-driven platform for resume analysis and talent management",
 								liveUrl: "https://talentsync.tashif.codes/",
-								githubUrl: "https://github.com/harleenkaur28/AI-Resume-Parser"
+								githubUrl: "https://github.com/harleenkaur28/AI-Resume-Parser",
 							},
 							{
 								title: "JPortal",
 								description: "React PWA for JIIT WebKiosk with 4.5k+ users",
 								liveUrl: "https://jportal.tashif.codes/",
-								githubUrl: "https://github.com/tashifkhan/jportal"
-							}
+								githubUrl: "https://github.com/tashifkhan/jportal",
+							},
 						].map((project) => (
 							<div
 								key={project.title}
