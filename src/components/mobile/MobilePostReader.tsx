@@ -17,9 +17,6 @@ export function MobilePostReader({
 	children,
 }: MobilePostReaderProps) {
 	const [theme, setThemeState] = useState(activeTheme);
-	const [fontScale, setFontScale] = useState(1);
-	const [lineHeight, setLineHeight] = useState(1.7);
-	const [contentWidth, setContentWidth] = useState(42); // ch
 
 	useEffect(() => {
 		setThemeState(activeTheme);
@@ -27,6 +24,34 @@ export function MobilePostReader({
 		window.addEventListener("themechange", onChange);
 		return () => window.removeEventListener("themechange", onChange);
 	}, []);
+
+	// CSS variable helpers
+	const setVar = (name: string, value: string) =>
+		document.documentElement.style.setProperty(name, value);
+
+	const getVar = (name: string, fallback: number): number => {
+		const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+		const n = parseFloat(v);
+		return Number.isFinite(n) && n > 0 ? n : fallback;
+	};
+
+	const inc = (
+		name: string,
+		step: number,
+		min: number,
+		max: number,
+		suffix = ""
+	) => {
+		const cur = getVar(name, min);
+		const next = Math.min(max, Math.max(min, +(cur + step).toFixed(2)));
+		setVar(name, `${next}${suffix}`);
+	};
+
+	const reset = () => {
+		setVar("--reader-font-scale", "1");
+		setVar("--reader-line-height", "1.7");
+		setVar("--reader-content-width", "42");
+	};
 
 	const getHeaderStyle = () => {
 		const base: React.CSSProperties = {
@@ -148,11 +173,7 @@ export function MobilePostReader({
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												setFontScale((s) =>
-													Math.max(0.85, +(s - 0.05).toFixed(2))
-												)
-											}
+											onClick={() => inc("--reader-font-scale", -0.05, 0.85, 1.4)}
 										>
 											-
 										</button>
@@ -160,16 +181,12 @@ export function MobilePostReader({
 											className="text-xs w-10 text-center"
 											aria-live="polite"
 										>
-											{Math.round(fontScale * 100)}%
+											{Math.round(getVar("--reader-font-scale", 1) * 100)}%
 										</span>
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												setFontScale((s) =>
-													Math.min(1.4, +(s + 0.05).toFixed(2))
-												)
-											}
+											onClick={() => inc("--reader-font-scale", 0.05, 0.85, 1.4)}
 										>
 											+
 										</button>
@@ -181,11 +198,7 @@ export function MobilePostReader({
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												setLineHeight((h) =>
-													Math.max(1.3, +(h - 0.1).toFixed(2))
-												)
-											}
+											onClick={() => inc("--reader-line-height", -0.1, 1.3, 2.0)}
 										>
 											-
 										</button>
@@ -193,16 +206,12 @@ export function MobilePostReader({
 											className="text-xs w-10 text-center"
 											aria-live="polite"
 										>
-											{lineHeight.toFixed(1)}
+											{getVar("--reader-line-height", 1.7).toFixed(1)}
 										</span>
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												setLineHeight((h) =>
-													Math.min(2.0, +(h + 0.1).toFixed(2))
-												)
-											}
+											onClick={() => inc("--reader-line-height", 0.1, 1.3, 2.0)}
 										>
 											+
 										</button>
@@ -214,9 +223,7 @@ export function MobilePostReader({
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												setContentWidth((w) => Math.max(34, w - 2))
-											}
+											onClick={() => inc("--reader-content-width", -2, 34, 60)}
 										>
 											-
 										</button>
@@ -224,14 +231,12 @@ export function MobilePostReader({
 											className="text-xs w-10 text-center"
 											aria-live="polite"
 										>
-											{contentWidth}ch
+											{getVar("--reader-content-width", 42)}ch
 										</span>
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() =>
-												setContentWidth((w) => Math.min(60, w + 2))
-											}
+											onClick={() => inc("--reader-content-width", 2, 34, 60)}
 										>
 											+
 										</button>
@@ -246,7 +251,10 @@ export function MobilePostReader({
 			<main className="px-4 py-5">
 				<article
 					className="mx-auto rounded border p-3"
-					style={{ maxWidth: `${contentWidth}ch`, ...getArticleCardStyle() }}
+					style={{ 
+						maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`, 
+						...getArticleCardStyle() 
+					}}
 				>
 					<header className="mb-4">
 						<h1
@@ -283,8 +291,8 @@ export function MobilePostReader({
 						className="prose prose-sm sm:prose"
 						style={{
 							color: theme.textColor,
-							fontSize: `${fontScale}rem`,
-							lineHeight,
+							fontSize: `calc(var(--reader-font-scale, 1) * 1rem)`,
+							lineHeight: `var(--reader-line-height, 1.6)`,
 						}}
 					>
 						{children}
