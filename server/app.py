@@ -5,7 +5,8 @@ from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import requests
+
+# import requests
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
 
