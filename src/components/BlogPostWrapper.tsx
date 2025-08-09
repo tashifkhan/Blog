@@ -56,8 +56,14 @@ export function BlogPostWrapper({
 
 	if (isMobile) {
 		return (
-			<MobilePostReader title={title} date={date} excerpt={excerpt} tags={tags}>
-				<PostMetaHeader slug={slug || ""} author={author} />
+			<MobilePostReader
+				title={title}
+				date={date}
+				excerpt={excerpt}
+				tags={tags}
+				slug={slug}
+				author={author}
+			>
 				{children}
 			</MobilePostReader>
 		);

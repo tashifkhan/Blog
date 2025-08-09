@@ -1,11 +1,25 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { activeTheme, allThemes, setTheme } from "@/lib/theme-config";
+import { PostMetaHeader } from "@/components/PostMetaHeader";
 
 interface MobilePostReaderProps {
 	title?: string;
 	date?: string;
 	excerpt?: string;
 	tags?: string[];
+	slug?: string;
+	author?: {
+		name: string;
+		bio?: string;
+		socials?:
+			| string[]
+			| {
+					github?: string;
+					twitter?: string;
+					linkedin?: string;
+					website?: string;
+			  };
+	};
 	children?: React.ReactNode;
 }
 
@@ -14,6 +28,8 @@ export function MobilePostReader({
 	date,
 	excerpt,
 	tags,
+	slug,
+	author,
 	children,
 }: MobilePostReaderProps) {
 	const [theme, setThemeState] = useState(activeTheme);
@@ -420,18 +436,18 @@ export function MobilePostReader({
 					>
 						<header className="mb-4">
 							<h1
-								className="text-2xl font-extrabold mb-2"
+								className="text-2xl font-extrabold mb-4"
 								style={{ color: theme.accentColor }}
 							>
 								{title}
 							</h1>
 							{date && (
-								<div className="text-xs opacity-70 mb-1">
+								<div className="text-xs opacity-70 mb-2">
 									{new Date(date).toLocaleDateString()}
 								</div>
 							)}
 							{tags && tags.length > 0 && (
-								<div className="flex flex-wrap gap-1 mb-2">
+								<div className="flex flex-wrap gap-1 mb-4">
 									{tags.map((t) => (
 										<span
 											key={t}
@@ -447,7 +463,12 @@ export function MobilePostReader({
 								</div>
 							)}
 							{excerpt && (
-								<p className="text-sm opacity-80 italic">{excerpt}</p>
+								<p className="text-sm opacity-80 italic mb-4">{excerpt}</p>
+							)}
+
+							{/* Include desktop post header content */}
+							{slug && (
+								<PostMetaHeader slug={slug} author={author} theme={theme} />
 							)}
 						</header>
 
