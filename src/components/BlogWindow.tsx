@@ -67,8 +67,7 @@ export function BlogWindow({
 			background: theme.windowBackground,
 			border: `${theme.borderWidth || 1}px solid ${theme.borderColor}`,
 			borderRadius: theme.windowRadius || "1rem",
-			overflow: "hidden",
-		};
+		} as React.CSSProperties;
 
 		if (theme.name === "neoBrutalism") {
 			return {
