@@ -28,11 +28,70 @@ export function MobilePostReader({
 		return () => window.removeEventListener("themechange", onChange);
 	}, []);
 
+	const getHeaderStyle = () => {
+		const base: React.CSSProperties = {
+			background: theme.menuBarBackground,
+			borderColor: theme.menuBarBorder,
+		};
+		if (theme.name === "neoBrutalism")
+			return {
+				...base,
+				borderBottom: "2px solid #000",
+				boxShadow: "6px 6px 0 #000",
+			};
+		if (theme.name === "modernMacOS")
+			return {
+				...base,
+				boxShadow: "0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+				backdropFilter: "blur(6px)",
+			};
+		if (theme.name === "dark")
+			return {
+				...base,
+				boxShadow: "0 15px 35px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2)",
+				backdropFilter: "blur(4px)",
+			};
+		if (theme.name === "neon" || theme.name === "cyberpunk")
+			return {
+				...base,
+				boxShadow: `0 0 18px ${theme.accentColor}80`,
+				backdropFilter: "blur(6px)",
+			};
+		return base;
+	};
+
+	const getRootBackground = () => {
+		if (theme.name === "neon")
+			return `radial-gradient(60% 60% at 20% 10%, ${theme.accentColor}22, transparent), ${theme.backgroundColor}`;
+		if (theme.name === "cyberpunk")
+			return `linear-gradient(120deg, #0f0015 0%, #001a1a 100%)`;
+		return theme.backgroundColor;
+	};
+
+	const getArticleCardStyle = (): React.CSSProperties => {
+		const base: React.CSSProperties = {
+			background: theme.windowBackground,
+			borderColor: theme.borderColor,
+		};
+		if (theme.name === "neoBrutalism")
+			return { ...base, border: "2px solid #000", boxShadow: "6px 6px 0 #000" };
+		if (theme.name === "neon")
+			return { ...base, boxShadow: `0 0 16px ${theme.accentColor}90` };
+		if (theme.name === "cyberpunk")
+			return { ...base, boxShadow: "0 0 30px rgba(0,255,255,0.2)" };
+		if (theme.name === "modernMacOS")
+			return {
+				...base,
+				boxShadow: "0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+			};
+		return base;
+	};
+
 	return (
 		<div
 			className="min-h-screen flex flex-col"
 			style={{
-				background: theme.backgroundColor,
+				background: getRootBackground(),
 				color: theme.textColor,
 				fontFamily: theme.fontFamily,
 			}}
@@ -40,10 +99,7 @@ export function MobilePostReader({
 			{/* Reader toolbar */}
 			<header
 				className="sticky top-0 z-50 border-b"
-				style={{
-					background: theme.menuBarBackground,
-					borderColor: theme.menuBarBorder,
-				}}
+				style={getHeaderStyle()}
 				aria-label="Reader toolbar"
 			>
 				<div className="flex items-center justify-between px-3 h-12">
@@ -188,7 +244,10 @@ export function MobilePostReader({
 			</header>
 
 			<main className="px-4 py-5">
-				<article className="mx-auto" style={{ maxWidth: `${contentWidth}ch` }}>
+				<article
+					className="mx-auto rounded border p-3"
+					style={{ maxWidth: `${contentWidth}ch`, ...getArticleCardStyle() }}
+				>
 					<header className="mb-4">
 						<h1
 							className="text-2xl font-extrabold mb-2"

@@ -32,23 +32,117 @@ export function MobileHome() {
 		);
 	}, [query, posts]);
 
+	// Theme-driven helpers for expressive visuals
+	const getHeaderStyle = () => {
+		const base: React.CSSProperties = {
+			background: theme.menuBarBackground,
+			borderColor: theme.menuBarBorder,
+		};
+		if (theme.name === "neoBrutalism") {
+			return {
+				...base,
+				background: theme.titleBarBackground || theme.accentColor,
+				borderBottom: "2px solid #000",
+				boxShadow: "6px 6px 0 #000",
+			} as React.CSSProperties;
+		}
+		if (theme.name === "modernMacOS") {
+			return {
+				...base,
+				boxShadow: "0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+				backdropFilter: "blur(6px)",
+			} as React.CSSProperties;
+		}
+		if (theme.name === "dark") {
+			return {
+				...base,
+				boxShadow: "0 15px 35px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2)",
+				backdropFilter: "blur(4px)",
+			} as React.CSSProperties;
+		}
+		if (theme.name === "neon" || theme.name === "cyberpunk") {
+			return {
+				...base,
+				background:
+					theme.titleBarBackground ||
+					`linear-gradient(90deg, ${theme.accentColor}, ${theme.accentColor})`,
+				boxShadow: `0 0 18px ${theme.accentColor}80`,
+				backdropFilter: "blur(6px)",
+			} as React.CSSProperties;
+		}
+		return base;
+	};
+
+	const getMenuPanelStyle = () => {
+		const base: React.CSSProperties = {
+			background: theme.menuBarBackground,
+			borderColor: theme.menuBarBorder,
+			color: theme.textColor,
+		};
+		if (theme.name === "neoBrutalism") {
+			return { ...base, boxShadow: "6px 6px 0 #000", border: "2px solid #000" };
+		}
+		if (theme.name === "neon" || theme.name === "cyberpunk") {
+			return {
+				...base,
+				boxShadow: `0 0 25px ${theme.accentColor}60`,
+				backdropFilter: "blur(8px)",
+			};
+		}
+		if (theme.name === "dark") {
+			return {
+				...base,
+				boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+				backdropFilter: "blur(10px)",
+			};
+		}
+		return base;
+	};
+
+	const getCardStyle = (): React.CSSProperties => {
+		const base: React.CSSProperties = {
+			background: theme.cardBackground || theme.windowBackground,
+			borderColor: theme.borderColor,
+			boxShadow: theme.cardBoxShadow,
+		};
+		if (theme.name === "neoBrutalism") {
+			return {
+				...base,
+				boxShadow: "4px 4px 0 #000",
+				border: "2px solid #000",
+				borderRadius: 0,
+			};
+		}
+		if (theme.name === "neon") {
+			return { ...base, boxShadow: `0 0 12px ${theme.accentColor}90` };
+		}
+		if (theme.name === "cyberpunk") {
+			return { ...base, boxShadow: "0 0 30px rgba(0,255,255,0.2)" };
+		}
+		return base;
+	};
+
+	const getRootBackground = () => {
+		if (theme.name === "neon") {
+			return `radial-gradient(60% 60% at 20% 10%, ${theme.accentColor}22, transparent), ${theme.backgroundColor}`;
+		}
+		if (theme.name === "cyberpunk") {
+			return `linear-gradient(120deg, #0f0015 0%, #001a1a 100%)`;
+		}
+		return theme.backgroundColor;
+	};
+
 	return (
 		<div
 			className="min-h-screen flex flex-col"
 			style={{
-				background: theme.backgroundColor,
+				background: getRootBackground(),
 				color: theme.textColor,
 				fontFamily: theme.fontFamily,
 			}}
 		>
 			{/* Top mobile bar */}
-			<header
-				className="sticky top-0 z-50 border-b"
-				style={{
-					background: theme.menuBarBackground,
-					borderColor: theme.menuBarBorder,
-				}}
-			>
+			<header className="sticky top-0 z-50 border-b" style={getHeaderStyle()}>
 				<div className="flex items-center justify-between px-3 h-12">
 					<a
 						href="/"
@@ -83,12 +177,8 @@ export function MobileHome() {
 								Menu
 							</summary>
 							<nav
-								className="absolute right-0 mt-2 w-64 rounded shadow border p-1"
-								style={{
-									background: theme.menuBarBackground,
-									borderColor: theme.menuBarBorder,
-									color: theme.textColor,
-								}}
+								className="absolute right-0 mt-2 w-64 rounded border p-1"
+								style={getMenuPanelStyle()}
 							>
 								{/* Navigate */}
 								<div className="px-2 py-1 text-[11px] opacity-70">Navigate</div>
@@ -282,12 +372,10 @@ export function MobileHome() {
 							<a
 								key={p.slug}
 								href={p.slug ? `/blog/${p.slug}/` : "/blog/"}
-								className="no-underline rounded border p-3"
-								style={{
-									borderColor: theme.borderColor,
-									background: theme.windowBackground,
-									color: theme.textColor,
-								}}
+								className={`no-underline ${
+									theme.name === "neoBrutalism" ? "rounded-none" : "rounded"
+								} border p-3`}
+								style={getCardStyle()}
 							>
 								<div
 									className="text-sm font-medium"
