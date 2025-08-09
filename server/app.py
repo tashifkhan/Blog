@@ -29,6 +29,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://*.tashif.codes",
+        "https://blog.tashif.codes",
         "https://tashif.codes",
         "http://localhost:4321",
         "https://*.vercel.app",
