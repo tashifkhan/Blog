@@ -53,7 +53,7 @@ export function BlogPostWrapper({
 			defaultWindowTitle={`Blog - ${title || "Post"}`}
 		>
 			{/* Main blog post window */}
-			<div className="flex-1" style={{ minWidth: "80%" }}>
+			<div className="flex-1" style={{ minWidth: "100%" }}>
 				<BlogPostPage title={title} date={date} excerpt={excerpt} tags={tags}>
 					{children}
 				</BlogPostPage>

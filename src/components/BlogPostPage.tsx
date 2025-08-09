@@ -154,7 +154,7 @@ export function BlogPostPage({
 
 	return (
 		<motion.div
-			className="w-full max-w-4xl mx-auto"
+			className="w-full max-w-6xl mx-auto"
 			variants={getWindowVariants()}
 			animate={windowState}
 			transition={{
@@ -264,8 +264,16 @@ export function BlogPostPage({
 
 						{/* Article Content */}
 						<div
-							className="prose prose-lg max-w-none"
-							style={{ color: theme.textColor }}
+							className="prose prose-lg"
+							style={{
+								color: theme.textColor,
+								// Default to full container width on desktop; reader controls can narrow it
+								maxWidth:
+									"min(100%, calc(var(--reader-content-width, 999) * 1ch))",
+								margin: "0 auto",
+								fontSize: "calc(var(--reader-font-scale, 1) * 1rem)",
+								lineHeight: "var(--reader-line-height, 1.7)",
+							}}
 						>
 							{children}
 						</div>

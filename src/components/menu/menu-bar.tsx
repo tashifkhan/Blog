@@ -8,6 +8,7 @@ import { NavigateMenu } from "./navigate-menu";
 import { AppearanceMenu } from "./appearance-menu";
 import { HelpMenu } from "./help-menu";
 import { RecentPostsMenu } from "./recent-posts-menu";
+import { ReaderMenu } from "./reader-menu";
 import type { Post } from "@/types/post";
 
 interface MenuBarProps {
@@ -49,6 +50,7 @@ export function MenuBar({
 					<EditMenu theme={theme} onFind={focusSearch} />
 					<ViewMenu theme={theme} />
 					<NavigateMenu theme={theme} setWindowTitle={setWindowTitle} />
+					<ReaderMenu theme={theme} />
 					<AppearanceMenu theme={theme} />
 					<HelpMenu theme={theme} />
 					<RecentPostsMenu

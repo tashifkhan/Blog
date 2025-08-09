@@ -293,6 +293,69 @@ export const neoBrutalismTheme: ThemeConfig = {
   hoverBoxShadow: "8px 8px 0px #000000, 0 8px 15px rgba(0,0,0,0.05)",
 };
 
+// Liquid Glass theme (glassmorphic)
+export const liquidGlassLightTheme: ThemeConfig = {
+  name: "liquidGlassLight",
+  backgroundColor: "#E6EBF5",
+  borderColor: "rgba(255,255,255,0.4)",
+  textColor: "#0F172A",
+  accentColor: "#4F46E5",
+
+  menuBarBackground: "rgba(255,255,255,0.55)",
+  menuBarBorder: "rgba(255,255,255,0.35)",
+  menuItemHoverBg: "rgba(79,70,229,0.15)",
+  menuItemHoverText: "#0F172A",
+
+  windowBackground: "rgba(255,255,255,0.6)",
+  windowBorder: "rgba(255,255,255,0.35)",
+  windowTitlebarBg: "rgba(255,255,255,0.45)",
+  windowRadius: "14px",
+
+  closeButtonColor: "#ef4444",
+  minimizeButtonColor: "#f59e0b",
+  maximizeButtonColor: "#22c55e",
+
+  statusBarBackground: "rgba(255,255,255,0.45)",
+  statusBarBorder: "rgba(255,255,255,0.35)",
+
+  fontFamily: "'SF Pro', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif",
+
+  boxShadow: "0 10px 30px rgba(31,41,55,0.15), 0 1px 0 0 rgba(255,255,255,0.4) inset",
+  cardBoxShadow: "0 6px 20px rgba(31,41,55,0.12)",
+  hoverBoxShadow: "0 16px 40px rgba(31,41,55,0.18)",
+};
+
+export const liquidGlassDarkTheme: ThemeConfig = {
+  name: "liquidGlassDark",
+  backgroundColor: "#0F172A",
+  borderColor: "rgba(255,255,255,0.12)",
+  textColor: "#E5E7EB",
+  accentColor: "#60A5FA",
+
+  menuBarBackground: "rgba(15, 23, 42, 0.55)",
+  menuBarBorder: "rgba(255,255,255,0.12)",
+  menuItemHoverBg: "rgba(96,165,250,0.16)",
+  menuItemHoverText: "#E5E7EB",
+
+  windowBackground: "rgba(17, 24, 39, 0.55)",
+  windowBorder: "rgba(255,255,255,0.12)",
+  windowTitlebarBg: "rgba(17, 24, 39, 0.45)",
+  windowRadius: "14px",
+
+  closeButtonColor: "#ef4444",
+  minimizeButtonColor: "#f59e0b",
+  maximizeButtonColor: "#22c55e",
+
+  statusBarBackground: "rgba(15, 23, 42, 0.45)",
+  statusBarBorder: "rgba(255,255,255,0.12)",
+
+  fontFamily: "'SF Pro', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif",
+
+  boxShadow: "0 15px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05) inset",
+  cardBoxShadow: "0 10px 30px rgba(0,0,0,0.45)",
+  hoverBoxShadow: "0 18px 50px rgba(0,0,0,0.6)",
+};
+
 // Get the stored theme from localStorage or default to macClassic
 function getStoredTheme(): ThemeConfig {
   if (typeof window !== 'undefined') {
@@ -313,7 +376,9 @@ export const allThemes = {
   win95: win95Theme,
   winXP: winXPTheme,
   ubuntu: ubuntuTheme,
-  neoBrutalism: neoBrutalismTheme
+  neoBrutalism: neoBrutalismTheme,
+  liquidGlassLight: liquidGlassLightTheme,
+  liquidGlassDark: liquidGlassDarkTheme,
 };
 
 // Define valid theme names as a type
