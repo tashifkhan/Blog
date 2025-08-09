@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { activeTheme, allThemes, setTheme } from "@/lib/theme-config";
 import { PostMetaHeader } from "@/components/PostMetaHeader";
+import { EngagementPanel } from "@/components/EngagementPanel";
 
 interface MobilePostReaderProps {
 	title?: string;
@@ -483,6 +484,19 @@ export function MobilePostReader({
 							{children}
 						</div>
 					</article>
+
+					{/* Engagement Panel (Comments, Likes, Views) */}
+					{slug && (
+						<div
+							className="mx-auto mt-4 rounded border"
+							style={{
+								maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`,
+								...getArticleCardStyle(),
+							}}
+						>
+							<EngagementPanel slug={slug} theme={theme} />
+						</div>
+					)}
 				</main>
 
 				<footer
