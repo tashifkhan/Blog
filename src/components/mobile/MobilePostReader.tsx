@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { activeTheme, allThemes, setTheme } from "@/lib/theme-config";
+import type { ThemeConfig } from "@/lib/theme-config";
+import { EngagementPanel } from "@/components/EngagementPanel";
 
 interface MobilePostReaderProps {
 	title?: string;
@@ -7,6 +9,7 @@ interface MobilePostReaderProps {
 	excerpt?: string;
 	tags?: string[];
 	children?: React.ReactNode;
+	slug?: string;
 }
 
 export function MobilePostReader({
@@ -15,6 +18,7 @@ export function MobilePostReader({
 	excerpt,
 	tags,
 	children,
+	slug,
 }: MobilePostReaderProps) {
 	const [theme, setThemeState] = useState(activeTheme);
 
@@ -144,39 +148,32 @@ export function MobilePostReader({
 		<>
 			<style>
 				{`
-					.mobile-content * {
-						color: var(--theme-text) !important;
+					.mobile-content {
+						color: var(--theme-text);
 					}
-					.mobile-content h1,
-					.mobile-content h2,
-					.mobile-content h3,
-					.mobile-content h4,
-					.mobile-content h5,
-					.mobile-content h6 {
-						color: var(--theme-text) !important;
+					.mobile-content h1, .mobile-content h2, .mobile-content h3, .mobile-content h4, .mobile-content h5, .mobile-content h6 {
+						color: var(--theme-text);
 					}
-					.mobile-content p {
-						color: var(--theme-text) !important;
-					}
-					.mobile-content li {
-						color: var(--theme-text) !important;
-					}
-					.mobile-content strong {
-						color: var(--theme-text) !important;
-					}
-					.mobile-content em {
-						color: var(--theme-text) !important;
+					.mobile-content p, .mobile-content li, .mobile-content strong, .mobile-content em, .mobile-content td, .mobile-content th {
+						color: var(--theme-text);
 					}
 					.mobile-content a {
-						color: var(--theme-accent) !important;
+						color: var(--theme-accent);
 					}
-					.mobile-content code {
-						color: var(--theme-text) !important;
+					.mobile-content pre[class*="language-"] {
+						background-color: #282c34 !important;
+						color: #abb2bf !important;
 					}
-					.mobile-content td,
-					.mobile-content th {
-						color: var(--theme-text) !important;
+					.mobile-content .token.comment,
+					.mobile-content .token.prolog,
+					.mobile-content .token.doctype,
+					.mobile-content .token.cdata {
+						color: #5c6370;
 					}
+					.mobile-content .token.punctuation {
+						color: #abb2bf;
+					}
+					/* Other prism styles here */
 				`}
 			</style>
 			<div
@@ -376,6 +373,17 @@ export function MobilePostReader({
 							{children}
 						</div>
 					</article>
+
+					{slug && (
+						<div
+							className="mx-auto mt-4"
+							style={{
+								maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`,
+							}}
+						>
+							<EngagementPanel slug={slug} theme={theme} />
+						</div>
+					)}
 				</main>
 
 				<footer
