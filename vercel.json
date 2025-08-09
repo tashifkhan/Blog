@@ -2,11 +2,6 @@
 	"buildCommand": "bun run build",
 	"installCommand": "bun install",
 	"framework": "astro",
-	"functions": {
-		"src/pages/api/**/*.ts": {
-			"runtime": "edge"
-		}
-	},
 	"routes": [
 		{
 			"handle": "filesystem"
