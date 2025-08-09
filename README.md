@@ -1,17 +1,18 @@
 <h1 align="center"> BlogOS – A Themed Blog Website </h1>
 
-<img src="./public/favicon.png" align="center">
+<div align="center" >
+ <img src="./public/favicon.png">
+</div>
 
 **BlogOS** is a retro-inspired, multi-theme blog platform built with **Astro**, **React**, **TailwindCSS**, and **Framer Motion**.  
 It mimics the look and feel of classic operating systems (Mac OS, Windows 95/XP, Ubuntu, NeoBrutalism, etc.) while providing a modern, responsive, and animated blogging experience.
 
----
+
 
 ## Tech Stack
 
 ![Astro](https://img.shields.io/badge/Astro-FF5D01?style=for-the-badge&logo=astro&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) ![Framer Motion](https://img.shields.io/badge/Framer%20Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white) ![MDX](https://img.shields.io/badge/MDX-1B1F24?style=for-the-badge&logo=mdx&logoColor=white) ![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)
 
----
 
 ## Features
 
