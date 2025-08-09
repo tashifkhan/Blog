@@ -173,7 +173,9 @@ export function MobilePostReader({
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() => inc("--reader-font-scale", -0.05, 0.85, 1.4)}
+											onClick={() =>
+												inc("--reader-font-scale", -0.05, 0.85, 1.4)
+											}
 										>
 											-
 										</button>
@@ -186,7 +188,9 @@ export function MobilePostReader({
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() => inc("--reader-font-scale", 0.05, 0.85, 1.4)}
+											onClick={() =>
+												inc("--reader-font-scale", 0.05, 0.85, 1.4)
+											}
 										>
 											+
 										</button>
@@ -198,7 +202,9 @@ export function MobilePostReader({
 										<button
 											className="text-xs px-2 py-1 rounded border"
 											style={{ borderColor: theme.borderColor }}
-											onClick={() => inc("--reader-line-height", -0.1, 1.3, 2.0)}
+											onClick={() =>
+												inc("--reader-line-height", -0.1, 1.3, 2.0)
+											}
 										>
 											-
 										</button>
@@ -251,9 +257,9 @@ export function MobilePostReader({
 			<main className="px-4 py-5">
 				<article
 					className="mx-auto rounded border p-3"
-					style={{ 
-						maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`, 
-						...getArticleCardStyle() 
+					style={{
+						maxWidth: `min(100%, calc(var(--reader-content-width, 42) * 1ch))`,
+						...getArticleCardStyle(),
 					}}
 				>
 					<header className="mb-4">
@@ -290,7 +296,7 @@ export function MobilePostReader({
 					<div
 						className="prose prose-sm sm:prose"
 						style={{
-							color: theme.textColor,
+							color: "var(--theme-text)",
 							fontSize: `calc(var(--reader-font-scale, 1) * 1rem)`,
 							lineHeight: `var(--reader-line-height, 1.6)`,
 						}}
