@@ -4,7 +4,6 @@ import { FaSearch, FaTimesCircle } from "react-icons/fa";
 import { PostList } from "./posts/post-list";
 import { WindowControls } from "./ui/window-controls";
 import { AboutSection } from "./sections/about-section";
-import { ProjectsSection } from "./sections/projects-section";
 import type { Post } from "@/types/post";
 
 interface WelcomeWindowProps {
@@ -373,7 +372,6 @@ export function WelcomeWindow({
 										transition={{ delay: 0.2 }}
 										className="space-y-6"
 									>
-										<ProjectsSection theme={theme} />
 										<AboutSection theme={theme} />
 									</motion.div>
 								)}

@@ -4,7 +4,6 @@ import { FaSearch, FaTimesCircle } from "react-icons/fa";
 import { PostList } from "./posts/post-list";
 import { WindowControls } from "./ui/window-controls";
 import { AboutSection } from "./sections/about-section";
-import { ProjectsSection } from "./sections/projects-section";
 
 interface MainWindowProps {
 	theme: any;
@@ -456,7 +455,6 @@ export function MainWindow({
 										transition={{ delay: 0.2 }}
 										className="space-y-6"
 									>
-										<ProjectsSection theme={theme} />
 										<AboutSection theme={theme} />
 									</motion.div>
 								)}
