@@ -4,6 +4,14 @@ import { randomUUID } from "crypto";
 
 export const prerender = false;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export const OPTIONS: APIRoute = async () => new Response(null, { headers: corsHeaders });
+
 export const GET: APIRoute = async ({ params, cookies, clientAddress, request }) => {
   const slug = params?.slug as string;
   const client = await clientPromise;
@@ -69,6 +77,6 @@ export const GET: APIRoute = async ({ params, cookies, clientAddress, request })
   const views = post?.views ?? (incremented ? 1 : 0);
 
   return new Response(JSON.stringify({ views }), {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 };
