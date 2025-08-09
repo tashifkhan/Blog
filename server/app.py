@@ -25,10 +25,14 @@ def get_db():
 
 
 app = FastAPI(title="Blog Backend API")
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://*.tashif.codes",
+        "https://tashif.codes",
+        "http://localhost:4321",
+        "https://*.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
