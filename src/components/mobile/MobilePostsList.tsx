@@ -10,7 +10,8 @@ export function MobilePostsList() {
 	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
-		fetch("/api/posts.json")
+		import("@/lib/api")
+			.then(({ apiUrl }) => fetch(apiUrl("/posts.json")))
 			.then((r) => r.json())
 			.then((data: Post[]) => {
 				setPosts(data);

@@ -1,0 +1,12 @@
+{
+	"functions": {
+		"api/index.py": {
+			"runtime": "python3.11",
+			"memory": 512,
+			"maxDuration": 20
+		}
+	},
+	"installCommand": "pip install -r requirements.txt",
+	"routes": [{ "src": "/(.*)", "dest": "api/index.py" }],
+	"regions": ["iad1"]
+}

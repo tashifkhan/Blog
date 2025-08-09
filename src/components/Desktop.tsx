@@ -42,7 +42,8 @@ export function Desktop({
 		if (!isMounted) return;
 
 		// Fetch real posts from API
-		fetch("/api/posts.json")
+		import("@/lib/api")
+			.then(({ apiUrl }) => fetch(apiUrl("/posts.json")))
 			.then((res) => res.json())
 			.then((data) => {
 				setPosts(data);

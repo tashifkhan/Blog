@@ -15,7 +15,8 @@ export function MobileHome() {
 	const [showRecent, setShowRecent] = useState(true);
 
 	useEffect(() => {
-		fetch("/api/posts.json")
+		import("@/lib/api")
+			.then(({ apiUrl }) => fetch(apiUrl("/posts.json")))
 			.then((r) => r.json())
 			.then((data) => setPosts(data))
 			.catch(() => {});

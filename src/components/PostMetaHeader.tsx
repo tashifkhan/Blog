@@ -1,5 +1,6 @@
 import React from "react";
 import type { ThemeConfig } from "@/lib/theme-config";
+import { fetchJSON } from "@/lib/api";
 import {
 	FaHeart,
 	FaEye,
@@ -65,21 +66,13 @@ export function PostMetaHeader({ slug, author, theme }: Props) {
 		transition: "all 0.2s ease",
 	};
 
-	const fetchJSON = async (url: string) => {
-		try {
-			const res = await fetch(url);
-			if (!res.ok) throw new Error("Request failed");
-			return res.json();
-		} catch {
-			return null;
-		}
-	};
+	// use shared fetchJSON
 
 	React.useEffect(() => {
 		const loadStats = async () => {
 			const [viewsData, likesData] = await Promise.all([
-				fetchJSON(`/api/views/${slug}`),
-				fetchJSON(`/api/likes/${slug}`),
+				fetchJSON(`/views/${slug}`),
+				fetchJSON(`/likes/${slug}`),
 			]);
 
 			if (viewsData) setViews(viewsData.views ?? 0);

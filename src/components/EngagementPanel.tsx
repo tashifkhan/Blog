@@ -1,6 +1,7 @@
 import React from "react";
 import type { ThemeConfig } from "@/lib/theme-config";
 import { FaHeart, FaEye, FaReply, FaPaperPlane } from "react-icons/fa";
+import { fetchJSON } from "@/lib/api";
 
 type CommentNode = {
 	id: string;
@@ -191,43 +192,39 @@ export function EngagementPanel({ slug, theme }: Props) {
 		margin: "1rem 0",
 	};
 
-	const fetchJSON = async (url: string, init?: RequestInit) => {
-		const res = await fetch(url, init);
-		if (!res.ok) throw new Error("Request failed");
-		return res.json();
-	};
+	// use fetchJSON from lib/api
 
 	const loadViews = React.useCallback(async () => {
 		try {
-			const data = await fetchJSON(`/api/views/${slug}`);
+			const data = await fetchJSON(`/views/${slug}`);
 			setViews(data.views ?? 0);
 		} catch {}
 	}, [slug]);
 
 	const loadLikes = React.useCallback(async () => {
 		try {
-			const data = await fetchJSON(`/api/likes/${slug}`);
+			const data = await fetchJSON(`/likes/${slug}`);
 			setLikes(data.likes ?? 0);
 		} catch {}
 	}, [slug]);
 
 	const likePost = async () => {
 		try {
-			const data = await fetchJSON(`/api/likes/${slug}`, { method: "POST" });
+			const data = await fetchJSON(`/likes/${slug}`, { method: "POST" });
 			setLikes(data.likes ?? 0);
 		} catch {}
 	};
 
 	const loadComments = React.useCallback(async () => {
 		try {
-			const data = await fetchJSON(`/api/comments/${slug}`);
+			const data = await fetchJSON(`/comments/${slug}`);
 			setComments(data.comments ?? []);
 		} catch {}
 	}, [slug]);
 
 	const submitComment = async () => {
 		if (!name.trim() || !text.trim()) return;
-		await fetchJSON(`/api/comments/${slug}`, {
+		await fetchJSON(`/comments/${slug}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ name: name.trim(), text: text.trim() }),
@@ -240,7 +237,7 @@ export function EngagementPanel({ slug, theme }: Props) {
 		const rName = (replyName[parentId] || "").trim();
 		const rText = (replyText[parentId] || "").trim();
 		if (!rName || !rText) return;
-		await fetchJSON(`/api/comments/${slug}`, {
+		await fetchJSON(`/comments/${slug}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ name: rName, text: rText, parentId }),
