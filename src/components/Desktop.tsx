@@ -90,8 +90,38 @@ export function Desktop({
 			setTheme(activeTheme);
 		};
 
+		// Sync theme variables to CSS custom properties
+		const syncThemeVars = () => {
+			if (typeof document !== "undefined") {
+				const root = document.documentElement;
+				const currentTheme = activeTheme;
+
+				root.style.setProperty("--theme-bg", currentTheme.backgroundColor);
+				root.style.setProperty("--theme-text", currentTheme.textColor);
+				root.style.setProperty("--theme-accent", currentTheme.accentColor);
+				root.style.setProperty("--theme-border", currentTheme.borderColor);
+				root.style.setProperty(
+					"--theme-window-bg",
+					currentTheme.windowBackground
+				);
+				root.style.setProperty(
+					"--theme-secondary",
+					currentTheme.statusBarBackground || currentTheme.menuBarBackground
+				);
+				root.style.setProperty("--theme-muted", currentTheme.menuBarBackground);
+			}
+		};
+
 		window.addEventListener("themechange", handleThemeChange);
-		return () => window.removeEventListener("themechange", handleThemeChange);
+		window.addEventListener("sync-theme-vars", syncThemeVars);
+
+		// Initial sync
+		syncThemeVars();
+
+		return () => {
+			window.removeEventListener("themechange", handleThemeChange);
+			window.removeEventListener("sync-theme-vars", syncThemeVars);
+		};
 	}, [isMounted]);
 
 	// Update clock

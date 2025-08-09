@@ -1,0 +1,335 @@
+---
+import { remark } from "remark";
+import remarkHtml from "remark-html";
+import rehypePrism from "rehype-prism-plus";
+import remarkGfm from "remark-gfm";
+
+const { content, githubBaseUrl } = Astro.props;
+
+let html = "";
+
+function convertRelativeUrl(url: string): string {
+	if (!githubBaseUrl) return url;
+	if (url.startsWith("http://") || url.startsWith("https://")) return url;
+
+	// Convert GitHub URL to raw.githubusercontent.com for images
+	let baseUrl = githubBaseUrl;
+	if (
+		baseUrl.includes("github.com") &&
+		!baseUrl.includes("raw.githubusercontent.com")
+	) {
+		baseUrl =
+			baseUrl.replace("github.com", "raw.githubusercontent.com") + "/main";
+	}
+
+	let convertedUrl = url;
+	if (url.startsWith("./")) {
+		convertedUrl = baseUrl + "/" + url.substring(2);
+	} else if (url.startsWith("../")) {
+		convertedUrl = baseUrl + "/" + url.replace(/^\.\.\//, "");
+	} else if (url.startsWith("/")) {
+		convertedUrl = baseUrl + url;
+	} else if (!url.includes("://") && !url.startsWith("#")) {
+		convertedUrl = baseUrl + "/" + url;
+	}
+	return convertedUrl;
+}
+
+function enhanceHtml(rawHtml: string): string {
+	let html = rawHtml;
+
+	// Inline code - styled via theme variables
+	html = html.replace(
+		/<code>([^<\n]+)<\/code>/g,
+		'<code class="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-md text-xs sm:text-sm font-mono border shadow-sm transition-all duration-200 bg-[var(--theme-muted)] text-[var(--theme-text)] border-[color:var(--theme-border)]">$1</code>'
+	);
+
+	// Headers - use theme foreground and accent variables
+	html = html.replace(
+		/<h1>(.*?)<\/h1>/g,
+		'<h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-[var(--theme-text)] border-b-2 border-[color:color-mix(in_oklab,var(--theme-accent)_30%,transparent)] pb-2 sm:pb-3 mt-6 sm:mt-8 first:mt-0">$1</h1>'
+	);
+	html = html.replace(
+		/<h2>(.*?)<\/h2>/g,
+		'<h2 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-[var(--theme-text)] mt-6 sm:mt-8 flex items-center"><span class="w-1 h-4 sm:h-6 rounded-full mr-2 sm:mr-3 bg-[var(--theme-accent)]"></span>$1</h2>'
+	);
+	html = html.replace(
+		/<h3>(.*?)<\/h3>/g,
+		'<h3 class="text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-[var(--theme-text)]/90 mt-4 sm:mt-6 flex items-center"><span class="w-1 h-3 sm:h-5 rounded-full mr-2 bg-[var(--theme-accent)]/80"></span>$1</h3>'
+	);
+	html = html.replace(
+		/<h4>(.*?)<\/h4>/g,
+		'<h4 class="text-base sm:text-lg font-medium mb-2 text-[var(--theme-text)]/85 mt-4 sm:mt-5 flex items-center"><span class="w-1 h-3 sm:h-4 rounded-full mr-2 bg-[var(--theme-accent)]/70"></span>$1</h4>'
+	);
+
+	// Bold/italic - use theme text
+	html = html.replace(
+		/<strong>(.*?)<\/strong>/g,
+		'<strong class="font-bold text-[var(--theme-text)]">$1</strong>'
+	);
+	html = html.replace(
+		/<em>(.*?)<\/em>/g,
+		'<em class="italic text-[var(--theme-text)]/90 font-medium">$1</em>'
+	);
+
+	// Images - themed borders and hover accent
+	html = html.replace(
+		/<img([^>]*)src="([^"]+)"([^>]*)>/g,
+		(match: string, before: string, src: string, after: string) => {
+			const fullSrc = convertRelativeUrl(src);
+			return (
+				"<div class='my-4 sm:my-6 group'><img" +
+				before +
+				'src="' +
+				fullSrc +
+				'"' +
+				after +
+				' class="max-w-full h-auto border shadow-lg sm:shadow-xl transition-all duration-300 mx-auto block border-[color:var(--theme-border)] group-hover:[box-shadow:_0_0_0_3px_color-mix(in_oklab,var(--theme-accent)_25%,transparent)] group-hover:scale-[1.02]" style="border-radius: 0.5rem;" /></div>'
+			);
+		}
+	);
+
+	// Links - themed color and underline decoration
+	html = html.replace(
+		/<a href="([^"]+)"([^>]*)>(.*?)<\/a>/g,
+		(match: string, url: string, rest: string, text: string) => {
+			const fullUrl = convertRelativeUrl(url);
+			return (
+				'<a href="' +
+				fullUrl +
+				'" target="_blank" class="text-[var(--theme-accent)] hover:opacity-90 underline decoration-2 underline-offset-2 transition-all duration-200 [text-decoration-color:var(--theme-accent)] font-medium"' +
+				rest +
+				">" +
+				text +
+				"</a>"
+			);
+		}
+	);
+
+	// Lists - themed markers
+	html = html.replace(
+		/<ul>/g,
+		'<ul class="my-3 sm:my-4 space-y-1 sm:space-y-2 list-none pl-0">'
+	);
+	html = html.replace(
+		/<ol>/g,
+		'<ol class="my-3 sm:my-4 space-y-1 sm:space-y-2 list-decimal pl-4 sm:pl-6">'
+	);
+	html = html.replace(
+		/<li>/g,
+		'<li class="text-[var(--theme-text)]/85 mb-1 sm:mb-2 flex items-start text-sm sm:text-base"><span class="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0 bg-[var(--theme-accent)]"></span><span class="flex-1">'
+	);
+	html = html.replace(/<\/li>/g, "</span></li>");
+
+	// Todo checkboxes - themed
+	html = html.replace(
+		/<input type="checkbox"([^>]*)>/g,
+		'<input type="checkbox" class="mr-2 sm:mr-3 mt-0.5 sm:mt-1 h-3 w-3 sm:h-4 sm:w-4 rounded border-2 transition-all duration-200 border-[color:var(--theme-border)] bg-[var(--theme-muted)] [accent-color:var(--theme-accent)] focus:ring-2 [--tw-ring-color:var(--theme-accent)] focus:ring-offset-2"$1>'
+	);
+
+	// Code blocks with language labels; themed with CSS variables
+	html = html.replace(
+		/<pre class="([^"]*)language-([^"]*)"([^>]*)>([\s\S]*?)<\/pre>/g,
+		(
+			match: string,
+			classes: string,
+			language: string,
+			rest: string,
+			content: string
+		) => {
+			const langLabel = language !== "text" ? language.toUpperCase() : "";
+			const langLabelHtml = langLabel
+				? '<div class="language-label text-xs sm:text-sm">' +
+					langLabel +
+					"</div>"
+				: "";
+			const copyButton =
+				'<button class="copy-button" onclick="copyCode(this)" title="Copy code"><svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>';
+			return (
+				'<div class="code-block-wrapper group my-4 sm:my-8 max-w-full overflow-hidden">' +
+				langLabelHtml +
+				copyButton +
+				'<pre class="' +
+				classes +
+				" language-" +
+				language +
+				'"' +
+				rest +
+				' style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">' +
+				content +
+				"</pre></div>"
+			);
+		}
+	);
+
+	// Tables - themed borders and backgrounds
+	html = html.replace(
+		/<table>/g,
+		'<div class="overflow-x-auto my-4 sm:my-8 border shadow-lg sm:shadow-xl border-[color:var(--theme-border)]" style="border-radius: 0.5rem;"><table class="min-w-full bg-[var(--theme-window-bg)] backdrop-blur-sm">'
+	);
+	html = html.replace(/<\/table>/g, "</table></div>");
+	html = html.replace(
+		/<thead>/g,
+		'<thead class="border-b border-[color:var(--theme-border)] bg-[color:color-mix(in_oklab,var(--theme-secondary)_70%,transparent)]">'
+	);
+	html = html.replace(
+		/<th>/g,
+		'<th class="px-3 sm:px-6 py-2 sm:py-4 text-left text-xs sm:text-sm font-semibold text-[var(--theme-text)] border-r border-[color:var(--theme-border)] last:border-r-0">'
+	);
+	html = html.replace(
+		/<td>/g,
+		'<td class="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-[var(--theme-text)]/85 border-r border-[color:var(--theme-border)] last:border-r-0">'
+	);
+	html = html.replace(
+		/<tr>/g,
+		'<tr class="transition-all duration-200 border-b border-[color:var(--theme-border)] last:border-b-0 hover:bg-[color:color-mix(in_oklab,var(--theme-secondary)_60%,transparent)]">'
+	);
+
+	// Paragraphs - theme text
+	html = html.replace(
+		/<p>/g,
+		'<p class="text-[var(--theme-text)]/85 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">'
+	);
+
+	// Blockquotes - themed
+	html = html.replace(
+		/<blockquote>/g,
+		'<blockquote class="border-l-4 pl-4 sm:pl-6 py-3 sm:py-4 my-4 sm:my-6 text-[var(--theme-text)]/90 border-[color:var(--theme-accent)] bg-[color:color-mix(in_oklab,var(--theme-secondary)_70%,transparent)]" style="border-radius: 0 0.5rem 0.5rem 0;">'
+	);
+	html = html.replace(/<\/blockquote>/g, "</blockquote>");
+
+	return html;
+}
+
+if (content) {
+	const processed = await remark()
+		.use(remarkGfm)
+		.use(remarkHtml, { sanitize: false })
+		.use(rehypePrism, {
+			showLineNumbers: true,
+			lineNumbers: true,
+			plugins: ["line-numbers", "command-line", "diff-highlight"],
+		})
+		.process(content);
+	html = enhanceHtml(processed.value.toString());
+} else {
+	html = "<p>No content provided.</p>";
+}
+---
+
+<div
+	class="prose max-w-none space-y-4 sm:space-y-6"
+	style="font-size: calc(var(--reader-font-scale, 1) * 1rem); line-height: var(--reader-line-height, 1.7);"
+	set:html={html}
+/>
+
+<script is:inline>
+	function copyCode(button) {
+		const pre = button.nextElementSibling;
+		const code = pre.textContent || pre.innerText;
+
+		// Create a temporary textarea for older browsers
+		const textarea = document.createElement("textarea");
+		textarea.value = code;
+		textarea.style.position = "fixed";
+		textarea.style.opacity = "0";
+		document.body.appendChild(textarea);
+
+		try {
+			// Try modern clipboard API first
+			if (navigator.clipboard && window.isSecureContext) {
+				navigator.clipboard
+					.writeText(code)
+					.then(() => {
+						showCopyFeedback(button, true);
+					})
+					.catch(() => {
+						// Fallback to selection method
+						fallbackCopy();
+					});
+			} else {
+				// Fallback for older browsers
+				fallbackCopy();
+			}
+		} catch (err) {
+			fallbackCopy();
+		}
+
+		function fallbackCopy() {
+			textarea.select();
+			textarea.setSelectionRange(0, 99999); // For mobile devices
+			try {
+				document.execCommand("copy");
+				showCopyFeedback(button, true);
+			} catch (err) {
+				console.error("Failed to copy: ", err);
+				showCopyFeedback(button, false);
+			}
+		}
+
+		// Clean up
+		document.body.removeChild(textarea);
+	}
+
+	function showCopyFeedback(button, success) {
+		const originalHTML = button.innerHTML;
+
+		if (success) {
+			button.classList.add("copied");
+			button.innerHTML =
+				'<svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+			button.title = "Copied!";
+		} else {
+			button.classList.add("error");
+			button.innerHTML =
+				'<svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+			button.title = "Failed to copy";
+		}
+
+		setTimeout(() => {
+			button.classList.remove("copied", "error");
+			button.innerHTML = originalHTML;
+			button.title = "Copy code";
+		}, 2000);
+	}
+</script>
+
+<style is:inline>
+	/* Minimal themed helpers for code blocks */
+	.code-block-wrapper {
+		position: relative;
+		border: 1px solid var(--theme-border);
+		background: var(--theme-window-bg);
+		border-radius: 0.5rem;
+	}
+	.code-block-wrapper .language-label {
+		position: absolute;
+		top: 0.35rem;
+		right: 0.5rem;
+		color: var(--theme-text);
+		opacity: 0.75;
+	}
+	.code-block-wrapper .copy-button {
+		position: absolute;
+		top: 0.35rem;
+		right: 3rem;
+		padding: 0.25rem;
+		border-radius: 0.375rem;
+		color: var(--theme-text);
+		background: color-mix(in oklab, var(--theme-secondary) 50%, transparent);
+		border: 1px solid var(--theme-border);
+		transition: opacity 0.2s ease;
+		opacity: 0.8;
+	}
+	.code-block-wrapper .copy-button:hover {
+		opacity: 1;
+		outline: 2px solid color-mix(in oklab, var(--theme-accent) 40%, transparent);
+	}
+	.code-block-wrapper pre {
+		margin: 0;
+		padding: 1rem 0.75rem 0.75rem 0.75rem;
+		background: color-mix(in oklab, var(--theme-secondary) 60%, transparent);
+		border-top-left-radius: 0.5rem;
+		border-top-right-radius: 0.5rem;
+	}
+</style>

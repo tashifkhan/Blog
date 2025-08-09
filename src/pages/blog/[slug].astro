@@ -2,6 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
 import { BlogPostWrapper } from "@/components/BlogPostWrapper";
+import MarkdownRenderer from "@/components/MarkdownRenderer.astro";
 
 export const prerender = true;
 
@@ -24,7 +25,10 @@ const post = await getPostBySlug(slug!);
 				excerpt={post.frontmatter.excerpt}
 				tags={post.frontmatter.tags}
 			>
-				<post.Content />
+				<MarkdownRenderer
+					content={post.rawContent}
+					githubBaseUrl="https://github.com/tashifkhan/Blog"
+				/>
 			</BlogPostWrapper>
 		) : (
 			<div class="max-w-2xl mx-auto p-8 text-center">Post not found.</div>

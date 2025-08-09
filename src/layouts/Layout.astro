@@ -42,6 +42,17 @@ import "../styles/global.css";
 	</head>
 	<body>
 		<slot />
+		<script>
+			// Sync theme variables with CSS custom properties
+			function syncThemeVariables() {
+				const themeEvent = new CustomEvent("sync-theme-vars");
+				window.dispatchEvent(themeEvent);
+			}
+
+			// Initial sync and listen for theme changes
+			document.addEventListener("DOMContentLoaded", syncThemeVariables);
+			window.addEventListener("themechange", syncThemeVariables);
+		</script>
 	</body>
 </html>
 
@@ -64,5 +75,16 @@ import "../styles/global.css";
 		body {
 			transform: none;
 		}
+	}
+
+	/* Theme variables sync */
+	:root {
+		--theme-bg: #dedede;
+		--theme-text: #000000;
+		--theme-accent: #0060cb;
+		--theme-border: #888888;
+		--theme-window-bg: #ffffff;
+		--theme-secondary: #f0f0f0;
+		--theme-muted: #e8e8e8;
 	}
 </style>
