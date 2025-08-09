@@ -2,14 +2,6 @@
 	"buildCommand": "bun run build",
 	"installCommand": "bun install",
 	"framework": "astro",
-	"functions": {
-		"src/pages/api/**/*.ts": {
-			"runtime": "nodejs20.x"
-		},
-		"src/pages/**/*.astro": {
-			"runtime": "nodejs20.x"
-		}
-	},
 	"routes": [
 		{
 			"handle": "filesystem"
