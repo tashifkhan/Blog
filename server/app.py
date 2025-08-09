@@ -9,9 +9,9 @@ import requests
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 MONGODB_URI = os.getenv("MONGODB_URI")
 client: Optional[MongoClient] = MongoClient(MONGODB_URI) if MONGODB_URI else None
