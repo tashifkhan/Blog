@@ -202,5 +202,4 @@ async def add_comment(slug: str, payload: CommentIn):
 # Posts listing - simplified without frontmatter since it requires file access
 @app.get("/posts.json")
 async def list_posts():
-    posts = await requests.get("https://blog.tashif.codes/api/posts.json")  # type: ignore
-    return posts.json()
+    return []

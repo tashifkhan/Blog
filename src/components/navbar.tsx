@@ -40,8 +40,7 @@ export default function Navbar() {
 	useEffect(() => {
 		setIsMounted(true);
 		// Fetch real posts from API
-		import("@/lib/api")
-			.then(({ apiUrl }) => fetch(apiUrl("/posts.json")))
+		fetch("/api/posts.json")
 			.then((res) => res.json())
 			.then((data) => {
 				setPosts(data);
