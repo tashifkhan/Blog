@@ -142,6 +142,10 @@ export function EngagementPanel({ slug, theme }: Props) {
 		{}
 	);
 
+	// Loading states
+	const [isLoadingViews, setIsLoadingViews] = React.useState(true);
+	const [isLoadingLikes, setIsLoadingLikes] = React.useState(true);
+
 	const t = theme;
 
 	const cardStyle: React.CSSProperties = {
@@ -195,17 +199,35 @@ export function EngagementPanel({ slug, theme }: Props) {
 	// use fetchJSON from lib/api
 
 	const loadViews = React.useCallback(async () => {
+		setIsLoadingViews(true);
 		try {
-			const data = await fetchJSON(`/views/${slug}`);
+			// Add minimum loading time to make loader visible
+			const [data] = await Promise.all([
+				fetchJSON(`/views/${slug}`),
+				new Promise((resolve) => setTimeout(resolve, 500)), // Minimum 500ms loading
+			]);
 			setViews(data.views ?? 0);
-		} catch {}
+		} catch (error) {
+			console.error("Error loading views:", error);
+		} finally {
+			setIsLoadingViews(false);
+		}
 	}, [slug]);
 
 	const loadLikes = React.useCallback(async () => {
+		setIsLoadingLikes(true);
 		try {
-			const data = await fetchJSON(`/likes/${slug}`);
+			// Add minimum loading time to make loader visible
+			const [data] = await Promise.all([
+				fetchJSON(`/likes/${slug}`),
+				new Promise((resolve) => setTimeout(resolve, 500)), // Minimum 500ms loading
+			]);
 			setLikes(data.likes ?? 0);
-		} catch {}
+		} catch (error) {
+			console.error("Error loading likes:", error);
+		} finally {
+			setIsLoadingLikes(false);
+		}
 	}, [slug]);
 
 	const likePost = async () => {
@@ -254,89 +276,135 @@ export function EngagementPanel({ slug, theme }: Props) {
 
 	const isNeo = t?.name === "neoBrutalism";
 
+	// Cute loader component
+	const CuteLoader = () => (
+		<span
+			style={{
+				display: "inline-block",
+				animation: "pulse 1.2s ease-in-out infinite",
+				fontSize: "0.9em",
+				color: t?.accentColor || "#0088ff",
+			}}
+		>
+			⬢⬢⬢
+		</span>
+	);
+
 	return (
-		<section style={cardStyle}>
-			{/* Stats Row */}
-			<div
-				style={{
-					display: "flex",
-					alignItems: "center",
-					gap: 12,
-					flexWrap: "wrap",
-				}}
-			>
-				<span style={tagStyle} title="Views">
-					<FaEye color={t?.accentColor} />{" "}
-					<span style={subtleText}>{views}</span>
-				</span>
-				<span style={tagStyle} title="Likes">
-					<FaHeart color={t?.accentColor} />{" "}
-					<span style={subtleText}>{likes}</span>
-				</span>
-				<button
-					style={buttonStyle(true)}
-					onClick={likePost}
-					aria-label="Like this post"
-				>
-					<FaHeart /> Like
-				</button>
-			</div>
-
-			<div style={dividerStyle} />
-
-			{/* Comments */}
-			<h3 style={{ marginBottom: 8, color: t?.accentColor }}>Comments</h3>
-
-			<div>
-				{comments.length === 0 && (
-					<div style={{ ...subtleText, fontStyle: "italic", marginBottom: 8 }}>
-						Be the first to comment.
-					</div>
-				)}
-				{comments.map((c) => (
-					<CommentItem
-						key={c.id}
-						c={c}
-						t={theme}
-						subtleText={subtleText}
-						buttonStyle={buttonStyle}
-						inputStyle={inputStyle}
-						openReplies={openReplies}
-						setOpenReplies={setOpenReplies}
-						replyName={replyName}
-						setReplyName={setReplyName}
-						replyText={replyText}
-						setReplyText={setReplyText}
-						submitReply={submitReply}
-					/>
-				))}
-			</div>
-
-			<div style={dividerStyle} />
-
-			{/* New comment form */}
-			<div>
-				<input
-					style={inputStyle}
-					placeholder="Your name"
-					value={name}
-					onChange={(e) => setName(e.target.value)}
-				/>
-				<textarea
-					style={{ ...inputStyle, marginTop: 8 }}
-					placeholder="Your comment"
-					value={text}
-					onChange={(e) => setText(e.target.value)}
-				/>
+		<>
+			<style>
+				{`
+					@keyframes pulse {
+						0%, 100% { opacity: 0.4; }
+						50% { opacity: 1; }
+					}
+				`}
+			</style>
+			<section style={cardStyle}>
+				{/* Stats Row */}
 				<div
-					style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}
+					style={{
+						display: "flex",
+						alignItems: "center",
+						gap: 12,
+						flexWrap: "wrap",
+					}}
 				>
-					<button style={buttonStyle(true)} onClick={submitComment}>
-						<FaPaperPlane /> Post Comment
+					<span style={tagStyle} title="Views">
+						<FaEye color={t?.accentColor} />{" "}
+						<span style={subtleText}>
+							{isLoadingViews ? <CuteLoader /> : views}
+						</span>
+						{/* Debug info */}
+						{process.env.NODE_ENV === "development" && (
+							<span style={{ fontSize: "10px", color: "red" }}>
+								{isLoadingViews ? " [LOADING]" : " [LOADED]"}
+							</span>
+						)}
+					</span>
+					<span style={tagStyle} title="Likes">
+						<FaHeart color={t?.accentColor} />{" "}
+						<span style={subtleText}>
+							{isLoadingLikes ? <CuteLoader /> : likes}
+						</span>
+						{/* Debug info */}
+						{process.env.NODE_ENV === "development" && (
+							<span style={{ fontSize: "10px", color: "red" }}>
+								{isLoadingLikes ? " [LOADING]" : " [LOADED]"}
+							</span>
+						)}
+					</span>
+					<button
+						style={buttonStyle(true)}
+						onClick={likePost}
+						aria-label="Like this post"
+					>
+						<FaHeart /> Like
 					</button>
 				</div>
-			</div>
-		</section>
+
+				<div style={dividerStyle} />
+
+				{/* Comments */}
+				<h3 style={{ marginBottom: 8, color: t?.accentColor }}>Comments</h3>
+
+				<div>
+					{comments.length === 0 && (
+						<div
+							style={{ ...subtleText, fontStyle: "italic", marginBottom: 8 }}
+						>
+							Be the first to comment.
+						</div>
+					)}
+					{comments.map((c) => (
+						<CommentItem
+							key={c.id}
+							c={c}
+							t={theme}
+							subtleText={subtleText}
+							buttonStyle={buttonStyle}
+							inputStyle={inputStyle}
+							openReplies={openReplies}
+							setOpenReplies={setOpenReplies}
+							replyName={replyName}
+							setReplyName={setReplyName}
+							replyText={replyText}
+							setReplyText={setReplyText}
+							submitReply={submitReply}
+						/>
+					))}
+				</div>
+
+				<div style={dividerStyle} />
+
+				{/* New comment form */}
+				<div>
+					<input
+						style={inputStyle}
+						placeholder="Your name"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+					/>
+					<textarea
+						style={{ ...inputStyle, marginTop: 8 }}
+						placeholder="Your comment"
+						value={text}
+						onChange={(e) => setText(e.target.value)}
+					/>
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "flex-end",
+							marginTop: 8,
+						}}
+					>
+						<button style={buttonStyle(true)} onClick={submitComment}>
+							<FaPaperPlane /> Post Comment
+						</button>
+					</div>
+				</div>
+			</section>
+		</>
 	);
 }
 

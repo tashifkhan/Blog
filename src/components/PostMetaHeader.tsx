@@ -30,8 +30,24 @@ type Props = {
 export function PostMetaHeader({ slug, author, theme }: Props) {
 	const [views, setViews] = React.useState<number>(0);
 	const [likes, setLikes] = React.useState<number>(0);
+	const [isLoadingViews, setIsLoadingViews] = React.useState<boolean>(true);
+	const [isLoadingLikes, setIsLoadingLikes] = React.useState<boolean>(true);
 
 	const t = theme;
+
+	// Cute loader component
+	const CuteLoader = () => (
+		<span
+			style={{
+				display: "inline-block",
+				animation: "pulse 1.2s ease-in-out infinite",
+				fontSize: "0.9em",
+				color: t?.accentColor || "#0088ff",
+			}}
+		>
+			⬢⬢⬢
+		</span>
+	);
 
 	const cardStyle: React.CSSProperties = {
 		background: t?.windowBackground || "#fff",
@@ -70,13 +86,25 @@ export function PostMetaHeader({ slug, author, theme }: Props) {
 
 	React.useEffect(() => {
 		const loadStats = async () => {
-			const [viewsData, likesData] = await Promise.all([
-				fetchJSON(`/views/${slug}`),
-				fetchJSON(`/likes/${slug}`),
-			]);
+			setIsLoadingViews(true);
+			setIsLoadingLikes(true);
 
-			if (viewsData) setViews(viewsData.views ?? 0);
-			if (likesData) setLikes(likesData.likes ?? 0);
+			try {
+				// Add minimum loading time to make loaders visible
+				const [viewsData, likesData] = await Promise.all([
+					fetchJSON(`/views/${slug}`),
+					fetchJSON(`/likes/${slug}`),
+					new Promise((resolve) => setTimeout(resolve, 500)), // Minimum 500ms loading
+				]);
+
+				if (viewsData) setViews(viewsData.views ?? 0);
+				if (likesData) setLikes(likesData.likes ?? 0);
+			} catch (error) {
+				console.error("Error loading stats:", error);
+			} finally {
+				setIsLoadingViews(false);
+				setIsLoadingLikes(false);
+			}
 		};
 
 		loadStats();
@@ -136,94 +164,108 @@ export function PostMetaHeader({ slug, author, theme }: Props) {
 	const socialLinks = parseSocials(authorInfo.socials);
 
 	return (
-		<section style={cardStyle}>
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "flex-start",
-					flexWrap: "wrap",
-					gap: "1rem",
-				}}
-			>
-				{/* Author Info */}
-				<div style={{ flex: 1, minWidth: "250px" }}>
-					<h3
-						style={{
-							margin: "0 0 0.5rem 0",
-							color: t?.accentColor,
-							fontSize: "1.1rem",
-						}}
-					>
-						{authorInfo.name}
-					</h3>
-					{authorInfo.socials && (
-						<div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-							{socialLinks.github && (
-								<a
-									href={socialLinks.github}
-									target="_blank"
-									rel="noopener noreferrer"
-									style={socialLinkStyle}
-									title="GitHub"
-								>
-									<FaGithub size={14} />
-									GitHub
-								</a>
-							)}
-							{socialLinks.twitter && (
-								<a
-									href={socialLinks.twitter}
-									target="_blank"
-									rel="noopener noreferrer"
-									style={socialLinkStyle}
-									title="Twitter"
-								>
-									<FaTwitter size={14} />
-									Twitter
-								</a>
-							)}
-							{socialLinks.linkedin && (
-								<a
-									href={socialLinks.linkedin}
-									target="_blank"
-									rel="noopener noreferrer"
-									style={socialLinkStyle}
-									title="LinkedIn"
-								>
-									<FaLinkedin size={14} />
-									LinkedIn
-								</a>
-							)}
-							{socialLinks.website && (
-								<a
-									href={socialLinks.website}
-									target="_blank"
-									rel="noopener noreferrer"
-									style={socialLinkStyle}
-									title="Website"
-								>
-									<FaGlobe size={14} />
-									Website
-								</a>
-							)}
-						</div>
-					)}
-				</div>
+		<>
+			<style>
+				{`
+					@keyframes pulse {
+						0%, 100% { opacity: 0.4; }
+						50% { opacity: 1; }
+					}
+				`}
+			</style>
+			<section style={cardStyle}>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "flex-start",
+						flexWrap: "wrap",
+						gap: "1rem",
+					}}
+				>
+					{/* Author Info */}
+					<div style={{ flex: 1, minWidth: "250px" }}>
+						<h3
+							style={{
+								margin: "0 0 0.5rem 0",
+								color: t?.accentColor,
+								fontSize: "1.1rem",
+							}}
+						>
+							{authorInfo.name}
+						</h3>
+						{authorInfo.socials && (
+							<div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+								{socialLinks.github && (
+									<a
+										href={socialLinks.github}
+										target="_blank"
+										rel="noopener noreferrer"
+										style={socialLinkStyle}
+										title="GitHub"
+									>
+										<FaGithub size={14} />
+										GitHub
+									</a>
+								)}
+								{socialLinks.twitter && (
+									<a
+										href={socialLinks.twitter}
+										target="_blank"
+										rel="noopener noreferrer"
+										style={socialLinkStyle}
+										title="Twitter"
+									>
+										<FaTwitter size={14} />
+										Twitter
+									</a>
+								)}
+								{socialLinks.linkedin && (
+									<a
+										href={socialLinks.linkedin}
+										target="_blank"
+										rel="noopener noreferrer"
+										style={socialLinkStyle}
+										title="LinkedIn"
+									>
+										<FaLinkedin size={14} />
+										LinkedIn
+									</a>
+								)}
+								{socialLinks.website && (
+									<a
+										href={socialLinks.website}
+										target="_blank"
+										rel="noopener noreferrer"
+										style={socialLinkStyle}
+										title="Website"
+									>
+										<FaGlobe size={14} />
+										Website
+									</a>
+								)}
+							</div>
+						)}
+					</div>
 
-				{/* Stats */}
-				<div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-					<span style={tagStyle} title="Views">
-						<FaEye color={t?.accentColor} size={14} />
-						<span>{views.toLocaleString()}</span>
-					</span>
-					<span style={tagStyle} title="Likes">
-						<FaHeart color={t?.accentColor} size={14} />
-						<span>{likes.toLocaleString()}</span>
-					</span>
+					{/* Stats */}
+					<div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+						<span style={tagStyle} title="Views">
+							<FaEye color={t?.accentColor} size={14} />
+							<span>
+								{isLoadingViews ? <CuteLoader /> : views.toLocaleString()}
+							</span>
+						</span>
+						<span style={tagStyle} title="Likes">
+							<FaHeart color={t?.accentColor} size={14} />
+							<span>
+								{isLoadingLikes ? <CuteLoader /> : likes.toLocaleString()}
+							</span>
+						</span>
+					</div>
 				</div>
-			</div>
-		</section>
+			</section>
+		</>
 	);
 }
 
