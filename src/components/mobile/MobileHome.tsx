@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { activeTheme, allThemes, setTheme } from "@/lib/theme-config";
+import {
+	activeTheme,
+	allThemes,
+	setTheme as applyTheme,
+} from "@/lib/theme-config";
 import type { Post } from "@/types/post";
 import SearchModal from "@/components/search/search-modal";
 
 export function MobileHome() {
-	const [theme, setTheme] = useState(activeTheme);
+	const [theme, setThemeState] = useState(activeTheme);
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [query, setQuery] = useState("");
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -15,8 +19,8 @@ export function MobileHome() {
 			.then((r) => r.json())
 			.then((data) => setPosts(data))
 			.catch(() => {});
-		setTheme(activeTheme);
-		const onChange = () => setTheme(activeTheme);
+		setThemeState(activeTheme);
+		const onChange = () => setThemeState(activeTheme);
 		window.addEventListener("themechange", onChange);
 		return () => window.removeEventListener("themechange", onChange);
 	}, []);
@@ -318,7 +322,7 @@ export function MobileHome() {
 										<button
 											key={key}
 											className="block w-full text-left px-2 py-1 text-xs"
-											onClick={() => setTheme(key)}
+											onClick={() => setThemeState(applyTheme(key))}
 											style={{ fontWeight: t.name === theme.name ? 700 : 400 }}
 										>
 											{t.name}
