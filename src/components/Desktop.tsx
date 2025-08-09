@@ -169,6 +169,29 @@ export function Desktop({
 		);
 	}
 
+	// Recursively inject shared props into nested React elements (avoid adding to DOM nodes)
+	const injectPropsDeep = (element: React.ReactNode): React.ReactNode => {
+		if (!React.isValidElement(element)) return element;
+
+		// Always process children first
+		const children = (element as any).props?.children;
+		const processedChildren = Array.isArray(children)
+			? children.map((child: React.ReactNode) => injectPropsDeep(child))
+			: injectPropsDeep(children);
+
+		// If it's a DOM element (e.g., 'div'), only replace its children
+		if (typeof element.type === "string") {
+			return React.cloneElement(element, undefined, processedChildren);
+		}
+
+		// It's a React component: inject our shared props and processed children
+		return React.cloneElement(
+			element as React.ReactElement<any>,
+			{ theme, posts, recentPosts, setWindowTitle, windowTitle },
+			processedChildren
+		);
+	};
+
 	return (
 		<div
 			className="w-full flex flex-col items-center min-h-screen"
@@ -193,19 +216,7 @@ export function Desktop({
 				className="container mx-auto my-8 flex flex-col md:flex-row flex-wrap gap-8"
 				style={getWindowContainerStyle()}
 			>
-				{/* Render children with context */}
-				{React.Children.map(children, (child) => {
-					if (React.isValidElement(child)) {
-						return React.cloneElement(child as React.ReactElement<any>, {
-							theme,
-							posts,
-							recentPosts,
-							setWindowTitle,
-							windowTitle,
-						});
-					}
-					return child;
-				})}
+				{injectPropsDeep(children)}
 			</div>
 
 			{/* Status bar */}
