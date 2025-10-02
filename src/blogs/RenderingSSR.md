@@ -12,8 +12,6 @@ tags: ["web development", "rendering", "ssr", "spa", "mpa"]
 excerpt: "A deep dive into the various rendering strategies of web frameworks."
 ---
 
-# Various Rendering Strategies of Web Frameworks
-
 The world of web development is a constantly evolving landscape, and one of its most dynamic areas is how web applications are rendered. Gone are the days when the choice was simply "send HTML" or "send JavaScript." Today, we live in an era where techniques are blended, offering a spectrum of benefits and trade-offs. Understanding these different approaches is crucial for any modern web developer.
 
 Let's dive into the core strategies and how various popular frameworks implement them.

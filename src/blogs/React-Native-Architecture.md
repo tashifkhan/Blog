@@ -13,8 +13,6 @@ tags:
 excerpt: "Understanding the fundamental shift from React Native's old bridge architecture to the new JSI-based system and why it matters."
 ---
 
-# Old Bridge vs New Architecture in React Native: A Deep Dive
-
 If you've been working with React Native or following its evolution, you've probably heard about the "New Architecture." But what exactly changed, and why does it matter? Let's break down the fundamental differences between React Native's old bridge system and the new architecture that's revolutionizing mobile development.
 
 ## The Old Bridge Architecture: How It All Began

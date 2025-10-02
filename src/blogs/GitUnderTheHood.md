@@ -12,8 +12,6 @@ tags: ["git", "version control", "programming"]
 excerpt: "A deep dive into the core components that make Git possible."
 ---
 
-## Unpacking Git: A Journey Under the Hood of Version Control
-
 Git. For many, it's the indispensable tool that orchestrates our code, tracks our progress, and saves us from countless headaches. We use `git add`, `git commit`, `git push`, and `git pull` almost instinctively. But have you ever stopped to wonder what's truly happening when you type those commands? How does Git manage to track every change, enable seamless collaboration, and allow us to travel through time in our codebase?
 
 The magic of Git lies in its elegant simplicity and robust underlying data structures. Unlike older version control systems that focused on storing diffs (differences between file versions), Git's core philosophy is that of a **content-addressable filesystem**. It sees your project not as a series of changes, but as a series of **snapshots**. Every time you commit, Git takes a picture of your entire project and stores it efficiently.

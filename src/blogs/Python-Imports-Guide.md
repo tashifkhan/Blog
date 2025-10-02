@@ -12,8 +12,6 @@ tags: ["python", "imports", "project structure", "packages", "modules"]
 excerpt: "Master Python's import system and learn how to structure your projects for maximum maintainability and scalability."
 ---
 
-# Python Imports and Project Structure: A Practical Guide
-
 One of the most confusing aspects of Python for newcomers - and even experienced developers - is the import system. You've probably seen those cryptic `ImportError: attempted relative import with no known parent package` messages and wondered what you did wrong.
 
 The truth is, Python's import system is elegant once you understand it. Let's demystify absolute imports, relative imports, and project structure best practices.

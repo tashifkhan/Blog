@@ -12,8 +12,6 @@ tags: ["python", "data structures", "dunder methods", "linked list", "oop"]
 excerpt: "Learn how to build a fully functional linked list in Python using dunder methods. Make your custom data structure behave just like built-in Python sequences!"
 ---
 
-# Building a Pythonic Linked List: Mastering Dunder Methods
-
 Python's "dunder methods" (double underscore methods) are one of the language's most powerful features. They let your custom classes seamlessly integrate with Python's built-in operations - using `+` for concatenation, `len()` for size, `in` for membership testing, and much more.
 
 Today, we're going to build a complete linked list implementation that feels as natural to use as Python's built-in list. By the end, you'll understand how to make your custom data structures truly Pythonic.

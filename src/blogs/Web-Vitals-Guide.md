@@ -12,8 +12,6 @@ tags: ["web vitals", "performance", "optimization", "nextjs", "astro", "react"]
 excerpt: "A comprehensive guide to understanding and optimizing Core Web Vitals from a full-stack perspective, with practical examples using modern frameworks."
 ---
 
-# Mastering Core Web Vitals: A Full-Stack Developer's Guide to Performance Excellence
-
 We've all been there. You build a beautiful application, test it locally, everything feels snappy and responsive. Then you deploy it to production, check it on your phone over a 4G connection, and... it crawls. Users bounce. Your client isn't happy. Google penalizes your rankings.
 
 After years of building with everything from Flask and FastAPI backends to Next.js, React, and Astro frontends, I've learned that understanding Core Web Vitals isn't just about appeasing Google's algorithms - it's about delivering genuinely exceptional user experiences. And honestly? It's become one of the most important skills in modern web development.

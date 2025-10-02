@@ -12,8 +12,6 @@ tags: ["python", "algorithms", "recursion", "itertools", "programming"]
 excerpt: "How do you create an arbitrary number of nested loops when you don't know the depth at compile time? Let's explore elegant solutions to this classic programming challenge."
 ---
 
-# Creating N Nested Loops Programmatically in Python
-
 Ever faced a problem where you need to generate all possible combinations of something, but the number of "levels" isn't known until runtime? Maybe you're building a product configurator, generating test cases, or exploring a search space. You need nested loops, but how many? That's determined by a variable `n`.
 
 You can't write `for i in range(x): for j in range(x): for k in range(x):` because you don't know how many loops you'll need. This is where programmatic loop generation comes in - a classic computer science challenge with some elegant solutions.

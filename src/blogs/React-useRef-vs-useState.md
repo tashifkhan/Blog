@@ -12,8 +12,6 @@ tags: ["react", "react native", "hooks", "useref", "usestate"]
 excerpt: "Confused about when to use useRef versus useState? Let's break down these two fundamental React hooks and when to use each one."
 ---
 
-# useRef vs useState in React: Understanding the Fundamental Difference
-
 If you're working with React or React Native, you've probably encountered both `useState` and `useRef`. At first glance, they might seem similar - both let you store values in your components. But use them interchangeably, and you'll quickly run into confusing bugs or performance issues.
 
 The key difference? **`useState` triggers re-renders, `useRef` doesn't.** But there's much more to the story. Let's dive deep into both hooks and understand when to use each one.

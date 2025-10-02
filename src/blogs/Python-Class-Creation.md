@@ -12,8 +12,6 @@ tags: ["python", "metaclass", "object-oriented", "internals", "type"]
 excerpt: "Everything in Python is an object - even classes themselves. Let's explore how Python creates classes internally and the fascinating role of metaclasses."
 ---
 
-# How Python Creates Classes: A Journey into Metaclasses and the Object Model
-
 You've probably heard the phrase "everything in Python is an object." It's not just a catchy slogan - it's a fundamental truth about how Python works. Numbers are objects. Strings are objects. Functions are objects. But here's where it gets really interesting: **classes themselves are objects too**.
 
 If classes are objects, then something must create them, right? Just like a class creates its instances, something creates the class itself. That "something" is called a **metaclass**, and understanding this concept opens up a whole new level of Python mastery.

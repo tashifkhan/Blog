@@ -12,8 +12,6 @@ tags: ["web development", "cors", "security", "api", "browser"]
 excerpt: "Understanding CORS - the browser security feature that every web developer needs to master."
 ---
 
-# The Complete Guide to CORS: Understanding Cross-Origin Resource Sharing from Security Perspective
-
 Hey everyone! Welcome back to another deep dive into web development concepts. Today we're tackling one of the most misunderstood and frustrating topics for web developers: **CORS (Cross-Origin Resource Sharing)**. If you've ever worked with APIs and encountered that dreaded CORS error, this comprehensive guide will not only help you understand what's happening but also why it's absolutely crucial for web security.
 
 By the end of this article, you'll have a complete understanding of CORS from a security perspective, how to configure it correctly, and most importantly, why this concept even exists in the first place. Let's dive in!

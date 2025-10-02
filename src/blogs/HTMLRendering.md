@@ -12,8 +12,6 @@ tags: ["html", "css", "javascript", "browser", "rendering"]
 excerpt: "A deep dive into the browser's rendering process."
 ---
 
-# How a Webpage Changes the Pixels on Your Screen: The Browser's Secret Journey
-
 Ever stopped to ponder the sheer magic that happens when you type a URL into your browser? One moment, it's just raw HTML, CSS, and perhaps a sprinkle of JavaScript; the next, it's a dynamic, interactive masterpiece gracing your display. It's not just a flicker of light; it's a meticulously choreographed dance performed by your browser, involving powerful data structures and crucial concepts like **Reflow** and **Repaint**.
 
 As an Electronics and Computer Science student with a keen eye for customization and a passion for understanding how things work, I find this deep dive into browser rendering endlessly fascinating. It’s not just about what you see, but the intricate systems and optimizations humming beneath the surface. For any aspiring web developer, understanding this "behind-the-scenes" drama is less of a suggestion and more of a superpower!

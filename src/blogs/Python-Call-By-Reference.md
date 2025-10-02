@@ -12,8 +12,6 @@ tags: ["python", "programming", "fundamentals", "reference", "memory"]
 excerpt: "Python doesn't have 'call by reference' in the traditional sense. Let's explore what really happens when you pass variables to functions and how to work with it effectively."
 ---
 
-# Understanding Python's 'Call by Reference': Why It Doesn't Exist (And What Actually Happens)
-
 If you're coming to Python from languages like C++ or Java, you might be searching for Python's "call by reference" mechanism. Maybe you want to increment a counter in a function and have that change reflected outside. Here's the thing: **Python doesn't have call by reference** in the traditional sense.
 
 But don't worry! Once you understand what Python actually does, you'll see it's both elegant and practical. Let's dive in.
