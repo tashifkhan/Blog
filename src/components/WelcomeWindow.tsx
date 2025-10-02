@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaTimesCircle } from "react-icons/fa";
 import { PostList } from "./posts/post-list";
@@ -21,13 +21,14 @@ export function WelcomeWindow({
 }: WelcomeWindowProps) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [searchResults, setSearchResults] = useState<Post[]>([]);
+	// Start maximized by default so the window appears expanded on initial render
 	const [windowState, setWindowState] = useState<
 		"normal" | "minimized" | "maximized"
-	>("normal");
+	>("maximized");
 	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	// Search functionality
-	React.useEffect(() => {
+	useEffect(() => {
 		if (searchQuery) {
 			const lowercaseQuery = searchQuery.toLowerCase();
 			setSearchResults(
