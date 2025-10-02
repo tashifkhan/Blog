@@ -1,7 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { activeTheme, allThemes, setTheme } from "@/lib/theme-config";
 import { PostMetaHeader } from "@/components/PostMetaHeader";
 import { EngagementPanel } from "@/components/EngagementPanel";
+import {
+	MobileTableOfContents,
+	MobileTableOfContentsRef,
+} from "./MobileTableOfContents";
+import { Menu } from "lucide-react";
 
 interface MobilePostReaderProps {
 	title?: string;
@@ -34,6 +39,7 @@ export function MobilePostReader({
 	children,
 }: MobilePostReaderProps) {
 	const [theme, setThemeState] = useState(activeTheme);
+	const tocRef = useRef<MobileTableOfContentsRef>(null);
 
 	useEffect(() => {
 		setThemeState(activeTheme);
@@ -297,13 +303,23 @@ export function MobilePostReader({
 					aria-label="Reader toolbar"
 				>
 					<div className="flex items-center justify-between px-3 h-12">
-						<a
-							href="/"
-							className="text-sm font-bold no-underline"
-							style={{ color: theme.textColor }}
-						>
-							← Home
-						</a>
+						<div className="flex items-center gap-3">
+							<button
+								onClick={() => tocRef.current?.open()}
+								className="p-1.5 rounded hover:bg-opacity-10 transition-colors"
+								style={{ color: theme.textColor }}
+								aria-label="Open table of contents"
+							>
+								<Menu size={20} />
+							</button>
+							<a
+								href="/"
+								className="text-sm font-bold no-underline"
+								style={{ color: theme.textColor }}
+							>
+								← Home
+							</a>
+						</div>
 						<div className="flex items-center gap-2">
 							<details className="relative">
 								<summary
@@ -508,6 +524,9 @@ export function MobilePostReader({
 					</div>
 				</footer>
 			</div>
+
+			{/* Mobile Table of Contents */}
+			<MobileTableOfContents ref={tocRef} theme={theme} />
 		</>
 	);
 }

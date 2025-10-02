@@ -44,23 +44,42 @@ function enhanceHtml(rawHtml: string): string {
 		'<code class="px-2 py-1 sm:px-3 sm:py-1.5 rounded-md font-mono border shadow-sm transition-all duration-200 bg-[var(--theme-muted)] text-[var(--theme-text)] border-[color:var(--theme-border)]" style="font-size: calc(var(--reader-font-scale, 1) * 0.875rem);">$1</code>'
 	);
 
-	// Headers - use theme foreground and accent variables with better spacing
-	html = html.replace(
-		/<h1>(.*?)<\/h1>/g,
-		'<h1 class="font-bold mb-6 sm:mb-8 text-[var(--theme-text)] border-b-2 border-[color:color-mix(in_oklab,var(--theme-accent)_30%,transparent)] pb-3 sm:pb-4 mt-8 sm:mt-10 first:mt-0" style="font-size: calc(var(--reader-font-scale, 1) * 2.25rem); line-height: var(--reader-line-height, 1.65);">$1</h1>'
-	);
-	html = html.replace(
-		/<h2>(.*?)<\/h2>/g,
-		'<h2 class="font-semibold mb-4 sm:mb-6 text-[var(--theme-text)] mt-8 sm:mt-10 flex items-center" style="font-size: calc(var(--reader-font-scale, 1) * 1.875rem); line-height: var(--reader-line-height, 1.65);"><span class="w-1 h-5 sm:h-7 rounded-full mr-3 sm:mr-4 bg-[var(--theme-accent)]"></span>$1</h2>'
-	);
-	html = html.replace(
-		/<h3>(.*?)<\/h3>/g,
-		'<h3 class="font-medium mb-3 sm:mb-4 text-[var(--theme-text)] mt-6 sm:mt-8 flex items-center" style="font-size: calc(var(--reader-font-scale, 1) * 1.5rem); line-height: var(--reader-line-height, 1.65);"><span class="w-1 h-4 sm:h-6 rounded-full mr-2 sm:mr-3 bg-[var(--theme-accent)]/80"></span>$1</h3>'
-	);
-	html = html.replace(
-		/<h4>(.*?)<\/h4>/g,
-		'<h4 class="font-medium mb-2 sm:mb-3 text-[var(--theme-text)] mt-5 sm:mt-6 flex items-center" style="font-size: calc(var(--reader-font-scale, 1) * 1.25rem); line-height: var(--reader-line-height, 1.65);"><span class="w-1 h-3 sm:h-5 rounded-full mr-2 sm:mr-3 bg-[var(--theme-accent)]/70"></span>$1</h4>'
-	);
+	// Function to generate heading IDs
+	function generateHeadingId(text: string): string {
+		return text
+			.toLowerCase()
+			.replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+			.replace(/\s+/g, "-") // Replace spaces with hyphens
+			.replace(/-+/g, "-") // Replace multiple hyphens with single
+			.replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+	}
+
+	// Headers - use theme foreground and accent variables with better spacing and IDs
+	let headingCounter = 0;
+	html = html.replace(/<h1>(.*?)<\/h1>/g, (match, text) => {
+		const id = generateHeadingId(text) || `heading-${++headingCounter}`;
+		return `<h1 id="${id}" class="font-bold mb-6 sm:mb-8 text-[var(--theme-text)] border-b-2 border-[color:color-mix(in_oklab,var(--theme-accent)_30%,transparent)] pb-3 sm:pb-4 mt-8 sm:mt-10 first:mt-0" style="font-size: calc(var(--reader-font-scale, 1) * 2.25rem); line-height: var(--reader-line-height, 1.65);">${text}</h1>`;
+	});
+	html = html.replace(/<h2>(.*?)<\/h2>/g, (match, text) => {
+		const id = generateHeadingId(text) || `heading-${++headingCounter}`;
+		return `<h2 id="${id}" class="font-semibold mb-4 sm:mb-6 text-[var(--theme-text)] mt-8 sm:mt-10 flex items-center" style="font-size: calc(var(--reader-font-scale, 1) * 1.875rem); line-height: var(--reader-line-height, 1.65);"><span class="w-1 h-5 sm:h-7 rounded-full mr-3 sm:mr-4 bg-[var(--theme-accent)]"></span>${text}</h2>`;
+	});
+	html = html.replace(/<h3>(.*?)<\/h3>/g, (match, text) => {
+		const id = generateHeadingId(text) || `heading-${++headingCounter}`;
+		return `<h3 id="${id}" class="font-medium mb-3 sm:mb-4 text-[var(--theme-text)] mt-6 sm:mt-8 flex items-center" style="font-size: calc(var(--reader-font-scale, 1) * 1.5rem); line-height: var(--reader-line-height, 1.65);"><span class="w-1 h-4 sm:h-6 rounded-full mr-2 sm:mr-3 bg-[var(--theme-accent)]/80"></span>${text}</h3>`;
+	});
+	html = html.replace(/<h4>(.*?)<\/h4>/g, (match, text) => {
+		const id = generateHeadingId(text) || `heading-${++headingCounter}`;
+		return `<h4 id="${id}" class="font-medium mb-2 sm:mb-3 text-[var(--theme-text)] mt-5 sm:mt-6 flex items-center" style="font-size: calc(var(--reader-font-scale, 1) * 1.25rem); line-height: var(--reader-line-height, 1.65);"><span class="w-1 h-3 sm:h-5 rounded-full mr-2 sm:mr-3 bg-[var(--theme-accent)]/70"></span>${text}</h4>`;
+	});
+	html = html.replace(/<h5>(.*?)<\/h5>/g, (match, text) => {
+		const id = generateHeadingId(text) || `heading-${++headingCounter}`;
+		return `<h5 id="${id}" class="font-medium mb-2 text-[var(--theme-text)] mt-4 sm:mt-5" style="font-size: calc(var(--reader-font-scale, 1) * 1.125rem); line-height: var(--reader-line-height, 1.65);">${text}</h5>`;
+	});
+	html = html.replace(/<h6>(.*?)<\/h6>/g, (match, text) => {
+		const id = generateHeadingId(text) || `heading-${++headingCounter}`;
+		return `<h6 id="${id}" class="font-medium mb-2 text-[var(--theme-text)] mt-4 opacity-90" style="font-size: calc(var(--reader-font-scale, 1) * 1rem); line-height: var(--reader-line-height, 1.65);">${text}</h6>`;
+	});
 
 	// Bold/italic - use theme text
 	html = html.replace(

@@ -1,4 +1,4 @@
-import React from "react";
+import type { FC } from "react";
 import { Menubar } from "../ui/menubar";
 import { Apple, SearchIcon } from "lucide-react";
 import { FileMenu } from "./file-menu";
@@ -9,6 +9,7 @@ import { AppearanceMenu } from "./appearance-menu";
 import { HelpMenu } from "./help-menu";
 import { RecentPostsMenu } from "./recent-posts-menu";
 import { ReaderMenu } from "./reader-menu";
+import { TableOfContentsMenu } from "./table-of-contents-menu";
 import type { Post } from "@/types/post";
 
 interface MenuBarProps {
@@ -20,14 +21,14 @@ interface MenuBarProps {
 	setWindowTitle: (title: string) => void;
 }
 
-export function MenuBar({
+export const MenuBar: FC<MenuBarProps> = ({
 	theme,
 	currentTime,
 	toggleRecentPosts,
 	focusSearch,
 	recentPosts,
 	setWindowTitle,
-}: MenuBarProps) {
+}) => {
 	const styles = {
 		menuBar: {
 			background: theme.menuBarBackground,
@@ -50,6 +51,7 @@ export function MenuBar({
 					<EditMenu theme={theme} onFind={focusSearch} />
 					<ViewMenu theme={theme} />
 					<NavigateMenu theme={theme} setWindowTitle={setWindowTitle} />
+					<TableOfContentsMenu theme={theme} />
 					<ReaderMenu theme={theme} />
 					<AppearanceMenu theme={theme} />
 					<HelpMenu theme={theme} />
@@ -79,4 +81,4 @@ export function MenuBar({
 			</div>
 		</div>
 	);
-}
+};
