@@ -152,6 +152,27 @@ async def like_post(slug: str):
     return {"likes": likes}
 
 
+# Allow unliking (client tracks whether current viewer liked via localStorage / cookie).
+# This simply decrements if likes > 0; it does not track per-user uniqueness server-side.
+@app.delete("/likes/{slug}")
+async def unlike_post(slug: str):
+    db = get_db()
+    posts = db.get_collection("posts")
+    # Decrement only if current likes > 0 to avoid negative counts
+    res = posts.find_one_and_update(
+        {"slug": slug, "likes": {"$gt": 0}},
+        {"$inc": {"likes": -1}},
+        return_document=True,
+    )
+    if not res:
+        # Either post didn't exist or likes already 0; fetch existing (or None)
+        res = posts.find_one({"slug": slug})
+    likes = int((res or {}).get("likes", 0))
+    if likes < 0:
+        likes = 0
+    return {"likes": likes}
+
+
 # Comments
 @app.get("/comments/{slug}")
 async def get_comments(slug: str):

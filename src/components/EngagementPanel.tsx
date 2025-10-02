@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import type { ThemeConfig } from "@/lib/theme-config";
 import { FaHeart, FaEye, FaReply, FaPaperPlane } from "react-icons/fa";
 import { fetchJSON } from "@/lib/api";
@@ -145,6 +145,17 @@ export function EngagementPanel({ slug, theme }: Props) {
 	// Loading states
 	const [isLoadingViews, setIsLoadingViews] = React.useState(true);
 	const [isLoadingLikes, setIsLoadingLikes] = React.useState(true);
+	const [hasLiked, setHasLiked] = React.useState<boolean>(false); // client-side like state
+	const likeActionRef = React.useRef<number | null>(null); // debounce timer id
+
+	// Initialize hasLiked from localStorage (per slug) on mount
+	React.useEffect(() => {
+		try {
+			const key = `liked:${slug}`;
+			const v = localStorage.getItem(key);
+			setHasLiked(v === "1");
+		} catch {}
+	}, [slug]);
 
 	const t = theme;
 
@@ -230,11 +241,42 @@ export function EngagementPanel({ slug, theme }: Props) {
 		}
 	}, [slug]);
 
-	const likePost = async () => {
-		try {
-			const data = await fetchJSON(`/likes/${slug}`, { method: "POST" });
-			setLikes(data.likes ?? 0);
-		} catch {}
+	// Debounced like toggle.
+	// Clicking rapidly should only schedule the final intended action (like OR unlike) after short delay.
+	const toggleLike = () => {
+		// Optimistic UI: flip state & adjust likes locally immediately
+		setHasLiked((prev) => {
+			const next = !prev;
+			setLikes((l) => Math.max(0, l + (next ? 1 : -1)));
+			return next;
+		});
+
+		if (likeActionRef.current) {
+			window.clearTimeout(likeActionRef.current);
+		}
+		likeActionRef.current = window.setTimeout(async () => {
+			try {
+				const method = hasLiked ? "DELETE" : "POST"; // hasLiked is stale after setState; compute inverse
+				// We want to send request that matches the NEW state; after flipping, hasLiked is old value
+				// So if previous state was true (user had liked), we just flipped to false -> send DELETE
+				const finalMethod = method;
+				const data = await fetchJSON(`/likes/${slug}`, { method: finalMethod });
+				setLikes(data.likes ?? 0);
+				try {
+					localStorage.setItem(
+						`liked:${slug}`,
+						finalMethod === "POST" ? "1" : "0"
+					);
+				} catch {}
+			} catch (e) {
+				// Revert optimistic change on failure
+				setHasLiked((prev) => {
+					const reverted = !prev; // flip back
+					setLikes((l) => Math.max(0, l + (reverted ? 1 : -1)));
+					return reverted;
+				});
+			}
+		}, 400); // 400ms debounce window
 	};
 
 	const loadComments = React.useCallback(async () => {
@@ -324,10 +366,11 @@ export function EngagementPanel({ slug, theme }: Props) {
 					</span>
 					<button
 						style={buttonStyle(true)}
-						onClick={likePost}
-						aria-label="Like this post"
+						onClick={toggleLike}
+						aria-label={hasLiked ? "Unlike this post" : "Like this post"}
 					>
-						<FaHeart /> Like
+						<FaHeart color={hasLiked ? t?.windowBackground : undefined} />{" "}
+						{hasLiked ? "Liked" : "Like"}
 					</button>
 				</div>
 
