@@ -4,7 +4,7 @@ import { PostMetaHeader } from "@/components/PostMetaHeader";
 import { EngagementPanel } from "@/components/EngagementPanel";
 import {
 	MobileTableOfContents,
-	MobileTableOfContentsRef,
+	type MobileTableOfContentsRef,
 } from "./MobileTableOfContents";
 import { Menu } from "lucide-react";
 
@@ -285,6 +285,22 @@ export function MobilePostReader({
 					.mobile-content pre *,
 					.mobile-content .code-block-wrapper pre * {
 						color: white !important;
+					}
+					
+					/* Mobile code blocks: fit parent article container */
+					@media (max-width: 768px) {
+						.mobile-content .code-block-wrapper {
+							/* Expand to fill article width by breaking out of .mobile-content padding */
+							/* Article has p-3 (0.75rem padding), so extend into that space */
+							width: calc(100% + 1.5rem); /* 0.75rem * 2 sides */
+							max-width: calc(100% + 1.5rem);
+							margin-left: -0.75rem; /* pull to article edge */
+							margin-right: -0.75rem;
+							border-radius: 0;
+						}
+						.mobile-content .code-block-wrapper pre {
+							border-radius: 0;
+						}
 					}
 				`}
 			</style>
