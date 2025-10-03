@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["web development", "cors", "security", "api", "browser"]
+tags: ["CORS", "API"]
 excerpt: "Understanding CORS - the browser security feature that every web developer needs to master."
 ---
 

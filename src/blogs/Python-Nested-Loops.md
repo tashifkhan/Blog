@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["python", "algorithms", "recursion", "itertools", "programming"]
+tags: ["Python", "DSA"]
 excerpt: "How do you create an arbitrary number of nested loops when you don't know the depth at compile time? Let's explore elegant solutions to this classic programming challenge."
 ---
 

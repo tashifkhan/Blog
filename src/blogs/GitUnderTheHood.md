@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["git", "version control", "programming"]
+tags: ["Git"]
 excerpt: "A deep dive into the core components that make Git possible."
 ---
 

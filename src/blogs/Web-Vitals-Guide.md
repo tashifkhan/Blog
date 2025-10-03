@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["web vitals", "performance", "optimization", "nextjs", "astro", "react"]
+tags: ["Web", "Next.js", "Astro", "React"]
 excerpt: "A comprehensive guide to understanding and optimizing Core Web Vitals from a full-stack perspective, with practical examples using modern frameworks."
 ---
 

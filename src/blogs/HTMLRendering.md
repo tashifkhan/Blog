@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["html", "css", "javascript", "browser", "rendering"]
+tags: ["Web", "JS"]
 excerpt: "A deep dive into the browser's rendering process."
 ---
 

@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["python", "data structures", "dunder methods", "linked list", "oop"]
+tags: ["Python", "DSA", "Low Level", "OPPs"]
 excerpt: "Learn how to build a fully functional linked list in Python using dunder methods. Make your custom data structure behave just like built-in Python sequences!"
 ---
 

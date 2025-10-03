@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["react", "react native", "hooks", "useref", "usestate"]
+tags: ["React", "React Native", "Low Level"]
 excerpt: "Confused about when to use useRef versus useState? Let's break down these two fundamental React hooks and when to use each one."
 ---
 

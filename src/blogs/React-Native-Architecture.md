@@ -8,8 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags:
-  ["react native", "mobile development", "architecture", "performance", "jsi"]
+tags: ["React Native", "Low Level"]
 excerpt: "Understanding the fundamental shift from React Native's old bridge architecture to the new JSI-based system and why it matters."
 ---
 

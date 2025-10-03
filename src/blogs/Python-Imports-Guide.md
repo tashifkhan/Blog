@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["python", "imports", "project structure", "packages", "modules"]
+tags: ["Python", "Low Level"]
 excerpt: "Master Python's import system and learn how to structure your projects for maximum maintainability and scalability."
 ---
 

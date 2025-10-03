@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["python", "programming", "fundamentals", "reference", "memory"]
+tags: ["Python", "Low Level"]
 excerpt: "Python doesn't have 'call by reference' in the traditional sense. Let's explore what really happens when you pass variables to functions and how to work with it effectively."
 ---
 

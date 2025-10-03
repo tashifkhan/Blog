@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["python", "metaclass", "object-oriented", "internals", "type"]
+tags: ["Python", "OOPs", "Low Level"]
 excerpt: "Everything in Python is an object - even classes themselves. Let's explore how Python creates classes internally and the fascinating role of metaclasses."
 ---
 

@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["web development", "rendering", "ssr", "spa", "mpa"]
+tags: ["Web", "Low Level"]
 excerpt: "A deep dive into the various rendering strategies of web frameworks."
 ---
 
