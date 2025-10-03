@@ -301,6 +301,15 @@ export function MobilePostReader({
 						.mobile-content .code-block-wrapper pre {
 							border-radius: 0;
 						}
+						/* Fix copy button position on mobile */
+						.mobile-content .code-block-wrapper .copy-button {
+							top: 0.5rem;
+							right: 0.75rem;
+							padding: 0.5rem;
+						}
+						.mobile-content .code-block-wrapper .language-label {
+							display: none; /* Hide language label on mobile to give more space */
+						}
 					}
 				`}
 			</style>
