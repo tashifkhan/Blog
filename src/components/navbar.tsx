@@ -8,11 +8,22 @@ import type { Post } from "@/types/post";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchModal from "./search/search-modal";
 
-export default function Navbar() {
+interface NavbarProps {
+	currentPage?: string;
+	currentSlug?: string;
+}
+
+export default function Navbar({ currentPage, currentSlug }: NavbarProps) {
 	// State management
 	const [theme, setTheme] = useState(activeTheme);
 	const [currentTime, setCurrentTime] = useState(new Date());
-	const [windowTitle, setWindowTitle] = useState("Blog - Home");
+	const [windowTitle, setWindowTitle] = useState(
+		currentSlug
+			? `Post - ${currentSlug}`
+			: currentPage
+			? `Blog - ${currentPage}`
+			: "Blog - Home"
+	);
 	// Changed default value to true to show recent posts on load
 	const [showRecentPosts, setShowRecentPosts] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");

@@ -1,6 +1,13 @@
 ---
 import "../styles/global.css";
 import Analytics from "@vercel/analytics/astro";
+
+export interface Props {
+	title?: string;
+	description?: string;
+}
+
+const { title, description } = Astro.props;
 ---
 
 <!doctype html>
@@ -12,7 +19,8 @@ import Analytics from "@vercel/analytics/astro";
 		<meta name="theme-color" content="#0f172a" />
 		<meta
 			name="description"
-			content="BlogOS by Tashif - Discover insightful articles, tutorials, and resources on web development, programming, and technology."
+			content={description ??
+				"BlogOS by Tashif - Discover insightful articles, tutorials, and resources on web development, programming, and technology."}
 		/>
 		<meta
 			name="keywords"
@@ -22,7 +30,9 @@ import Analytics from "@vercel/analytics/astro";
 		<link rel="canonical" href="https://blog.tashif.codes/" />
 		<link rel="icon" type="image/png" href="/favicon.png" />
 		<meta name="generator" content={Astro.generator} />
-		<title>BlogOS - A blog website by Tashif</title>
+		<title>
+			{title ? `${title} | BlogOS` : "BlogOS - A blog website by Tashif"}
+		</title>
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://tashif.codes/" />
@@ -81,12 +91,12 @@ import Analytics from "@vercel/analytics/astro";
 
 	/* Theme variables sync */
 	:root {
-		--theme-bg: #FDFD96;
+		--theme-bg: #fdfd96;
 		--theme-text: #000000;
-		--theme-accent: #FF498B;
+		--theme-accent: #ff498b;
 		--theme-border: #000000;
-		--theme-window-bg: #FFFFFF;
-		--theme-secondary: #4DEEEA;
-		--theme-muted: #74EE15;
+		--theme-window-bg: #ffffff;
+		--theme-secondary: #4deeea;
+		--theme-muted: #74ee15;
 	}
 </style>
