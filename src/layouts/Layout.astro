@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import Analytics from "@vercel/analytics/astro";
-
+import PostHog from "../components/posthog.astro";
 export interface Props {
 	title?: string;
 	description?: string;
@@ -52,6 +52,7 @@ const { title, description } = Astro.props;
 		<meta name="twitter:image" content="/favicon.png" />
 	</head>
 	<body>
+		<PostHog />
 		<Analytics />
 		<slot />
 		<script>
