@@ -142,10 +142,10 @@ export function MobileAbout({ theme, getCardStyle }: MobileAboutProps) {
 								githubUrl: "https://github.com/harleenkaur28/AI-Resume-Parser",
 							},
 							{
-								title: "JPortal",
-								description: "React PWA for JIIT WebKiosk with 4.5k+ users",
-								liveUrl: "https://jportal.tashif.codes/",
-								githubUrl: "https://github.com/tashifkhan/jportal",
+								title: "JIIT Tool Suite",
+								description: "Bundled tools for JIIT students",
+								liveUrl: "https://jiit-tools.tashif.codes/",
+								githubUrl: "https://github.com/tashifkhan/JIIT-tools-docs",
 							},
 						].map((project) => (
 							<div

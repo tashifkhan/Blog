@@ -65,12 +65,11 @@ export function AboutSection({ theme }: AboutSectionProps) {
 			githubUrl: "https://github.com/harleenkaur28/AI-Resume-Parser",
 		},
 		{
-			title: "JPortal",
-			description:
-				"Modern React Progressive Web App serving as an intuitive frontend for JIIT WebKiosk, attracting over 4,500 users. Features Pyodide integration for PDF parsing, sophisticated theming system, and includes JIIT Timetable, Placement alerts, and Campus Updates.",
+			title: "JIIT Tool Suite",
+			description: "Bundled tools for JIIT students",
 			tech: ["React", "Python", "WASM (Pyodide)", "MongoDB", "PWA"],
-			liveUrl: "https://jportal.tashif.codes/",
-			githubUrl: "https://github.com/tashifkhan/jportal",
+			liveUrl: "https://jiit-tools.tashif.codes/",
+			githubUrl: "https://github.com/tashifkhan/JIIT-tools-docs",
 		},
 		{
 			title: "SolarHelper",
