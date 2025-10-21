@@ -1,17 +1,4 @@
 {
-	"buildCommand": "bun run build",
-	"installCommand": "bun install",
-	"framework": "astro",
-	"routes": [
-		{
-			"handle": "filesystem"
-		},
-		{
-			"src": "/(.*)",
-			"status": 404,
-			"dest": "https://tashif.codes"
-		}
-	],
 	"rewrites": [
 		{
 			"source": "/ph/static/(.*)",
