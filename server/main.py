@@ -60,7 +60,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(system_router)
-app.include_router(health_router)
-app.include_router(engagement_router)
-app.include_router(posts_router)
+API_PREFIX = "/api"
+
+app.include_router(system_router, prefix=API_PREFIX)
+app.include_router(health_router, prefix=API_PREFIX)
+app.include_router(engagement_router, prefix=API_PREFIX)
+app.include_router(posts_router, prefix=API_PREFIX)
