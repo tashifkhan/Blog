@@ -1,7 +1,10 @@
 // Centralized API base using Astro public env.
-// Set PUBLIC_API_URL in your .env to point to the FastAPI server, e.g. http://localhost:8000
+// Default to relative /api for single-project Vercel deployment.
+// For split local dev, set PUBLIC_API_URL to something like http://localhost:8000.
 
-const BASE = (import.meta.env.PUBLIC_API_URL as string | undefined)?.replace(/\/$/, "") || "";
+const BASE =
+  (import.meta.env.PUBLIC_API_URL as string | undefined)?.replace(/\/$/, "") ||
+  "/api";
 
 export function apiUrl(path: string) {
   const p = path.startsWith("/") ? path : `/${path}`;

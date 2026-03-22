@@ -1,6 +1,10 @@
 {
 	"rewrites": [
 		{
+			"source": "/api/(.*)",
+			"destination": "/api/index.py"
+		},
+		{
 			"source": "/ph/static/(.*)",
 			"destination": "https://eu-assets.i.posthog.com/static/$1"
 		},
