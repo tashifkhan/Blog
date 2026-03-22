@@ -1,3 +1,7 @@
 fastapi
+motor
 pymongo[srv]
-# python-dotenv is not needed in Vercel serverless environment
+pydantic-settings
+python-frontmatter
+python-dotenv
+uvicorn
