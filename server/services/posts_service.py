@@ -20,9 +20,27 @@ class PostsService:
         self.blogs_dir = blogs_dir
         self.engagement_service = engagement_service
 
+    def _resolve_blogs_dir(self) -> Path:
+        candidates: list[Path] = [self.blogs_dir]
+
+        for parent in Path(__file__).resolve().parents:
+            candidates.append(parent / "src" / "blogs")
+
+        seen: set[Path] = set()
+        for candidate in candidates:
+            resolved = candidate.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            if resolved.exists() and resolved.is_dir():
+                return resolved
+
+        return self.blogs_dir
+
     def _list_blog_files(self) -> list[Path]:
-        md_files = list(self.blogs_dir.glob("*.md"))
-        mdx_files = list(self.blogs_dir.glob("*.mdx"))
+        blogs_dir = self._resolve_blogs_dir()
+        md_files = list(blogs_dir.glob("*.md"))
+        mdx_files = list(blogs_dir.glob("*.mdx"))
         return md_files + mdx_files
 
     @staticmethod
@@ -80,15 +98,16 @@ class PostsService:
             return datetime.min
 
     def _find_file_by_slug(self, slug: str) -> Path:
+        blogs_dir = self._resolve_blogs_dir()
         safe_slug = Path(slug).name
         for extension in (".md", ".mdx"):
-            file_path = self.blogs_dir / f"{safe_slug}{extension}"
+            file_path = blogs_dir / f"{safe_slug}{extension}"
             if file_path.exists() and file_path.is_file():
                 return file_path
         raise HTTPException(status_code=404, detail="Post not found")
 
     async def list_posts(self) -> list[PostSummary]:
-        if not self.blogs_dir.exists():
+        if not self._resolve_blogs_dir().exists():
             return []
 
         posts: list[PostSummary] = []

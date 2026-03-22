@@ -25,6 +25,25 @@ async def list_posts(
 
 
 @router.get(
+    "/posts/debug-paths",
+    summary="Debug resolved posts directory",
+    description="Returns resolved posts directory and discovered markdown files.",
+    include_in_schema=False,
+)
+async def debug_posts_paths(
+    service: PostsService = Depends(get_posts_service),
+) -> dict[str, object]:
+    resolved = service._resolve_blogs_dir()
+    files = service._list_blog_files()
+    return {
+        "resolvedBlogsDir": str(resolved),
+        "exists": resolved.exists(),
+        "count": len(files),
+        "files": [path.name for path in files],
+    }
+
+
+@router.get(
     "/posts/{slug}/full",
     response_model=PostDetailResponse,
     summary="Get a full blog post",

@@ -15,6 +15,14 @@ DEFAULT_ALLOWED_ORIGINS = [
 ]
 
 
+def _default_project_root() -> Path:
+    current_file = Path(__file__).resolve()
+    server_dir = current_file.parents[1]
+    if server_dir.name == "server":
+        return current_file.parents[2]
+    return server_dir
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
@@ -42,7 +50,8 @@ class Settings(BaseSettings):
     )
 
     project_root: Path = Field(
-        default=Path(__file__).resolve().parents[2], alias="PROJECT_ROOT"
+        default_factory=_default_project_root,
+        alias="PROJECT_ROOT",
     )
     blogs_dir: Path | None = Field(default=None, alias="BLOGS_DIR")
 
