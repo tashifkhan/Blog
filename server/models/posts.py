@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from models.comments import Comment
+from ..models.comments import Comment
 
 
 class PostSummary(BaseModel):
@@ -16,7 +16,13 @@ class PostSummary(BaseModel):
     excerpt: str | None = None
     category: str | None = None
     socials: list[str] | dict[str, Any] | None = None
+    word_count: int = Field(default=0, alias="wordCount", ge=0)
+    reading_time_minutes: int = Field(
+        default=1, alias="readingTimeMinutes", ge=1
+    )
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {"populate_by_name": True}
 
 
 class PostMetrics(BaseModel):

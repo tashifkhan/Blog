@@ -4,10 +4,10 @@ from typing import Any
 
 from fastapi import Depends, Request
 
-from core.config import Settings, get_settings
-from core.database import get_database, get_optional_database
-from services.engagement_service import EngagementService
-from services.posts_service import PostsService
+from ..core.config import Settings, get_settings
+from ..core.database import get_database, get_optional_database
+from ..services.engagement_service import EngagementService
+from ..services.posts_service import PostsService
 
 
 def get_settings_dependency() -> Settings:

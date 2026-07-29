@@ -20,8 +20,7 @@ The API is now modular and split into:
 ## App Entry Points
 
 - `server/main.py` - primary FastAPI app composition
-- `server/app.py` - compatibility entrypoint for Vercel (`from main import app`)
-- `server/api/index.py` - Vercel Python fallback/import wrapper
+- `api/index.py` - Vercel Python entrypoint (`from server.main import app`)
 
 ## Environment Variables
 
@@ -31,7 +30,9 @@ Set these in `.env` (or deployment env vars):
 - `MONGODB_DB_NAME` (default: `Blog`)
 - `MONGO_SERVER_SELECTION_TIMEOUT_MS` (default: `4000`)
 - `VIEWS_WINDOW_SECONDS` (default: `3600`)
-- `ALLOWED_ORIGINS` (default: `https://*.tashif.codes,https://blog.tashif.codes,https://tashif.codes,http://localhost:4321`, accepts comma-separated list)
+- `VIEWER_HASH_SALT` (default: a local-development placeholder; **set this in
+  production** — it salts the hashed viewer keys used for view de-duplication)
+- `ALLOWED_ORIGINS` (default: `https://*.tashif.codes,https://blog.tashif.codes,https://tashif.codes,http://localhost:4321`, accepts comma-separated list). Entries containing `*` are compiled into a CORS `allow_origin_regex` (one wildcard matches a single label); the rest are passed as exact origins.
 - `PROJECT_ROOT` (optional, auto-derived by default)
 - `BLOGS_DIR` (optional, overrides `${PROJECT_ROOT}/src/blogs`)
 
@@ -48,9 +49,13 @@ ALLOWED_ORIGINS=https://blog.tashif.codes,http://localhost:4321
 
 When running the app:
 
-- Swagger UI: `/docs`
-- ReDoc: `/redoc`
-- OpenAPI JSON: `/openapi.json`
+- Swagger UI: `/api/docs`
+- ReDoc: `/api/redoc`
+- OpenAPI JSON: `/api/openapi.json`
+
+These live under the `/api` prefix because `vercel.json` only rewrites `/api/*`
+to the Python function; the unprefixed defaults are not routed to it in
+production.
 
 ## Data Model Overview
 
@@ -100,8 +105,8 @@ Response:
 ```json
 {
   "message": "Blog Backend API",
-  "docs": "/docs",
-  "redoc": "/redoc"
+  "docs": "/api/docs",
+  "redoc": "/api/redoc"
 }
 ```
 
@@ -126,13 +131,26 @@ Response:
 
 #### `GET /views/{slug}`
 
-- Increments and returns view count (deduped by viewer in time window)
-- Viewer key is derived from `x-forwarded-for` (or client IP fallback)
+- Returns the current view count. Read-only: it does **not** record a view.
 
 Response:
 
 ```json
 { "views": 120 }
+```
+
+#### `POST /views/{slug}`
+
+- Records a view for the calling client and returns the updated count
+- De-duplicated per viewer within `VIEWS_WINDOW_SECONDS`
+- The viewer key is a salted SHA-256 digest of the client IP (from
+  `x-forwarded-for`, falling back to the socket peer) plus user agent. The raw
+  address is never stored — set `VIEWER_HASH_SALT` in production.
+
+Response:
+
+```json
+{ "views": 121 }
 ```
 
 #### `GET /likes/{slug}`
@@ -231,6 +249,8 @@ Each item contains:
 
 - `slug`
 - known frontmatter fields (`title`, `date`, `author`, `tags`, `excerpt`, `category`, `socials`)
+- `wordCount` — body word count (frontmatter excluded)
+- `readingTimeMinutes` — estimated read time at 200 wpm (`max(1, round(wordCount / 200))`)
 - additional `metadata` bag for remaining frontmatter keys
 
 Example response item:
@@ -245,6 +265,8 @@ Example response item:
   "excerpt": "Understanding CORS...",
   "category": null,
   "socials": ["https://github.com/..."],
+  "wordCount": 1840,
+  "readingTimeMinutes": 9,
   "metadata": {}
 }
 ```
@@ -306,20 +328,30 @@ Routers depend on service abstractions rather than directly using Mongo collecti
 - `500 Database is not configured` when Mongo URI/dependency is missing
 - `404 Post not found` when slug file does not exist
 - `404 Parent comment not found` for invalid reply targets
+- `409 Comment thread is busy` when a nested reply loses its optimistic-
+  concurrency check repeatedly (retried with backoff before surfacing)
 - `422 Unprocessable Entity` for request validation failures
 
 ## Local Run
 
-From `server/`:
+The package uses relative imports, so run it as a package from the **project
+root** (not from `server/`):
 
 ```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Then open:
 
-- `http://localhost:8000/docs`
-- `http://localhost:8000/redoc`
+- `http://localhost:8000/api/docs`
+- `http://localhost:8000/api/redoc`
+
+To point the Astro frontend at this local backend, set the base **including**
+the `/api` prefix:
+
+```env
+PUBLIC_API_URL="http://localhost:8000/api"
+```
 
 ## Migration Notes
 

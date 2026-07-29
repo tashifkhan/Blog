@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -24,8 +25,12 @@ def _default_project_root() -> Path:
 
 
 class Settings(BaseSettings):
+    # Anchored to the project root rather than the process CWD, which differs
+    # between `uvicorn server.main:app` locally and the Vercel function runtime.
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=_default_project_root() / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     app_name: str = "Blog Backend API"
@@ -43,6 +48,13 @@ class Settings(BaseSettings):
     )
 
     views_window_seconds: int = Field(default=3600, alias="VIEWS_WINDOW_SECONDS")
+
+    # Salt for hashing viewer IPs before storing them as view-dedup keys.
+    # Set VIEWER_HASH_SALT in the environment; the default keeps dedup working
+    # in local development without persisting plaintext addresses.
+    viewer_hash_salt: str = Field(
+        default="blog-views-local-salt", alias="VIEWER_HASH_SALT"
+    )
 
     allowed_origins: list[str] = Field(
         default_factory=lambda: DEFAULT_ALLOWED_ORIGINS.copy(),
@@ -83,6 +95,29 @@ class Settings(BaseSettings):
     @property
     def resolved_blogs_dir(self) -> Path:
         return self.blogs_dir or (self.project_root / "src" / "blogs")
+
+    @property
+    def exact_allowed_origins(self) -> list[str]:
+        """Origins without a wildcard, usable directly as CORS allow_origins."""
+        return [origin for origin in self.allowed_origins if "*" not in origin]
+
+    @property
+    def allowed_origin_regex(self) -> str | None:
+        """
+        Wildcard origins compiled into a single regex.
+
+        Starlette compares allow_origins by exact string match, so an entry like
+        "https://*.tashif.codes" never matches any request. Wildcard entries are
+        translated here and passed as allow_origin_regex instead.
+        """
+        patterns = [
+            re.escape(origin).replace(r"\*", r"[^.]+")
+            for origin in self.allowed_origins
+            if "*" in origin
+        ]
+        if not patterns:
+            return None
+        return "|".join(f"^{pattern}$" for pattern in patterns)
 
 
 @lru_cache

@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import HTTPException, Request
 from fastapi import FastAPI
 
-from core.config import Settings
+from ..core.config import Settings
 
 
 async def initialize_database(app: FastAPI, settings: Settings) -> None:

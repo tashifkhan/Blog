@@ -7,8 +7,8 @@ from typing import Any
 import frontmatter
 from fastapi import HTTPException
 
-from models.posts import PostFull, PostMetrics, PostSummary
-from services.engagement_service import EngagementService
+from ..models.posts import PostFull, PostMetrics, PostSummary
+from ..services.engagement_service import EngagementService
 
 
 class PostsService:
@@ -19,23 +19,32 @@ class PostsService:
     ) -> None:
         self.blogs_dir = blogs_dir
         self.engagement_service = engagement_service
+        self._resolved_blogs_dir: Path | None = None
 
     def _resolve_blogs_dir(self) -> Path:
+        # Resolution walks the filesystem, so cache it per instance: it was
+        # previously re-run for every request and several times per request.
+        if self._resolved_blogs_dir is not None:
+            return self._resolved_blogs_dir
+
         candidates: list[Path] = [self.blogs_dir]
 
         for parent in Path(__file__).resolve().parents:
             candidates.append(parent / "src" / "blogs")
 
         seen: set[Path] = set()
+        resolved_dir = self.blogs_dir
         for candidate in candidates:
             resolved = candidate.resolve()
             if resolved in seen:
                 continue
             seen.add(resolved)
             if resolved.exists() and resolved.is_dir():
-                return resolved
+                resolved_dir = resolved
+                break
 
-        return self.blogs_dir
+        self._resolved_blogs_dir = resolved_dir
+        return resolved_dir
 
     def _list_blog_files(self) -> list[Path]:
         blogs_dir = self._resolve_blogs_dir()
@@ -54,7 +63,21 @@ class PostsService:
         return serialized
 
     @staticmethod
-    def _extract_summary(slug: str, metadata: dict[str, Any]) -> PostSummary:
+    def _word_count(content: str) -> int:
+        return len([word for word in content.split() if word])
+
+    @staticmethod
+    def _reading_time_minutes(word_count: int, wpm: int = 200) -> int:
+        if word_count <= 0:
+            return 1
+        return max(1, round(word_count / wpm))
+
+    @staticmethod
+    def _extract_summary(
+        slug: str,
+        metadata: dict[str, Any],
+        content: str = "",
+    ) -> PostSummary:
         data = dict(metadata)
 
         title = data.pop("title", None)
@@ -64,6 +87,11 @@ class PostsService:
         excerpt = data.pop("excerpt", None)
         category = data.pop("category", None)
         socials = data.pop("socials", None)
+        # Prefer computed body stats over any stale frontmatter keys
+        data.pop("wordCount", None)
+        data.pop("word_count", None)
+        data.pop("readingTimeMinutes", None)
+        data.pop("reading_time_minutes", None)
 
         if isinstance(post_date, (datetime, date)):
             date_value: str | None = post_date.isoformat()
@@ -76,6 +104,9 @@ class PostsService:
         if isinstance(tags, list):
             normalized_tags = [str(tag) for tag in tags]
 
+        word_count = PostsService._word_count(content or "")
+        reading_time_minutes = PostsService._reading_time_minutes(word_count)
+
         return PostSummary(
             slug=slug,
             title=str(title) if title is not None else None,
@@ -85,6 +116,8 @@ class PostsService:
             excerpt=str(excerpt) if excerpt is not None else None,
             category=str(category) if category is not None else None,
             socials=socials,
+            word_count=word_count,
+            reading_time_minutes=reading_time_minutes,
             metadata=PostsService._serialize_metadata(data),
         )
 
@@ -117,6 +150,7 @@ class PostsService:
                 summary = self._extract_summary(
                     slug=file_path.stem,
                     metadata=dict(loaded.metadata or {}),
+                    content=str(loaded.content or ""),
                 )
                 posts.append(summary)
             except Exception:
@@ -155,13 +189,43 @@ class PostsService:
         )
 
     async def list_full_posts(self) -> list[PostFull]:
+        """
+        Full payload for every post.
+
+        Engagement data is fetched in two bulk queries rather than two queries
+        per post, which previously made this endpoint issue ~2N round-trips.
+        """
         summaries = await self.list_posts()
+        slugs = [summary.slug for summary in summaries]
+
+        metrics_by_slug: dict[str, dict] = {}
+        comments_by_slug: dict[str, list[dict[str, Any]]] = {}
+        if self.engagement_service is not None and slugs:
+            metrics_by_slug = await self.engagement_service.get_metrics_bulk(slugs)
+            comments_by_slug = await self.engagement_service.get_comments_bulk(slugs)
+
+        empty_metrics = {"views": 0, "likes": 0, "commentsCount": 0}
         full_posts: list[PostFull] = []
 
         for summary in summaries:
             try:
-                full_posts.append(await self.get_full_post(summary.slug))
-            except HTTPException:
+                file_path = self._find_file_by_slug(summary.slug)
+                loaded = frontmatter.load(str(file_path))
+            except Exception:
                 continue
+
+            full_posts.append(
+                PostFull.model_validate(
+                    {
+                        "slug": summary.slug,
+                        "markdown": loaded.content,
+                        "metadata": self._serialize_metadata(
+                            dict(loaded.metadata or {})
+                        ),
+                        "metrics": metrics_by_slug.get(summary.slug, empty_metrics),
+                        "comments": comments_by_slug.get(summary.slug, []),
+                    }
+                )
+            )
 
         return full_posts

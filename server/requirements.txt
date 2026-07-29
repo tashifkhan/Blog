@@ -1,7 +1,0 @@
-fastapi
-motor
-pymongo[srv]
-pydantic-settings
-python-frontmatter
-python-dotenv
-uvicorn

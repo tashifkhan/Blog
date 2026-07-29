@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 import os
 
 from fastapi import APIRouter, Request
 
-from core.database import get_database_error, get_optional_database
-from models.health import HealthEnv, HealthMongo, HealthResponse
+from ..core.database import get_database_error, get_optional_database
+from ..models.health import HealthEnv, HealthMongo, HealthResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Health"])
 
@@ -32,7 +35,10 @@ async def health(request: Request) -> HealthResponse:
             mongo_ok = True
             mongo_error = None
         except Exception as exc:
-            mongo_error = str(exc)
+            # Driver errors embed the connection string / cluster hostnames, so
+            # log the detail server-side and return only the exception type.
+            logger.warning("Mongo health check failed", exc_info=True)
+            mongo_error = type(exc).__name__
 
     return HealthResponse(
         ok=True,
