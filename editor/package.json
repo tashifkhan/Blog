@@ -6,7 +6,8 @@
     "dev": "vite dev --port 3100",
     "build": "vite build && tsc --noEmit",
     "start": "node .output/server/index.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "icons": "bun scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.4",
@@ -33,6 +34,7 @@
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.4",
     "nitro": "^3.0.260610-beta",
+    "sharp": "^0.35.3",
     "typescript": "^5.9.2",
     "vite": "^7.3.1",
     "vitest": "^3.2.4"

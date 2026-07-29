@@ -153,6 +153,23 @@ YAML line reading `asset: ./cover.png` both pass.
 Heading, list, and quote are line-prefix toggles: they apply to every line the
 selection touches and remove the prefix when it is already present.
 
+## Progressive Web App
+
+Pressroom is installable as a standalone app (home screen / desktop). The
+build ships:
+
+- `public/manifest.webmanifest` — name, icons, `display: standalone`
+- `public/sw.js` — runtime cache for static assets; network-first navigations;
+  never caches `/api/*`
+- `public/offline.html` — fallback when the desk has no network
+- Full favicon set under `public/` + `public/icons/` — `.ico`, SVG, 16/32/48 PNG,
+  Apple touch sizes, maskable PWA icons, Safari pinned-tab (regenerate with
+  `bun run icons`)
+
+Install from the browser’s install prompt (or “Add to Home Screen” on iOS)
+when the editor is served over HTTPS or `localhost`. Service worker updates
+activate automatically on the next visit after a deploy.
+
 ## Build and run
 
 ```bash
@@ -160,6 +177,7 @@ bun run test
 bun run build
 bun run start
 ```
+
 
 The Nitro production server listens on `HOST`/`PORT` (defaults `0.0.0.0` /
 `3000`; Compose sets `PORT=3100`). Configure a deployment project with

@@ -28,10 +28,21 @@ export function readStoredTheme(): ThemePreference {
   }
 }
 
+const THEME_COLORS: Record<ResolvedTheme, string> = {
+  light: '#f3efe4',
+  dark: '#141310',
+}
+
 export function applyTheme(resolved: ResolvedTheme) {
   if (typeof document === 'undefined') return
   document.documentElement.dataset.theme = resolved
   document.documentElement.style.colorScheme = resolved
+
+  // Keep the browser chrome / installed PWA title bar in sync with the desk.
+  const color = THEME_COLORS[resolved]
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.setAttribute('content', color)
+  }
 }
 
 /**
