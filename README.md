@@ -97,6 +97,14 @@ This is my first post in **BlogOS**!
 
 3. The post will automatically appear in the blog list and search results.
 
+### Private web editor
+
+The authenticated React editor is a separate TanStack Start application under
+[`editor/`](./editor). It owns the GitHub publishing API routes and is deployed
+independently from the public blog and FastAPI server. See
+[`editor/README.md`](./editor/README.md) for local setup, credentials, and the
+atomic Markdown/image commit flow.
+
 ## Customizing Themes
 
 Themes are defined in `src/lib/theme-config.ts`.
