@@ -39,7 +39,7 @@ function requireSessionSecret(): string {
 
 function requireEditorPassword(): string {
   const password = process.env.EDITOR_PASSWORD
-  if (!password || password.length < 16) {
+  if (!password || password.length < 1) {
     throw new ApiError(
       503,
       'Editor authentication is not configured on the server',
