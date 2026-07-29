@@ -23,6 +23,8 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: "3100"
+      # HTTP over Tailscale: keep Secure cookies off unless TLS is terminated.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     healthcheck:
       test:
         [

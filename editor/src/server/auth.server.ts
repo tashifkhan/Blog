@@ -48,17 +48,27 @@ function requireEditorPassword(): string {
   return password
 }
 
+/**
+ * Secure + `__Host-` cookies require HTTPS. Tailscale home deploys often serve
+ * plain HTTP, so cookie security is opt-in via COOKIE_SECURE=true (e.g. behind
+ * a TLS terminator). Default is insecure cookies that work on HTTP.
+ */
+function cookieSecureEnabled(): boolean {
+  const value = process.env.COOKIE_SECURE?.trim().toLowerCase()
+  return value === '1' || value === 'true' || value === 'yes'
+}
+
 export function useEditorSession() {
-  const production = process.env.NODE_ENV === 'production'
+  const secure = cookieSecureEnabled()
   return useSession<EditorSessionData>({
-    name: production ? '__Host-pressroom' : 'pressroom',
+    name: secure ? '__Host-pressroom' : 'pressroom',
     password: requireSessionSecret(),
     cookie: {
       httpOnly: true,
       maxAge: 12 * 60 * 60,
       path: '/',
       sameSite: 'strict',
-      secure: production,
+      secure,
     },
   })
 }
