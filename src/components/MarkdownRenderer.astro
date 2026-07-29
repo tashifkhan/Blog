@@ -9,8 +9,19 @@ const { content, githubBaseUrl } = Astro.props;
 let html = "";
 
 function convertRelativeUrl(url: string): string {
-	if (!githubBaseUrl) return url;
-	if (url.startsWith("http://") || url.startsWith("https://")) return url;
+	// Root-relative URLs point at assets served by this site. In particular,
+	// the editor publishes images to `public/images/blog/...` and writes them
+	// as `/images/blog/...`; rewriting those URLs to raw GitHub produces a
+	// path that does not exist.
+	if (
+		!githubBaseUrl ||
+		url.startsWith("/") ||
+		url.startsWith("#") ||
+		url.startsWith("//") ||
+		/^[A-Za-z][A-Za-z0-9+.-]*:/.test(url)
+	) {
+		return url;
+	}
 
 	// Convert GitHub URL to raw.githubusercontent.com for images
 	let baseUrl = githubBaseUrl;
@@ -27,8 +38,6 @@ function convertRelativeUrl(url: string): string {
 		convertedUrl = baseUrl + "/" + url.substring(2);
 	} else if (url.startsWith("../")) {
 		convertedUrl = baseUrl + "/" + url.replace(/^\.\.\//, "");
-	} else if (url.startsWith("/")) {
-		convertedUrl = baseUrl + url;
 	} else if (!url.includes("://") && !url.startsWith("#")) {
 		convertedUrl = baseUrl + "/" + url;
 	}
