@@ -262,7 +262,21 @@ export function computeDecorations(
 
           case 'ListMark': {
             const parent = node.node.parent
-            if (parent && editing({ ...parent, name: 'ListItem' })) return
+            // TreeNode exposes `from` and `to` through prototype getters, so
+            // spreading it drops both values. Passing that partial object to
+            // `editing` used to crash the whole live-preview plugin as soon as
+            // a document contained a list, which also prevented images later
+            // in the document from rendering.
+            if (
+              parent &&
+              editing({
+                from: parent.from,
+                to: parent.to,
+                name: 'ListItem',
+              })
+            ) {
+              return
+            }
             const marker = state.doc.sliceString(node.from, node.to)
             // Ordered markers stay legible as-is; bullets get a real glyph.
             if (!/^[-*+]$/.test(marker)) return

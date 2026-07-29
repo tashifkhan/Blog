@@ -50,9 +50,9 @@ const classesOn = (doc: string, cursor?: number) =>
 
 describe('live preview rendering', () => {
   it('styles a heading and hides its hash marks', () => {
-    const doc = '## The bridge'
-    expect(classesOn(doc, 999)).toContain('cm-md-heading cm-md-h2')
-    expect(hiddenText(doc, 999)).toContain('##')
+    const doc = '## The bridge\n\ncaret away'
+    expect(classesOn(doc, doc.length)).toContain('cm-md-heading cm-md-h2')
+    expect(hiddenText(doc, doc.length)).toContain('##')
   })
 
   it('hides emphasis markers and styles the content', () => {
@@ -76,21 +76,23 @@ describe('live preview rendering', () => {
   })
 
   it('replaces a horizontal rule with a widget', () => {
-    expect(classesOn('---', 999)).toContain('widget:RuleWidget')
+    const doc = '---\n\ncaret away'
+    expect(classesOn(doc, doc.length)).toContain('widget:RuleWidget')
   })
 
   it('replaces an image with a widget', () => {
-    expect(classesOn('![Cover](asset:cover.png)', 999)).toContain(
+    const doc = '![Cover](asset:cover.png)\n\ncaret away'
+    expect(classesOn(doc, doc.length)).toContain(
       'widget:ImageWidget',
     )
   })
 
   it('renders an attached image and flags a detached one', () => {
-    const doc = '![Cover](asset:cover.png)'
+    const doc = '![Cover](asset:cover.png)\n\ncaret away'
     const attached = EditorState.create({
       doc,
       extensions: [markdown(), livePreview()],
-      selection: { anchor: 999 },
+      selection: { anchor: doc.length },
     }).update({
       effects: setAssets.of(new Map([['cover.png', 'blob:fake']])),
     }).state
@@ -100,7 +102,7 @@ describe('live preview rendering', () => {
     ]).iter().value?.spec as { widget?: { missing?: boolean } }
     expect(decoration.widget).toMatchObject({ missing: false })
 
-    const detached = computeDecorations(stateFor(doc, 999), [
+    const detached = computeDecorations(stateFor(doc, doc.length), [
       { from: 0, to: doc.length },
     ]).iter().value?.spec as { widget?: { missing?: boolean } }
     expect(detached.widget).toMatchObject({ missing: true })
