@@ -1,0 +1,37 @@
+# Pressroom private editor — intended for Tailscale-only home-server deploy.
+#
+#   cp .env.example .env   # fill secrets; never commit .env
+#   docker compose up -d --build
+#
+# Binds to all interfaces inside the host so Tailscale can reach it; do not
+# publish this port on a public WAN firewall without an extra access layer.
+
+services:
+  pressroom:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pressroom-editor:local
+    container_name: pressroom-editor
+    restart: unless-stopped
+    ports:
+      # Host : container — change left side if 3100 is already taken.
+      - "3100:3100"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "3100"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-qO-",
+          "http://127.0.0.1:3100/",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s

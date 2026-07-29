@@ -1,0 +1,14 @@
+node_modules
+.output
+.dist
+dist
+.env
+.env.*
+!.env.example
+.git
+.tanstack
+**/*.test.ts
+vitest.config.ts
+README.md
+docker-compose.yml
+Dockerfile

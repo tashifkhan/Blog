@@ -161,6 +161,27 @@ bun run build
 bun run start
 ```
 
-The Nitro production server listens on `PORT` (default `3000`). Configure a
-deployment project with `editor/` as its root directory and keep all variables
-from `.env.example` server-side.
+The Nitro production server listens on `HOST`/`PORT` (defaults `0.0.0.0` /
+`3000`; Compose sets `PORT=3100`). Configure a deployment project with
+`editor/` as its root directory and keep all variables from `.env.example`
+server-side.
+
+## Docker (home-server / Tailscale)
+
+From `editor/`:
+
+```bash
+cp .env.example .env   # fill secrets; never commit .env
+docker compose up -d --build
+```
+
+The container publishes **host port 3100**. On a Tailscale host that is typically:
+
+```text
+http://home-server:3100
+http://<tailscale-ip>:3100
+http://home-server.<tailnet>.ts.net:3100
+```
+
+Keep the port off public WAN exposure; Tailscale (or Cloudflare Access) is the
+perimeter.
