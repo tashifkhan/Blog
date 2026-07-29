@@ -5,6 +5,7 @@ import {
   normalizeFilename,
   resolveAssetReferences,
   slugify,
+  uniqueFilename,
 } from './article'
 import { findAssetReferences } from './publishing-rules'
 
@@ -35,6 +36,29 @@ describe('normalizeFilename', () => {
 
   it('falls back to a usable name', () => {
     expect(normalizeFilename('___.webp')).toBe('image.webp')
+  })
+})
+
+describe('uniqueFilename', () => {
+  it('keeps a free name untouched', () => {
+    expect(uniqueFilename('cover.png', new Set(['other.png']))).toBe(
+      'cover.png',
+    )
+  })
+
+  it('suffixes past every taken name so a second paste still attaches', () => {
+    expect(uniqueFilename('image.png', new Set(['image.png']))).toBe(
+      'image-2.png',
+    )
+    expect(
+      uniqueFilename('image.png', new Set(['image.png', 'image-2.png'])),
+    ).toBe('image-3.png')
+  })
+
+  it('compares case-insensitively, matching how attachments clash', () => {
+    expect(uniqueFilename('Cover.PNG', new Set(['cover.png']))).toBe(
+      'Cover-2.PNG',
+    )
   })
 })
 

@@ -45,12 +45,15 @@ import {
   parseTags,
   readingMinutes,
   slugify,
+  uniqueFilename,
   wordCount,
 } from '../lib/article'
 import { ClientApiError, apiRequest, fileToBase64 } from '../lib/client-api'
 import {
   type BodyEdit,
   insertBlock,
+  insertLink,
+  normalizeLinkDestination,
   prefixLines,
   wrapSelection,
 } from '../lib/markdown-editing'
@@ -463,6 +466,10 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     applyEdit(insertLink(linkDraft.label, destination))
   }
 
+  function imageMarkdown(image: EditorImage): string {
+    const alt = image.filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')
+    return `![${alt}](${assetReference(image.filename)})`
+  }
 
   function addFiles(fileList: FileList | File[]) {
     setError('')
@@ -488,16 +495,29 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
         )
         continue
       }
-      const clashes = (candidate: EditorImage) =>
-        candidate.filename.toLowerCase() === filename.toLowerCase()
-      if (images.some(clashes) || accepted.some(clashes)) {
+      // Attaching the very same file twice is a slip worth reporting. A
+      // different image that merely shares a name is not: the clipboard calls
+      // every pasted screenshot `image.png`, so rejecting on the name alone
+      // would make a second paste impossible. Those get a suffix instead.
+      const attached = [...images, ...accepted]
+      const alreadyAttached = attached.some(
+        (candidate) =>
+          candidate.filename.toLowerCase() === filename.toLowerCase() &&
+          candidate.file.size === file.size &&
+          candidate.file.lastModified === file.lastModified,
+      )
+      if (alreadyAttached) {
         setError(`${filename} is already attached`)
         continue
       }
+      const unique = uniqueFilename(
+        filename,
+        new Set(attached.map((candidate) => candidate.filename.toLowerCase())),
+      )
 
       accepted.push({
         file,
-        filename,
+        filename: unique,
         id: crypto.randomUUID(),
         previewUrl: URL.createObjectURL(file),
         status: 'ready',
@@ -505,7 +525,19 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
       room -= 1
     }
 
-    if (accepted.length) setImages((current) => [...current, ...accepted])
+    if (accepted.length) {
+      setImages((current) => [...current, ...accepted])
+
+      // Choosing an image should do the complete editorial action. If a
+      // restored draft already references the file, attaching it only repairs
+      // that reference; otherwise place it at the current caret immediately.
+      const newReferences = accepted.filter(
+        (image) => !draft.body.includes(assetReference(image.filename)),
+      )
+      if (newReferences.length) {
+        applyEdit(insertBlock(newReferences.map(imageMarkdown).join('\n\n')))
+      }
+    }
   }
 
   function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
@@ -528,8 +560,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   }
 
   function insertImage(image: EditorImage) {
-    const alt = image.filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')
-    applyEdit(insertBlock(`![${alt}](${assetReference(image.filename)})`))
+    applyEdit(insertBlock(imageMarkdown(image)))
   }
 
   function startNewDraft() {
@@ -841,8 +872,8 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
               </ToolButton>
               <ToolButton
                 label="Link"
-                  hint="⌘K"
-                  onClick={openLinkDialog}
+                hint="⌘K"
+                onClick={openLinkDialog}
               >
                 <LinkIcon size={17} aria-hidden="true" />
               </ToolButton>
@@ -890,6 +921,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
                 assets={assets}
                 live={mode === 'live'}
                 onChange={(body) => updateDraft('body', body)}
+                onFiles={addFiles}
                 placeholder="Write the story here."
                 slug={draft.slug}
                 value={draft.body}
@@ -977,14 +1009,14 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
                 onChange={handleFileInput}
               />
               <UploadCloud size={24} aria-hidden="true" />
-              <strong>Drop optimized images</strong>
+              <strong>Drop images to attach & insert</strong>
               <span>AVIF, WebP, PNG, JPEG or GIF · 3 MB max</span>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Plus size={15} aria-hidden="true" />
-                Choose files
+                Choose & insert
               </button>
             </div>
 
@@ -1030,12 +1062,14 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
                   </div>
                   <div className="image-actions">
                     <button
+                      className="insert-image-button"
                       type="button"
                       title="Insert into article"
                       aria-label={`Insert ${image.filename} into article`}
                       onClick={() => insertImage(image)}
                     >
                       <ImagePlus size={15} aria-hidden="true" />
+                      <span>Insert</span>
                     </button>
                     <button
                       type="button"

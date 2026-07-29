@@ -1273,6 +1273,18 @@ html[data-theme='dark'] .login-aside {
   display: flex;
 }
 
+.image-actions .insert-image-button {
+  width: auto;
+  gap: 4px;
+  padding: 0 7px;
+}
+
+.image-actions .insert-image-button span {
+  color: inherit;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
 /* Link composer */
 
 .dialog-backdrop {
@@ -1365,7 +1377,6 @@ html[data-theme='dark'] .login-aside {
   color: var(--paper);
   background: var(--ink);
 }
-
 
 .commit-section {
   position: sticky;

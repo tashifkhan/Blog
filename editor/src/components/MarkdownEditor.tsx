@@ -20,6 +20,7 @@ import type { BodyEdit } from '../lib/markdown-editing'
 export type MarkdownEditorHandle = {
   applyEdit: (edit: BodyEdit) => void
   focus: () => void
+  getSelection: () => string
 }
 
 type MarkdownEditorProps = {
@@ -28,10 +29,21 @@ type MarkdownEditorProps = {
   className?: string
   live: boolean
   onChange: (value: string) => void
+  /** Files dropped on or pasted into the body, with the caret already placed. */
+  onFiles?: (files: File[]) => void
   placeholder?: string
   ref?: Ref<MarkdownEditorHandle>
   slug: string
   value: string
+}
+
+/**
+ * A drag only exposes its file list on drop; during `dragover` the browser
+ * withholds it and advertises the payload through `types` instead. Reading
+ * `files` here would always see zero and refuse the drop.
+ */
+export function isDraggingFiles(transfer: DataTransfer | null): boolean {
+  return transfer ? Array.from(transfer.types).includes('Files') : false
 }
 
 /**
@@ -47,6 +59,7 @@ export function MarkdownEditor({
   className,
   live,
   onChange,
+  onFiles,
   placeholder,
   ref,
   slug,
@@ -60,6 +73,8 @@ export function MarkdownEditor({
   // over a stale callback, which would silently drop edits after a re-render.
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+  const onFilesRef = useRef(onFiles)
+  onFilesRef.current = onFiles
   const initialRef = useRef({ ariaLabel, assets, live, placeholder, slug, value })
 
   useEffect(() => {
@@ -81,6 +96,42 @@ export function MarkdownEditor({
             ? placeholderExtension(initial.placeholder)
             : [],
           liveCompartment.current.of(initial.live ? livePreview() : []),
+          // Dropping an image into the prose is the natural gesture, so the
+          // body accepts files itself rather than only the media desk.
+          EditorView.domEventHandlers({
+            dragover(event) {
+              if (!isDraggingFiles(event.dataTransfer)) return false
+              // Without this the drop never reaches the page and the browser
+              // navigates away from the editor to display the file.
+              event.preventDefault()
+              if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+              return true
+            },
+            drop(event, view) {
+              const files = Array.from(event.dataTransfer?.files ?? [])
+              if (!files.length) return false
+              event.preventDefault()
+
+              // Land the image where it was aimed, not at the old caret.
+              const position = view.posAtCoords({
+                x: event.clientX,
+                y: event.clientY,
+              })
+              if (position !== null) {
+                view.dispatch({ selection: { anchor: position } })
+              }
+              view.focus()
+              onFilesRef.current?.(files)
+              return true
+            },
+            paste(event) {
+              const files = Array.from(event.clipboardData?.files ?? [])
+              if (!files.length) return false
+              event.preventDefault()
+              onFilesRef.current?.(files)
+              return true
+            },
+          }),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
               onChangeRef.current(update.state.doc.toString())
@@ -144,6 +195,12 @@ export function MarkdownEditor({
       },
       focus() {
         viewRef.current?.focus()
+      },
+      getSelection() {
+        const view = viewRef.current
+        if (!view) return ''
+        const { from, to } = view.state.selection.main
+        return view.state.sliceDoc(from, to)
       },
     }),
     [],

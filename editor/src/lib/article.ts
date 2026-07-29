@@ -1,4 +1,5 @@
 import {
+  MAX_IMAGES,
   MAX_SLUG_LENGTH,
   assetReference,
   publicImageUrl,
@@ -41,6 +42,27 @@ export function normalizeFilename(value: string): string {
   const extension = dot > 0 ? value.slice(dot + 1).toLowerCase() : ''
   const name = slugify(rawName).toLowerCase() || 'image'
   return `${name}.${extension}`
+}
+
+/**
+ * `image.png` -> `image-2.png` when the name is taken.
+ *
+ * Every screenshot arrives from the clipboard as `image.png`, so a name clash
+ * has to stay attachable rather than becoming a dead end. `taken` holds
+ * lowercased filenames, matching how attachments are compared.
+ */
+export function uniqueFilename(filename: string, taken: Set<string>): string {
+  if (!taken.has(filename.toLowerCase())) return filename
+
+  const dot = filename.lastIndexOf('.')
+  const stem = dot > 0 ? filename.slice(0, dot) : filename
+  const extension = dot > 0 ? filename.slice(dot) : ''
+
+  for (let suffix = 2; suffix <= MAX_IMAGES; suffix += 1) {
+    const candidate = `${stem}-${suffix}${extension}`
+    if (!taken.has(candidate.toLowerCase())) return candidate
+  }
+  return filename
 }
 
 /** JSON and YAML agree on double-quoted scalars, so this is a safe encoder. */
