@@ -5,6 +5,7 @@ import { PostList } from "./posts/post-list";
 import { WindowControls } from "./ui/window-controls";
 import { AboutSection } from "./sections/about-section";
 import type { Post } from "@/types/post";
+import { useDesktopContext } from "@/contexts/desktop-context";
 
 interface WelcomeWindowProps {
 	theme?: any;
@@ -14,11 +15,16 @@ interface WelcomeWindowProps {
 }
 
 export function WelcomeWindow({
-	theme,
-	windowTitle = "Blog - Home",
-	posts = [],
-	setWindowTitle,
+	theme: themeProp,
+	windowTitle: windowTitleProp,
+	posts: postsProp,
+	setWindowTitle: setWindowTitleProp,
 }: WelcomeWindowProps) {
+	const ctx = useDesktopContext();
+	const theme = themeProp ?? ctx?.theme;
+	const windowTitle = windowTitleProp ?? ctx?.windowTitle ?? "Blog - Home";
+	const posts = postsProp ?? ctx?.posts ?? [];
+	const setWindowTitle = setWindowTitleProp ?? ctx?.setWindowTitle;
 	const [searchQuery, setSearchQuery] = useState("");
 	const [searchResults, setSearchResults] = useState<Post[]>([]);
 	// Start maximized by default so the window appears expanded on initial render

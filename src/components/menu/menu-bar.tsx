@@ -14,7 +14,8 @@ import type { Post } from "@/types/post";
 
 interface MenuBarProps {
 	theme: any;
-	currentTime: Date;
+	/** Null until the client has mounted, so SSR and hydration agree. */
+	currentTime: Date | null;
 	toggleRecentPosts: () => void;
 	focusSearch: () => void;
 	recentPosts: Post[];
@@ -71,11 +72,22 @@ export const MenuBar: FC<MenuBarProps> = ({
 						<SearchIcon size={12} className="mr-1" />
 						Search
 					</button>
-					<div className="text-[10px]" style={{ color: theme.textColor }}>
-						{currentTime.toLocaleTimeString([], {
-							hour: "2-digit",
-							minute: "2-digit",
-						})}
+					{/*
+					 * suppressHydrationWarning: the clock is inherently different on
+					 * the server and the client. Desktop renders an empty string until
+					 * mounted, so this only guards the transition.
+					 */}
+					<div
+						className="text-[10px]"
+						style={{ color: theme.textColor }}
+						suppressHydrationWarning
+					>
+						{currentTime
+							? currentTime.toLocaleTimeString([], {
+									hour: "2-digit",
+									minute: "2-digit",
+								})
+							: ""}
 					</div>
 				</div>
 			</div>

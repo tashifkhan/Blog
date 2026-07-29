@@ -1,10 +1,15 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { ResponsiveHome } from "@/components/ResponsiveHome";
+import { getPostSummaries } from "@/lib/post-summaries";
 
 export const prerender = true;
+
+// Resolved at build time and handed to React as initial state, so the page ships
+// real content instead of an empty shell.
+const posts = await getPostSummaries();
 ---
 
 <Layout>
-	<ResponsiveHome client:only="react" />
+	<ResponsiveHome client:load initialPosts={posts} />
 </Layout>

@@ -80,13 +80,20 @@ const { title, description } = Astro.props;
 	:root {
 		--zoom: 1;
 	}
+	/*
+	 * Use `zoom`, not `transform: scale()`. A transform on <body> makes it the
+	 * containing block for `position: fixed` descendants, which breaks every Radix
+	 * popper: menubar/dropdown content is portaled into <body> and positioned with
+	 * strategy "fixed", so open menus drifted away by exactly the scroll offset.
+	 * `zoom` also reflows layout instead of only scaling it visually, so zooming in
+	 * no longer overflows the viewport.
+	 */
 	body {
-		transform: scale(var(--zoom));
-		transform-origin: top center;
+		zoom: var(--zoom);
 	}
 	@media (max-width: 640px) {
 		body {
-			transform: none;
+			zoom: 1;
 		}
 	}
 

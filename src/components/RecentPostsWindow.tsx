@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WindowControls } from "./ui/window-controls";
 import type { Post } from "@/types/post";
+import { useDesktopContext } from "@/contexts/desktop-context";
 
 interface RecentPostsWindowProps {
 	posts?: Post[];
@@ -11,11 +12,16 @@ interface RecentPostsWindowProps {
 }
 
 export function RecentPostsWindow({
-	posts = [],
-	theme,
+	posts: postsProp,
+	theme: themeProp,
 	onClose,
 	initialState = "normal",
 }: RecentPostsWindowProps) {
+	const ctx = useDesktopContext();
+	// Falls back to recentPosts (not the full list) so this window shows recent
+	// items when no explicit posts prop is given.
+	const posts = postsProp ?? ctx?.recentPosts ?? [];
+	const theme = themeProp ?? ctx?.theme;
 	const [windowState, setWindowState] = useState<
 		"normal" | "minimized" | "maximized"
 	>(initialState);

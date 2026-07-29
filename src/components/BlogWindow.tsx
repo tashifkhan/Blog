@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WindowControls } from "./ui/window-controls";
 import { BlogSection } from "./sections/blog-section";
 import type { Post } from "@/types/post";
+import { useDesktopContext } from "@/contexts/desktop-context";
 
 interface BlogWindowProps {
 	theme?: any;
@@ -13,12 +14,17 @@ interface BlogWindowProps {
 }
 
 export function BlogWindow({
-	theme,
-	windowTitle = "Blog - Posts",
-	posts = [],
-	setWindowTitle,
+	theme: themeProp,
+	windowTitle: windowTitleProp,
+	posts: postsProp,
+	setWindowTitle: setWindowTitleProp,
 	searchQuery = "",
 }: BlogWindowProps) {
+	const ctx = useDesktopContext();
+	const theme = themeProp ?? ctx?.theme;
+	const windowTitle = windowTitleProp ?? ctx?.windowTitle ?? "Blog - Posts";
+	const posts = postsProp ?? ctx?.posts ?? [];
+	const setWindowTitle = setWindowTitleProp ?? ctx?.setWindowTitle;
 	const [windowState, setWindowState] = useState<
 		"normal" | "minimized" | "maximized"
 	>("normal");

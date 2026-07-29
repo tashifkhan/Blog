@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { Desktop } from "./Desktop";
 import { WelcomeWindow } from "./WelcomeWindow";
 import { RecentPostsWindow } from "./RecentPostsWindow";
@@ -7,28 +7,21 @@ import type { Post } from "@/types/post";
 
 interface HomePageProps {
 	showRecentPosts?: boolean;
+	initialPosts?: Post[];
 }
 
-export function HomePage({ showRecentPosts = true }: HomePageProps) {
-	const [posts, setPosts] = React.useState<Post[]>([]);
-	const [recentPosts, setRecentPosts] = React.useState<Post[]>([]);
+export function HomePage({
+	showRecentPosts = true,
+	initialPosts,
+}: HomePageProps) {
 	const [showRecentPostsWindow, setShowRecentPostsWindow] =
 		React.useState(showRecentPosts);
-
-	const handlePostsFetched = useCallback((fetchedPosts: Post[]) => {
-		setPosts(fetchedPosts);
-		setRecentPosts(
-			[...fetchedPosts]
-				.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-				.slice(0, 3)
-		);
-	}, []);
 
 	return (
 		<Desktop
 			showRecentPosts={showRecentPosts}
 			defaultWindowTitle="Blog - Home"
-			onPostsFetched={handlePostsFetched}
+			initialPosts={initialPosts}
 		>
 			{/* Main welcome window */}
 			<div className="flex-1" style={{ minWidth: "60%" }}>
@@ -45,8 +38,8 @@ export function HomePage({ showRecentPosts = true }: HomePageProps) {
 						transition={{ type: "spring", stiffness: 300, damping: 25 }}
 						style={{ width: "35%" }}
 					>
+						{/* posts omitted: RecentPostsWindow reads recentPosts from context */}
 						<RecentPostsWindow
-							posts={recentPosts}
 							onClose={() => setShowRecentPostsWindow(false)}
 							initialState="normal"
 						/>
