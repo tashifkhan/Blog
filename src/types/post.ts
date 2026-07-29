@@ -7,4 +7,7 @@ export interface Post {
   category?: string;
   tags?: string[];
   content?: string;
+  author?: string;
+  wordCount?: number;
+  readingTimeMinutes?: number;
 }
