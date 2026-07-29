@@ -1,0 +1,35 @@
+{
+  "name": "@blog/editor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 3100",
+    "build": "vite build && tsc --noEmit",
+    "start": "node .output/server/index.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource-variable/dm-sans": "^5.2.8",
+    "@fontsource-variable/newsreader": "^5.2.8",
+    "@octokit/auth-app": "^8.2.0",
+    "@tanstack/react-router": "^1.170.18",
+    "@tanstack/react-start": "^1.168.32",
+    "gray-matter": "^4.0.3",
+    "lucide-react": "^0.536.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.4",
+    "nitro": "^3.0.260610-beta",
+    "typescript": "^5.9.2",
+    "vite": "^7.3.1",
+    "vitest": "^3.2.4"
+  }
+}
