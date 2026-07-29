@@ -1,26 +1,18 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { activeTheme, allThemes, setTheme } from "@/lib/theme-config";
+import React, { useMemo, useState } from "react";
+import { allThemes, setTheme } from "@/lib/theme-config";
+import { usePosts } from "@/hooks/use-posts";
+import { useActiveTheme } from "@/hooks/use-theme";
 import type { Post } from "@/types/post";
 
-export function MobilePostsList() {
-	const [theme, setThemeState] = useState(activeTheme);
-	const [posts, setPosts] = useState<Post[]>([]);
+interface MobilePostsListProps {
+	initialPosts?: Post[];
+}
+
+export function MobilePostsList({ initialPosts }: MobilePostsListProps) {
+	const theme = useActiveTheme();
+	const { posts, isLoading } = usePosts(3, initialPosts);
 	const [query, setQuery] = useState("");
 	const [selectedTag, setSelectedTag] = useState<string>("");
-	const [isLoading, setIsLoading] = useState(true);
-
-	useEffect(() => {
-		fetch("/api/posts.json")
-			.then((r) => r.json())
-			.then((data: Post[]) => {
-				setPosts(data);
-			})
-			.finally(() => setIsLoading(false));
-		setThemeState(activeTheme);
-		const onChange = () => setThemeState(activeTheme);
-		window.addEventListener("themechange", onChange);
-		return () => window.removeEventListener("themechange", onChange);
-	}, []);
 
 	const allTags = useMemo(() => {
 		const t = new Map<string, number>();

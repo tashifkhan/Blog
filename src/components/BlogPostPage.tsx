@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WindowControls } from "./ui/window-controls";
+import { useDesktopContext } from "@/contexts/desktop-context";
 
 interface BlogPostPageProps {
 	theme?: any;
@@ -13,14 +14,17 @@ interface BlogPostPageProps {
 }
 
 export function BlogPostPage({
-	theme,
+	theme: themeProp,
 	title = "Blog Post",
 	date,
 	excerpt,
 	tags,
 	children,
-	setWindowTitle,
+	setWindowTitle: setWindowTitleProp,
 }: BlogPostPageProps) {
+	const ctx = useDesktopContext();
+	const theme = themeProp ?? ctx?.theme;
+	const setWindowTitle = setWindowTitleProp ?? ctx?.setWindowTitle;
 	const [windowState, setWindowState] = useState<
 		"normal" | "minimized" | "maximized"
 	>("normal");

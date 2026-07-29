@@ -1,6 +1,6 @@
 import React from "react";
 import type { ThemeConfig } from "@/lib/theme-config";
-import { fetchJSON } from "@/lib/api";
+import { fetchJSON, recordView } from "@/lib/api";
 import {
 	FaHeart,
 	FaEye,
@@ -91,13 +91,15 @@ export function PostMetaHeader({ slug, author, theme }: Props) {
 
 			try {
 				// Add minimum loading time to make loaders visible
-				const [viewsData, likesData] = await Promise.all([
-					fetchJSON(`/views/${slug}`),
-					fetchJSON(`/likes/${slug}`),
+				// recordView is deduplicated across components, so this does not
+				// double-count with the EngagementPanel on the same page.
+				const [viewCount, likesData] = await Promise.all([
+					recordView(slug),
+					fetchJSON<{ likes: number }>(`/likes/${slug}`),
 					new Promise((resolve) => setTimeout(resolve, 500)), // Minimum 500ms loading
 				]);
 
-				if (viewsData) setViews(viewsData.views ?? 0);
+				setViews(viewCount ?? 0);
 				if (likesData) setLikes(likesData.likes ?? 0);
 			} catch (error) {
 				console.error("Error loading stats:", error);

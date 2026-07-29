@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { ThemeConfig } from "@/lib/theme-config";
 import { FaHeart, FaEye, FaReply, FaPaperPlane } from "react-icons/fa";
-import { fetchJSON } from "@/lib/api";
+import { fetchJSON, recordView } from "@/lib/api";
 
 type CommentNode = {
 	id: string;
@@ -147,13 +147,17 @@ export function EngagementPanel({ slug, theme }: Props) {
 	const [isLoadingLikes, setIsLoadingLikes] = React.useState(true);
 	const [hasLiked, setHasLiked] = React.useState<boolean>(false); // client-side like state
 	const likeActionRef = React.useRef<number | null>(null); // debounce timer id
+	const intendedLikeRef = React.useRef<boolean>(false); // final state the user asked for
 
 	// Initialize hasLiked from localStorage (per slug) on mount
 	React.useEffect(() => {
 		try {
 			const key = `liked:${slug}`;
-			const v = localStorage.getItem(key);
-			setHasLiked(v === "1");
+			const liked = localStorage.getItem(key) === "1";
+			setHasLiked(liked);
+			// Keep the debounce ref in sync with the restored state, otherwise the
+			// first click would compute the wrong target action.
+			intendedLikeRef.current = liked;
 		} catch {}
 	}, [slug]);
 
@@ -213,11 +217,12 @@ export function EngagementPanel({ slug, theme }: Props) {
 		setIsLoadingViews(true);
 		try {
 			// Add minimum loading time to make loader visible
-			const [data] = await Promise.all([
-				fetchJSON(`/views/${slug}`),
+			// Deduplicated with PostMetaHeader's call on the same page.
+			const [viewCount] = await Promise.all([
+				recordView(slug),
 				new Promise((resolve) => setTimeout(resolve, 500)), // Minimum 500ms loading
 			]);
-			setViews(data.views ?? 0);
+			setViews(viewCount ?? 0);
 		} catch (error) {
 			console.error("Error loading views:", error);
 		} finally {
@@ -230,7 +235,7 @@ export function EngagementPanel({ slug, theme }: Props) {
 		try {
 			// Add minimum loading time to make loader visible
 			const [data] = await Promise.all([
-				fetchJSON(`/likes/${slug}`),
+				fetchJSON<{ likes: number }>(`/likes/${slug}`),
 				new Promise((resolve) => setTimeout(resolve, 500)), // Minimum 500ms loading
 			]);
 			setLikes(data.likes ?? 0);
@@ -241,47 +246,53 @@ export function EngagementPanel({ slug, theme }: Props) {
 		}
 	}, [slug]);
 
-	// Debounced like toggle.
-	// Clicking rapidly should only schedule the final intended action (like OR unlike) after short delay.
+	// Debounced like toggle. Rapid clicks collapse into a single request that
+	// matches the final intended state.
+	//
+	// The intended state is tracked in a ref rather than read from `hasLiked`
+	// inside the timeout: that closure captures the value from the render at
+	// click time, which is stale once several clicks land within one debounce
+	// window.
 	const toggleLike = () => {
-		// Optimistic UI: flip state & adjust likes locally immediately
-		setHasLiked((prev) => {
-			const next = !prev;
-			setLikes((l) => Math.max(0, l + (next ? 1 : -1)));
-			return next;
-		});
+		const nextLiked = !intendedLikeRef.current;
+		intendedLikeRef.current = nextLiked;
+
+		// Optimistic UI
+		setHasLiked(nextLiked);
+		setLikes((l) => Math.max(0, l + (nextLiked ? 1 : -1)));
 
 		if (likeActionRef.current) {
 			window.clearTimeout(likeActionRef.current);
 		}
 		likeActionRef.current = window.setTimeout(async () => {
+			const desired = intendedLikeRef.current;
 			try {
-				const method = hasLiked ? "DELETE" : "POST"; // hasLiked is stale after setState; compute inverse
-				// We want to send request that matches the NEW state; after flipping, hasLiked is old value
-				// So if previous state was true (user had liked), we just flipped to false -> send DELETE
-				const finalMethod = method;
-				const data = await fetchJSON(`/likes/${slug}`, { method: finalMethod });
+				const data = await fetchJSON<{ likes: number }>(`/likes/${slug}`, {
+					method: desired ? "POST" : "DELETE",
+				});
 				setLikes(data.likes ?? 0);
 				try {
-					localStorage.setItem(
-						`liked:${slug}`,
-						finalMethod === "POST" ? "1" : "0"
-					);
+					localStorage.setItem(`liked:${slug}`, desired ? "1" : "0");
 				} catch {}
-			} catch (e) {
-				// Revert optimistic change on failure
-				setHasLiked((prev) => {
-					const reverted = !prev; // flip back
-					setLikes((l) => Math.max(0, l + (reverted ? 1 : -1)));
-					return reverted;
-				});
+			} catch {
+				// Revert to the server's view of the world on failure.
+				intendedLikeRef.current = !desired;
+				setHasLiked(!desired);
+				try {
+					const data = await fetchJSON<{ likes: number }>(`/likes/${slug}`);
+					setLikes(data.likes ?? 0);
+				} catch {
+					setLikes((l) => Math.max(0, l + (desired ? -1 : 1)));
+				}
 			}
 		}, 400); // 400ms debounce window
 	};
 
 	const loadComments = React.useCallback(async () => {
 		try {
-			const data = await fetchJSON(`/comments/${slug}`);
+			const data = await fetchJSON<{ comments: CommentNode[] }>(
+				`/comments/${slug}`
+			);
 			setComments(data.comments ?? []);
 		} catch {}
 	}, [slug]);

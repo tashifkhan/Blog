@@ -1,41 +1,23 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-	activeTheme,
-	allThemes,
-	setTheme as applyTheme,
-} from "@/lib/theme-config";
-import type { Post } from "@/types/post";
+import React, { useMemo, useState } from "react";
+import { allThemes, setTheme as applyTheme } from "@/lib/theme-config";
 import SearchModal from "@/components/search/search-modal";
 import { MobileAbout } from "./MobileAbout";
+import type { Post } from "@/types/post";
+import { usePosts, searchPosts } from "@/hooks/use-posts";
+import { useActiveTheme } from "@/hooks/use-theme";
 
-export function MobileHome() {
-	const [theme, setThemeState] = useState<any>(activeTheme);
-	const [posts, setPosts] = useState<Post[]>([]);
+interface MobileHomeProps {
+	initialPosts?: Post[];
+}
+
+export function MobileHome({ initialPosts }: MobileHomeProps) {
+	const theme = useActiveTheme();
+	const { posts } = usePosts(3, initialPosts);
 	const [query, setQuery] = useState("");
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
 	const [showRecent, setShowRecent] = useState(true);
 
-	useEffect(() => {
-		fetch("/api/posts.json")
-			.then((r) => r.json())
-			.then((data) => setPosts(data))
-			.catch(() => {});
-		setThemeState(activeTheme);
-		const onChange = () => setThemeState(activeTheme);
-		window.addEventListener("themechange", onChange);
-		return () => window.removeEventListener("themechange", onChange);
-	}, []);
-
-	const results = useMemo(() => {
-		if (!query) return [] as Post[];
-		const q = query.toLowerCase();
-		return posts.filter(
-			(p) =>
-				p.title?.toLowerCase().includes(q) ||
-				p.excerpt?.toLowerCase().includes(q) ||
-				p.tags?.some((t) => t.toLowerCase().includes(q))
-		);
-	}, [query, posts]);
+	const results = useMemo(() => searchPosts(posts, query), [posts, query]);
 
 	// Theme-driven helpers for expressive visuals
 	const getHeaderStyle = () => {
@@ -46,7 +28,11 @@ export function MobileHome() {
 		if (theme.name === "neoBrutalism") {
 			return {
 				...base,
-				background: theme.titleBarBackground || theme.accentColor,
+				// Was `theme.titleBarBackground || theme.accentColor`, but
+				// titleBarBackground is not part of ThemeConfig, so the fallback was
+				// always what rendered. To use the themed titlebar instead, switch
+				// this to `theme.windowTitlebarBg`.
+				background: theme.accentColor,
 				borderBottom: "2px solid #000",
 				boxShadow: "6px 6px 0 #000",
 			} as React.CSSProperties;
@@ -68,9 +54,8 @@ export function MobileHome() {
 		if (theme.name === "neon" || theme.name === "cyberpunk") {
 			return {
 				...base,
-				background:
-					theme.titleBarBackground ||
-					`linear-gradient(90deg, ${theme.accentColor}, ${theme.accentColor})`,
+				// See note above: titleBarBackground never existed on ThemeConfig.
+				background: `linear-gradient(90deg, ${theme.accentColor}, ${theme.accentColor})`,
 				boxShadow: `0 0 18px ${theme.accentColor}80`,
 				backdropFilter: "blur(6px)",
 			} as React.CSSProperties;
@@ -106,7 +91,8 @@ export function MobileHome() {
 
 	const getCardStyle = (): React.CSSProperties => {
 		const base: React.CSSProperties = {
-			background: theme.cardBackground || theme.windowBackground,
+			// cardBackground is not part of ThemeConfig either.
+			background: theme.windowBackground,
 			borderColor: theme.borderColor,
 			boxShadow: theme.cardBoxShadow,
 		};
@@ -337,7 +323,7 @@ export function MobileHome() {
 										<button
 											key={key}
 											className="block w-full text-left px-2 py-1 text-xs"
-											onClick={() => setThemeState(applyTheme(key))}
+											onClick={() => applyTheme(key)}
 											style={{ fontWeight: t.name === theme.name ? 700 : 400 }}
 										>
 											{t.name}
