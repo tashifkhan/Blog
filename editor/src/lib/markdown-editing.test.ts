@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { insertBlock, prefixLines, wrapSelection } from './markdown-editing'
+import {
+  insertBlock,
+  insertLink,
+  normalizeLinkDestination,
+  prefixLines,
+  wrapSelection,
+} from './markdown-editing'
 
 describe('wrapSelection', () => {
   it('wraps the selection and keeps it selected', () => {
@@ -48,5 +54,28 @@ describe('insertBlock', () => {
   it('leaves the caret after the inserted block', () => {
     const result = insertBlock('X')('', 0, 0)
     expect(result.body.slice(0, result.selectionStart)).toBe('X')
+  })
+})
+
+describe('links', () => {
+  it('normalizes bare domains without changing relative links', () => {
+    expect(normalizeLinkDestination('search.taf.sh')).toBe(
+      'https://search.taf.sh',
+    )
+    expect(normalizeLinkDestination('/about')).toBe('/about')
+    expect(normalizeLinkDestination('#details')).toBe('#details')
+  })
+
+  it('rejects malformed and executable destinations', () => {
+    expect(normalizeLinkDestination('not a destination')).toBeNull()
+    expect(normalizeLinkDestination('javascript:alert(1)')).toBeNull()
+  })
+
+  it('writes label first and destination second', () => {
+    const result = insertLink(
+      'this is cool',
+      'https://search.taf.sh',
+    )('Read more', 0, 9)
+    expect(result.body).toBe('[this is cool](https://search.taf.sh)')
   })
 })

@@ -1273,6 +1273,100 @@ html[data-theme='dark'] .login-aside {
   display: flex;
 }
 
+/* Link composer */
+
+.dialog-backdrop {
+  position: fixed;
+  z-index: 100;
+  display: grid;
+  inset: 0;
+  place-items: center;
+  padding: 20px;
+  background: rgba(12, 11, 9, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.link-dialog {
+  width: min(440px, 100%);
+  padding: 22px;
+  border: 1px solid var(--rule);
+  background: var(--white);
+  box-shadow: 0 24px 80px rgba(12, 11, 9, 0.32);
+}
+
+.link-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.link-dialog-heading h2 {
+  margin: 3px 0 0;
+  font-family: 'Newsreader Variable', serif;
+  font-size: 1.65rem;
+  font-weight: 620;
+}
+
+.link-dialog-heading > button {
+  width: 31px;
+  height: 31px;
+  border: 0;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.link-dialog .field-group + .field-group {
+  margin-top: 13px;
+}
+
+.link-dialog input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--rule);
+  background: var(--surface-soft);
+}
+
+.link-dialog-note,
+.link-dialog-error {
+  min-height: 18px;
+  margin: 11px 0 18px;
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.link-dialog-error {
+  color: var(--red-dark);
+}
+
+.link-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.link-dialog-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.link-dialog-actions button:last-child {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+
 .commit-section {
   position: sticky;
   top: 72px;

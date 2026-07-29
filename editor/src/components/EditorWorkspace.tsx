@@ -120,6 +120,12 @@ type Phase = 'idle' | 'staging' | 'committing' | 'done'
  */
 type Mode = 'source' | 'live' | 'reading'
 
+type LinkDraft = {
+  destination: string
+  error: string
+  label: string
+}
+
 const MODES: Array<{ id: Mode; label: string; hint: string }> = [
   { id: 'source', label: 'Source', hint: 'Raw Markdown' },
   { id: 'live', label: 'Live', hint: 'Renders as you type' },
@@ -176,10 +182,17 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [error, setError] = useState('')
   const [result, setResult] = useState<PublishResult | null>(null)
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false)
+  const [linkDraft, setLinkDraft] = useState<LinkDraft>({
+    destination: '',
+    error: '',
+    label: '',
+  })
 
   const formRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<MarkdownEditorHandle>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const linkDestinationRef = useRef<HTMLInputElement>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
   const imagesRef = useRef<EditorImage[]>([])
 
@@ -361,6 +374,29 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     [mode],
   )
 
+  const openLinkDialog = useCallback(() => {
+    const reveal = () => {
+      setLinkDraft({
+        destination: '',
+        error: '',
+        label: editorRef.current?.getSelection() ?? '',
+      })
+      setLinkDialogOpen(true)
+    }
+
+    if (mode === 'reading') {
+      setMode('live')
+      window.requestAnimationFrame(reveal)
+      return
+    }
+    reveal()
+  }, [mode])
+
+  useEffect(() => {
+    if (!linkDialogOpen) return
+    window.requestAnimationFrame(() => linkDestinationRef.current?.focus())
+  }, [linkDialogOpen])
+
   // Keyboard shortcuts mirror the toolbar so hands can stay on the keys.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -393,10 +429,15 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
         return
       }
 
+      if (key === 'k') {
+        event.preventDefault()
+        openLinkDialog()
+        return
+      }
+
       const inline: Record<string, BodyEdit> = {
         b: wrapSelection('**', '**'),
         i: wrapSelection('_', '_'),
-        k: wrapSelection('[', '](https://)'),
       }
       const edit = inline[key]
       if (!edit) return
@@ -406,7 +447,22 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [applyEdit])
+  }, [applyEdit, openLinkDialog])
+
+  function commitLink() {
+    const destination = normalizeLinkDestination(linkDraft.destination)
+    if (!destination) {
+      setLinkDraft((current) => ({
+        ...current,
+        error: 'Enter a valid web address, relative path, email, or anchor.',
+      }))
+      return
+    }
+
+    setLinkDialogOpen(false)
+    applyEdit(insertLink(linkDraft.label, destination))
+  }
+
 
   function addFiles(fileList: FileList | File[]) {
     setError('')
@@ -785,8 +841,8 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
               </ToolButton>
               <ToolButton
                 label="Link"
-                hint="⌘K"
-                onClick={() => applyEdit(wrapSelection('[', '](https://)'))}
+                  hint="⌘K"
+                  onClick={openLinkDialog}
               >
                 <LinkIcon size={17} aria-hidden="true" />
               </ToolButton>
@@ -1139,6 +1195,98 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
           </section>
         </aside>
       </form>
+
+      {linkDialogOpen ? (
+        <div
+          className="dialog-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setLinkDialogOpen(false)
+          }}
+        >
+          <section
+            className="link-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="link-dialog-title"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault()
+                setLinkDialogOpen(false)
+              }
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                commitLink()
+              }
+            }}
+          >
+            <div className="link-dialog-heading">
+              <div>
+                <span className="eyebrow">Markdown link</span>
+                <h2 id="link-dialog-title">Add a destination</h2>
+              </div>
+              <button
+                type="button"
+                aria-label="Close link dialog"
+                onClick={() => setLinkDialogOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <label className="field-group">
+              <span>Link text</span>
+              <input
+                value={linkDraft.label}
+                onChange={(event) =>
+                  setLinkDraft((current) => ({
+                    ...current,
+                    label: event.target.value,
+                  }))
+                }
+                placeholder="this is cool"
+              />
+            </label>
+
+            <label className="field-group">
+              <span>Destination</span>
+              <input
+                ref={linkDestinationRef}
+                value={linkDraft.destination}
+                onChange={(event) =>
+                  setLinkDraft((current) => ({
+                    ...current,
+                    destination: event.target.value,
+                    error: '',
+                  }))
+                }
+                placeholder="https://search.taf.sh"
+                inputMode="url"
+              />
+            </label>
+
+            {linkDraft.error ? (
+              <p className="link-dialog-error" role="alert">
+                {linkDraft.error}
+              </p>
+            ) : (
+              <p className="link-dialog-note">
+                This writes <code>[link text](destination)</code> in the correct
+                order.
+              </p>
+            )}
+
+            <div className="link-dialog-actions">
+              <button type="button" onClick={() => setLinkDialogOpen(false)}>
+                Cancel
+              </button>
+              <button type="button" onClick={commitLink}>
+                <LinkIcon size={15} aria-hidden="true" />
+                Insert link
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   )
 }

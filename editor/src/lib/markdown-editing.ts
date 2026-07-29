@@ -13,6 +13,10 @@ export type EditResult = {
 
 export type BodyEdit = (body: string, start: number, end: number) => EditResult
 
+const EXPLICIT_SCHEME = /^[A-Za-z][A-Za-z0-9+.-]*:/
+const BARE_DOMAIN = /^(?:localhost(?::\d+)?|(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,})(?:[/?#:]|$)/
+const SAFE_LINK_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:'])
+
 /** Wrap the selection, or drop an empty pair at the caret. */
 export function wrapSelection(before: string, after: string): BodyEdit {
   return (body, start, end) => {
@@ -39,6 +43,57 @@ export function wrapSelection(before: string, after: string): BodyEdit {
       body: body.slice(0, start) + before + selected + after + body.slice(end),
       selectionStart: start + before.length,
       selectionEnd: start + before.length + selected.length,
+    }
+  }
+}
+
+/**
+ * Turn a friendly destination into a safe Markdown link target.
+ *
+ * Bare domains become HTTPS links, while article-local paths and anchors stay
+ * relative. Returning `null` lets the link dialog show a useful error instead
+ * of writing malformed or unsafe Markdown.
+ */
+export function normalizeLinkDestination(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('./') ||
+    trimmed.startsWith('../') ||
+    trimmed.startsWith('#')
+  ) {
+    return trimmed.replaceAll(' ', '%20').replaceAll(')', '%29')
+  }
+
+  const candidate = BARE_DOMAIN.test(trimmed) ? `https://${trimmed}` : trimmed
+  if (!EXPLICIT_SCHEME.test(candidate)) return null
+
+  try {
+    const parsed = new URL(candidate)
+    if (!SAFE_LINK_SCHEMES.has(parsed.protocol)) return null
+    return candidate.replaceAll(' ', '%20').replaceAll(')', '%29')
+  } catch {
+    return null
+  }
+}
+
+/** Replace the current selection with one complete, correctly ordered link. */
+export function insertLink(label: string, destination: string): BodyEdit {
+  return (body, start, end) => {
+    const selected = body.slice(start, end)
+    const text = (label.trim() || selected || 'link text')
+      .replaceAll('\\', '\\\\')
+      .replaceAll('[', '\\[')
+      .replaceAll(']', '\\]')
+    const markdown = `[${text}](${destination})`
+    const placeholder = !label.trim() && !selected
+
+    return {
+      body: body.slice(0, start) + markdown + body.slice(end),
+      selectionStart: placeholder ? start + 1 : start + markdown.length,
+      selectionEnd: placeholder ? start + 1 + text.length : start + markdown.length,
     }
   }
 }
