@@ -1,0 +1,138 @@
+import { describe, expect, it } from 'vitest'
+
+import { parseDirectiveInfo } from './directives'
+import { renderMarkdown } from './render'
+
+describe('parseDirectiveInfo', () => {
+  it('accepts a bare directive', () => {
+    expect(parseDirectiveInfo('col')).toEqual({ name: 'col', attrs: {} })
+  })
+
+  it('reads braced attributes with either quoting style', () => {
+    expect(parseDirectiveInfo('two-col{ratio="2:1"}')).toEqual({
+      name: 'two-col',
+      attrs: { ratio: '2:1' },
+    })
+    expect(parseDirectiveInfo("note{title='Heads up'}")).toEqual({
+      name: 'note',
+      attrs: { title: 'Heads up' },
+    })
+  })
+
+  it('maps a bare value onto the directive’s primary attribute', () => {
+    expect(parseDirectiveInfo('two-col 2:1')).toEqual({
+      name: 'two-col',
+      attrs: { ratio: '2:1' },
+    })
+    expect(parseDirectiveInfo('tip Performance note')).toEqual({
+      name: 'tip',
+      attrs: { title: 'Performance note' },
+    })
+  })
+
+  it('rejects unknown names and unterminated attributes', () => {
+    expect(parseDirectiveInfo('waring')).toBeNull()
+    expect(parseDirectiveInfo('note{title="x"')).toBeNull()
+    // `col` takes no positional value, so a stray one is not a directive.
+    expect(parseDirectiveInfo('col left')).toBeNull()
+  })
+})
+
+describe('two-col rendering', () => {
+  const source = [
+    '::::two-col{ratio="2:1"}',
+    ':::col',
+    '### Left',
+    '',
+    '- one',
+    ':::',
+    ':::col',
+    'Right side',
+    ':::',
+    '::::',
+  ].join('\n')
+
+  it('emits a grid with the requested tracks', () => {
+    const html = renderMarkdown(source)
+    expect(html).toContain('class="md-two-col"')
+    expect(html).toContain('--md-grid-cols: 2fr 1fr')
+    expect(html.match(/class="md-col"/g)).toHaveLength(2)
+  })
+
+  it('parses column bodies as Markdown rather than raw text', () => {
+    const html = renderMarkdown(source)
+    expect(html).toContain('<h3')
+    expect(html).toContain('Left')
+    expect(html).toContain('<ul')
+    expect(html).not.toContain('### Left')
+  })
+
+  it('falls back to equal columns for an unsupported ratio', () => {
+    const html = renderMarkdown('::::two-col{ratio="9:1"}\n:::col\na\n:::\n::::')
+    expect(html).toContain('--md-grid-cols: 1fr 1fr')
+  })
+
+  it('nests with equal-length fences', () => {
+    const html = renderMarkdown(
+      [':::two-col', ':::col', 'a', ':::', ':::col', 'b', ':::', ':::'].join('\n'),
+    )
+    expect(html.match(/class="md-col"/g)).toHaveLength(2)
+    expect(html).toContain('md-two-col')
+  })
+
+  it('leaves a fenced code block containing colons alone', () => {
+    const html = renderMarkdown(
+      [
+        '::::two-col',
+        ':::col',
+        '```yaml',
+        'key: value',
+        ':::',
+        '```',
+        ':::',
+        ':::col',
+        'right',
+        ':::',
+        '::::',
+      ].join('\n'),
+    )
+    // The `:::` inside the fence must not close the column early, so both
+    // columns still exist and the code block survives intact.
+    expect(html.match(/class="md-col"/g)).toHaveLength(2)
+    expect(html).toContain('key: value')
+  })
+})
+
+describe('callouts', () => {
+  it('renders a directive callout with its title', () => {
+    const html = renderMarkdown(':::warning Careful\nBody text\n:::')
+    expect(html).toContain('md-callout md-callout--warning')
+    expect(html).toContain('Careful')
+    expect(html).toContain('Body text')
+  })
+
+  it('defaults the title to the callout name', () => {
+    const html = renderMarkdown(':::note\nBody\n:::')
+    expect(html).toContain('<span>Note</span>')
+  })
+
+  it('escapes a title', () => {
+    const html = renderMarkdown(':::note{title="<script>x</script>"}\nBody\n:::')
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('&lt;script&gt;')
+  })
+
+  it('renders GitHub alert blockquotes through the same markup', () => {
+    const html = renderMarkdown('> [!TIP]\n> Use a directive instead.')
+    expect(html).toContain('md-callout md-callout--tip')
+    expect(html).toContain('Use a directive instead.')
+    expect(html).not.toContain('[!TIP]')
+    expect(html).not.toContain('<blockquote')
+  })
+
+  it('leaves an ordinary blockquote as a blockquote', () => {
+    const html = renderMarkdown('> Just a quote')
+    expect(html).toContain('md-quote')
+    expect(html).not.toContain('md-callout')
+  })
+})

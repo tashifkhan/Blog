@@ -1,0 +1,543 @@
+/*
+ * Structural styles for rendered Markdown.
+ *
+ * Everything here keys off the `md-*` classes the renderer emits and is themed
+ * through the `--md-*` custom properties, which each site maps to its own design
+ * tokens. Layout that must be CSS lives here; per-site typography does not.
+ */
+
+.markdown-body {
+  /* Theme hooks. A host that sets nothing still gets a readable document. */
+  --md-fg: currentColor;
+  --md-fg-muted: color-mix(in oklab, currentColor 65%, transparent);
+  --md-accent: currentColor;
+  --md-border: color-mix(in oklab, currentColor 18%, transparent);
+  --md-surface: transparent;
+  --md-surface-muted: color-mix(in oklab, currentColor 5%, transparent);
+  --md-radius: 0.75rem;
+  --md-gap: 1.5rem;
+
+  --md-callout-note: #3b82f6;
+  --md-callout-tip: #22c55e;
+  --md-callout-important: #a855f7;
+  --md-callout-warning: #f59e0b;
+  --md-callout-caution: #ef4444;
+  --md-callout-danger: #dc2626;
+
+  /*
+   * The blog renders posts inside resizable desktop windows and a mobile
+   * reader, so every breakpoint below measures the container rather than the
+   * viewport. A viewport media query would hand a 400px-wide window the
+   * two-column layout.
+   */
+  container-type: inline-size;
+}
+
+/* ---------- two-column grid ---------- */
+
+.md-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--md-gap);
+  margin: var(--md-gap) 0;
+  align-items: start;
+}
+
+@container (min-width: 40rem) {
+  .md-two-col {
+    grid-template-columns: var(--md-grid-cols, 1fr 1fr);
+  }
+}
+
+/*
+ * Without this a grid item's `min-width: auto` resolves against its widest
+ * content, so a code block or wide table pushes the track past the container
+ * and the whole grid overflows.
+ */
+.md-col {
+  min-width: 0;
+}
+
+/* Block margins inside a column fight the grid gap. */
+.md-col > :first-child {
+  margin-top: 0;
+}
+
+.md-col > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- callouts ---------- */
+
+.md-callout {
+  --md-callout-color: var(--md-callout-note);
+  margin: 2rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid var(--md-callout-color);
+  border-radius: 0 var(--md-radius) var(--md-radius) 0;
+  background: color-mix(in oklab, var(--md-callout-color) 8%, transparent);
+}
+
+.md-callout--note {
+  --md-callout-color: var(--md-callout-note);
+}
+.md-callout--tip {
+  --md-callout-color: var(--md-callout-tip);
+}
+.md-callout--important {
+  --md-callout-color: var(--md-callout-important);
+}
+.md-callout--warning {
+  --md-callout-color: var(--md-callout-warning);
+}
+.md-callout--caution {
+  --md-callout-color: var(--md-callout-caution);
+}
+.md-callout--danger {
+  --md-callout-color: var(--md-callout-danger);
+}
+
+.md-callout-title {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--md-callout-color) 18%, transparent);
+  color: color-mix(in oklab, var(--md-callout-color) 80%, var(--md-fg));
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.md-callout-title .md-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.md-callout-body > :first-child {
+  margin-top: 0;
+}
+
+.md-callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* A callout inside a column should not add another layer of outer margin. */
+.md-col > .md-callout:first-child {
+  margin-top: 0;
+}
+
+/* ---------- code blocks ---------- */
+
+.md-code {
+  position: relative;
+  margin: var(--md-gap) 0;
+  overflow: hidden;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.md-code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--md-border);
+  background: var(--md-surface-muted);
+}
+
+.md-code-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--md-fg-muted);
+}
+
+.md-code-lang {
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.md-code-copy {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0.375rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--md-fg-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.md-code-copy:hover {
+  background: color-mix(in oklab, var(--md-fg) 8%, transparent);
+  color: var(--md-fg);
+}
+
+.md-code-copy .md-check-icon {
+  display: none;
+  color: var(--md-callout-tip);
+}
+
+.md-code-copy[data-copied='true'] .md-copy-icon {
+  display: none;
+}
+
+.md-code-copy[data-copied='true'] .md-check-icon {
+  display: inline;
+}
+
+.md-code-pre {
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  background: transparent;
+  line-height: 1.6;
+  -webkit-overflow-scrolling: touch;
+}
+
+.md-code-pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  white-space: pre;
+}
+
+/* ---------- mermaid ---------- */
+
+.md-mermaid {
+  margin: var(--md-gap) 0;
+  padding: 1.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.md-mermaid-render {
+  min-width: fit-content;
+}
+
+.md-mermaid-fallback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--md-fg-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ---------- headings and anchors ---------- */
+
+.md-heading-wrap {
+  position: relative;
+}
+
+.md-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  scroll-margin-top: 6rem;
+}
+
+.md-heading-bar {
+  flex-shrink: 0;
+  width: 0.25rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--md-accent);
+}
+
+.md-heading-bar--h3 {
+  height: 1.25rem;
+  opacity: 0.8;
+}
+
+.md-heading-bar--h4 {
+  height: 1rem;
+  opacity: 0.6;
+}
+
+.md-anchor {
+  color: var(--md-fg-muted);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.md-anchor--lead {
+  position: absolute;
+  top: 0.35rem;
+  left: -1.25rem;
+}
+
+.md-anchor--trail {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.md-heading-wrap:hover .md-anchor,
+.md-heading:hover .md-anchor,
+.md-anchor:focus-visible {
+  color: var(--md-accent);
+  opacity: 1;
+}
+
+/* ---------- lists ---------- */
+
+.md-ul {
+  margin: var(--md-gap) 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.md-ol {
+  margin: var(--md-gap) 0;
+  padding-left: 1.5rem;
+  list-style: decimal;
+}
+
+.md-li--ordered::marker {
+  color: var(--md-accent);
+  font-weight: 600;
+}
+
+.md-li {
+  margin-bottom: 0.5rem;
+}
+
+.md-li:not(.md-li--ordered):not(.md-li--task) {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+}
+
+.md-li-bullet {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--md-accent);
+}
+
+.md-li-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.md-p--tight {
+  margin: 0;
+}
+
+/* Nested lists sit tight under their parent item. */
+.md-li .md-ul,
+.md-li .md-ol {
+  margin: 0.5rem 0;
+}
+
+/* ---------- task lists ---------- */
+
+.md-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.md-li--task {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.md-task-checkbox {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.3rem;
+  accent-color: var(--md-accent);
+}
+
+/* ---------- tables ---------- */
+
+.md-table-wrap {
+  margin: 2rem 0;
+  /*
+   * `auto` on both axes rather than `hidden` plus a nested scroller: the
+   * rounded border has to clip the table, and a wide table still has to scroll.
+   */
+  overflow: auto;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.md-table {
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.md-th,
+.md-td {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--md-border);
+}
+
+.md-th {
+  background: var(--md-surface-muted);
+  color: var(--md-fg-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.md-tr:last-child .md-td {
+  border-bottom: 0;
+}
+
+/* ---------- quotes, rules, media ---------- */
+
+.md-quote {
+  margin: 2rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid color-mix(in oklab, var(--md-accent) 45%, transparent);
+  border-radius: 0 var(--md-radius) var(--md-radius) 0;
+  background: var(--md-surface-muted);
+  color: var(--md-fg-muted);
+  font-style: italic;
+}
+
+.md-hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--md-border);
+}
+
+.md-figure {
+  margin: var(--md-gap) 0;
+  text-align: center;
+}
+
+.md-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--md-border);
+  border-radius: 0.5rem;
+}
+
+.md-image-caption {
+  margin-top: 0.5rem;
+  color: var(--md-fg-muted);
+  font-size: 0.8125rem;
+}
+
+.md-image-missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border: 1px dashed var(--md-callout-warning);
+  border-radius: 0.375rem;
+  color: var(--md-fg-muted);
+  font-size: 0.8125rem;
+}
+
+/* ---------- cite cards (generated docs) ---------- */
+
+.md-cite {
+  margin: var(--md-gap) 0;
+  overflow: hidden;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+}
+
+.md-cite-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--md-border);
+  background: var(--md-surface-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.md-cite-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.md-cite-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 100%;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--md-border);
+  border-radius: 0.375rem;
+  background: var(--md-surface-muted);
+  color: var(--md-fg-muted);
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.md-cite-link:hover {
+  border-color: color-mix(in oklab, var(--md-accent) 40%, transparent);
+  color: var(--md-accent);
+}
+
+.md-cite-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- details / summary ---------- */
+
+.markdown-body details {
+  margin: 2rem 0;
+  overflow: hidden;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.markdown-body summary {
+  padding: 1rem 1.5rem;
+  outline: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.markdown-body details[open] summary {
+  border-bottom: 1px solid var(--md-border);
+  background: var(--md-surface-muted);
+}
+
+.markdown-body details > :not(summary) {
+  padding-inline: 1.5rem;
+}
+
+.markdown-body details > :last-child {
+  margin-bottom: 1.5rem;
+}
