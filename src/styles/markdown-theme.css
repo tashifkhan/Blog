@@ -1,0 +1,228 @@
+/*
+ * Blog theming for rendered Markdown.
+ *
+ * The shared renderer emits structural `md-*` classes only; this file maps them
+ * onto the runtime `--theme-*` variables that Desktop.tsx and MobilePostReader
+ * set from theme-config.ts, and onto the `--reader-*` variables the reader menu
+ * adjusts. Typography used to be inlined per element by a regex pass over the
+ * generated HTML, which meant the reader's font-size control had to be
+ * re-applied through `calc()` in every single tag.
+ */
+
+@import "../../packages/markdown/markdown.css";
+
+.markdown-body {
+  --md-fg: var(--theme-text);
+  --md-fg-muted: color-mix(in oklab, var(--theme-text) 75%, transparent);
+  --md-accent: var(--theme-accent);
+  --md-border: var(--theme-border);
+  --md-surface: var(--theme-window-bg);
+  --md-surface-muted: color-mix(
+    in oklab,
+    var(--theme-secondary) 60%,
+    transparent
+  );
+  --md-radius: 0.5rem;
+
+  width: 100%;
+  color: var(--theme-text);
+  font-size: calc(var(--reader-font-scale, 1) * 0.95rem);
+  line-height: var(--reader-line-height, 1.65);
+}
+
+/* ---------- typography ---------- */
+
+.markdown-body .md-p,
+.markdown-body .md-li,
+.markdown-body .md-td,
+.markdown-body .md-th {
+  font-size: calc(var(--reader-font-scale, 1) * 1rem);
+  line-height: var(--reader-line-height, 1.65);
+}
+
+.markdown-body .md-p {
+  margin-bottom: 1.25rem;
+}
+
+.markdown-body .md-p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body .md-h1 {
+  margin: 2rem 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid
+    color-mix(in oklab, var(--theme-accent) 30%, transparent);
+  font-size: calc(var(--reader-font-scale, 1) * 2.25rem);
+  font-weight: 700;
+}
+
+.markdown-body .md-heading-wrap:first-child .md-h1 {
+  margin-top: 0;
+}
+
+.markdown-body .md-h2 {
+  margin: 2rem 0 1.25rem;
+  font-size: calc(var(--reader-font-scale, 1) * 1.875rem);
+  font-weight: 600;
+}
+
+.markdown-body .md-h3 {
+  margin: 1.75rem 0 1rem;
+  font-size: calc(var(--reader-font-scale, 1) * 1.5rem);
+  font-weight: 500;
+}
+
+.markdown-body .md-h4 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: calc(var(--reader-font-scale, 1) * 1.25rem);
+  font-weight: 500;
+}
+
+.markdown-body .md-h5 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: calc(var(--reader-font-scale, 1) * 1.125rem);
+  font-weight: 500;
+}
+
+.markdown-body .md-h6 {
+  margin: 1rem 0 0.5rem;
+  font-size: calc(var(--reader-font-scale, 1) * 1rem);
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.markdown-body .md-strong {
+  font-weight: 700;
+}
+
+.markdown-body .md-em {
+  color: color-mix(in oklab, var(--theme-text) 90%, transparent);
+  font-weight: 500;
+}
+
+.markdown-body .md-link {
+  color: var(--theme-accent);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--theme-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s ease;
+}
+
+.markdown-body .md-link:hover {
+  opacity: 0.9;
+}
+
+/* ---------- code ---------- */
+
+.markdown-body .md-code-inline {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--theme-border);
+  border-radius: 0.375rem;
+  background: var(--theme-muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: calc(var(--reader-font-scale, 1) * 0.875rem);
+}
+
+.markdown-body .md-code-pre {
+  background: color-mix(in oklab, var(--theme-secondary) 60%, transparent);
+  font-size: calc(var(--reader-font-scale, 1) * 0.875rem);
+  line-height: var(--reader-line-height, 1.6);
+}
+
+/*
+ * MobilePostReader forces `color: white !important` on everything inside a
+ * `pre`, so the code surface has to stay dark on small screens or the source
+ * becomes invisible. Removing that override is a separate change; matching it
+ * here keeps the current mobile appearance.
+ */
+@media (max-width: 768px) {
+  .markdown-body .md-code {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(17, 24, 39, 0.85);
+  }
+
+  .markdown-body .md-code-bar {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  .markdown-body .md-code-meta,
+  .markdown-body .md-code-lang,
+  .markdown-body .md-code-copy {
+    color: #e5e7eb;
+  }
+
+  .markdown-body .md-code-pre {
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Full-bleed code blocks on narrow screens, as before. */
+@media (max-width: 640px) {
+  .markdown-body .md-code {
+    margin-inline: -1rem;
+    border-inline: 0;
+    border-radius: 0;
+  }
+
+  .markdown-body .md-code-pre {
+    padding: 1rem 0.75rem;
+    font-size: calc(var(--reader-font-scale, 1) * 0.8rem);
+  }
+}
+
+/* ---------- blocks ---------- */
+
+.markdown-body .md-quote {
+  font-size: calc(var(--reader-font-scale, 1) * 1rem);
+}
+
+.markdown-body .md-image {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.markdown-body .md-figure:hover .md-image {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--theme-accent) 25%, transparent);
+  transform: scale(1.02);
+}
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 480px) {
+  .markdown-body {
+    padding-inline: 0.5rem;
+    font-size: calc(var(--reader-font-scale, 1) * 0.85rem);
+  }
+
+  .markdown-body .md-h1 {
+    margin: 1.5rem 0 1rem;
+    font-size: calc(var(--reader-font-scale, 1) * 1.75rem);
+  }
+
+  .markdown-body .md-h2 {
+    margin: 1.25rem 0 0.75rem;
+    font-size: calc(var(--reader-font-scale, 1) * 1.375rem);
+  }
+
+  .markdown-body .md-h3 {
+    margin: 1rem 0 0.5rem;
+    font-size: calc(var(--reader-font-scale, 1) * 1.125rem);
+  }
+
+  .markdown-body .md-h4 {
+    margin: 0.75rem 0 0.5rem;
+    font-size: calc(var(--reader-font-scale, 1) * 1rem);
+  }
+
+  .markdown-body .md-p {
+    margin-bottom: 0.75rem;
+  }
+
+  .markdown-body .md-li {
+    margin-bottom: 0.5rem;
+  }
+}

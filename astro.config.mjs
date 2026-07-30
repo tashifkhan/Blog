@@ -4,7 +4,6 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
 import react from '@astrojs/react';
-import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import vercel from "@astrojs/vercel";
 
@@ -25,5 +24,7 @@ export default defineConfig({
   adapter: vercel({
     functionPerRoute: false
   }),
-  integrations: [react(), mdx(), sitemap()]
+  // Posts are plain Markdown rendered by packages/markdown; the MDX integration
+  // was compiling every post to a component that nothing rendered.
+  integrations: [react(), sitemap()]
 });
