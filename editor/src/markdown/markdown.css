@@ -45,7 +45,13 @@
   align-items: start;
 }
 
-@container (min-width: 40rem) {
+/*
+ * 34rem, not 40rem. Every real container here is narrower than the viewport it
+ * sits in: the editor's reading pane measures 38.5rem (a 760px column less its
+ * 72px gutters), and a blog post window is narrower still. A 40rem threshold
+ * meant the grid fell back to one column everywhere it was actually used.
+ */
+@container (min-width: 34rem) {
   .md-two-col {
     grid-template-columns: var(--md-grid-cols, 1fr 1fr);
   }
