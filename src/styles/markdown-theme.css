@@ -180,6 +180,59 @@
   font-size: calc(var(--reader-font-scale, 1) * 1rem);
 }
 
+/*
+ * Callouts as system dialogs.
+ *
+ * The whole site is a desktop metaphor — windows with title bars, chunky
+ * borders, hard drop shadows — so a callout is drawn as a small window rather
+ * than the soft tinted panel the shared default gives. The title bar spans the
+ * full width, which is why the padding moves from the shell onto the parts.
+ */
+.markdown-body .md-callout {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--theme-border);
+  border-left: 3px solid var(--md-callout-color);
+  background: var(--theme-window-bg);
+  box-shadow: 2px 2px 0 color-mix(in oklab, var(--theme-border) 40%, transparent);
+}
+
+.markdown-body .md-callout-title {
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--theme-border);
+  background: color-mix(in oklab, var(--md-callout-color) 14%, var(--theme-muted));
+  color: var(--theme-text);
+  font-size: calc(var(--reader-font-scale, 1) * 0.75rem);
+}
+
+.markdown-body .md-callout-title .md-icon {
+  padding: 0.1875rem;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--md-callout-color) 22%, transparent);
+}
+
+.markdown-body .md-callout-body {
+  padding: 0.875rem;
+  font-size: calc(var(--reader-font-scale, 1) * 1rem);
+}
+
+/*
+ * markdown.css sets these first, so its `> :last-child { margin-bottom: 0 }`
+ * loses the tie to `.markdown-body .md-p` above and every callout and column
+ * ends with a stray gap. Same specificity, later in the cascade, so this wins.
+ */
+.markdown-body .md-callout-body > :last-child,
+.markdown-body .md-col > :last-child,
+.markdown-body details > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body .md-callout-body > :first-child,
+.markdown-body .md-col > :first-child {
+  margin-top: 0;
+}
+
 .markdown-body .md-image {
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
