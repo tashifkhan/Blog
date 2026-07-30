@@ -41,8 +41,18 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--md-gap);
-  margin: var(--md-gap) 0;
+  margin: 2rem 0;
   align-items: start;
+}
+
+/*
+ * Stacked, the two columns run together as one block of prose and the split the
+ * author wrote is invisible. A rule between them keeps the boundary legible;
+ * side by side the gap already says it, so it comes back off.
+ */
+.md-two-col > .md-col:not(:last-child) {
+  padding-bottom: var(--md-gap);
+  border-bottom: 1px solid var(--md-border);
 }
 
 /*
@@ -54,6 +64,13 @@
 @container (min-width: 34rem) {
   .md-two-col {
     grid-template-columns: var(--md-grid-cols, 1fr 1fr);
+    /* Two text columns need more air between them than stacked blocks do. */
+    gap: 2.25rem;
+  }
+
+  .md-two-col > .md-col:not(:last-child) {
+    padding-bottom: 0;
+    border-bottom: 0;
   }
 }
 
@@ -80,10 +97,15 @@
 .md-callout {
   --md-callout-color: var(--md-callout-note);
   margin: 2rem 0;
-  padding: 1rem 1.5rem;
-  border-left: 4px solid var(--md-callout-color);
-  border-radius: 0 var(--md-radius) var(--md-radius) 0;
-  background: color-mix(in oklab, var(--md-callout-color) 8%, transparent);
+  padding: 1.125rem 1.25rem;
+  /*
+   * A full outline rather than a bare left bar: tinted only on one edge, a
+   * callout inside a column reads as a stray indent rather than a panel.
+   */
+  border: 1px solid color-mix(in oklab, var(--md-callout-color) 28%, transparent);
+  border-left: 3px solid var(--md-callout-color);
+  border-radius: var(--md-radius);
+  background: color-mix(in oklab, var(--md-callout-color) 6%, var(--md-surface));
 }
 
 .md-callout--note {
@@ -105,26 +127,37 @@
   --md-callout-color: var(--md-callout-danger);
 }
 
+/*
+ * An icon badge plus a plain label, rather than the whole title inside a pill.
+ * A pill reads as a tag — something you could click or filter by — where this
+ * is the callout's heading.
+ */
 .md-callout-title {
   display: flex;
-  width: fit-content;
   align-items: center;
-  gap: 0.375rem;
-  margin-bottom: 0.75rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--md-callout-color) 18%, transparent);
-  color: color-mix(in oklab, var(--md-callout-color) 80%, var(--md-fg));
-  font-size: 0.75rem;
+  gap: 0.625rem;
+  margin-bottom: 0.625rem;
+  color: color-mix(in oklab, var(--md-callout-color) 72%, var(--md-fg));
+  font-size: 0.8125rem;
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.05em;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .md-callout-title .md-icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  flex-shrink: 0;
+  box-sizing: content-box;
+  width: 1rem;
+  height: 1rem;
+  padding: 0.25rem;
+  border-radius: 0.4rem;
+  background: color-mix(in oklab, var(--md-callout-color) 16%, transparent);
+  color: var(--md-callout-color);
+}
+
+.md-callout-body {
+  color: var(--md-fg);
 }
 
 .md-callout-body > :first-child {
@@ -444,11 +477,25 @@
 
 .md-image {
   display: block;
+  /*
+   * `max-width` keeps a sized image inside a narrow column, and `height: auto`
+   * overrides the `height` attribute so scaling down preserves the aspect
+   * ratio instead of squashing it.
+   */
   max-width: 100%;
   height: auto;
   margin: 0 auto;
   border: 1px solid var(--md-border);
   border-radius: 0.5rem;
+}
+
+/* An image inside a sentence: no frame, no centring, sits on the text baseline. */
+.md-image--inline {
+  display: inline-block;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  vertical-align: text-bottom;
 }
 
 .md-image-caption {

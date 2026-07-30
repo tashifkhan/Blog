@@ -11,13 +11,17 @@
 const STROKE =
   'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"'
 
+/**
+ * Stroke width 2, not 3: the icon now sits in a badge at 1.5rem rather than
+ * inline in a pill at 0.875rem, and the heavier stroke reads as smudged there.
+ */
 export const CALLOUT_ICONS: Record<string, string> = {
-  note: `<svg class="md-icon" ${STROKE} stroke-width="3"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-  tip: `<svg class="md-icon" ${STROKE} stroke-width="3"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>`,
-  important: `<svg class="md-icon" ${STROKE} stroke-width="3"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`,
-  warning: `<svg class="md-icon" ${STROKE} stroke-width="3"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`,
-  caution: `<svg class="md-icon" ${STROKE} stroke-width="3"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-  danger: `<svg class="md-icon" ${STROKE} stroke-width="3"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+  note: `<svg class="md-icon" ${STROKE} stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+  tip: `<svg class="md-icon" ${STROKE} stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>`,
+  important: `<svg class="md-icon" ${STROKE} stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`,
+  warning: `<svg class="md-icon" ${STROKE} stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`,
+  caution: `<svg class="md-icon" ${STROKE} stroke-width="2"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+  danger: `<svg class="md-icon" ${STROKE} stroke-width="2"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
 }
 
 export const TERMINAL_ICON = `<svg class="md-icon" ${STROKE} stroke-width="2" width="16" height="16"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>`
