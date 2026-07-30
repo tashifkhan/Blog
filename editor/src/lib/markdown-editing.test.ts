@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
+import { validateDirectives } from '../markdown/validate'
 import {
+  CALLOUT_TEMPLATE,
+  TWO_COL_TEMPLATE,
   insertBlock,
   insertLink,
+  insertTemplate,
   normalizeLinkDestination,
   prefixLines,
   wrapSelection,
@@ -77,5 +81,35 @@ describe('links', () => {
       'https://search.taf.sh',
     )('Read more', 0, 9)
     expect(result.body).toBe('[this is cool](https://search.taf.sh)')
+  })
+})
+
+describe('insertTemplate', () => {
+  it('lands the caret at the marker instead of after the block', () => {
+    const result = insertTemplate(CALLOUT_TEMPLATE)('', 0, 0)
+    expect(result.body.trimEnd()).toBe(':::note\n\n:::')
+    // Directly after the opening fence's newline, ready to type.
+    expect(result.body.slice(0, result.selectionStart)).toBe(':::note\n')
+    expect(result.selectionEnd).toBe(result.selectionStart)
+  })
+
+  it('opens the caret in the first column of a grid', () => {
+    const result = insertTemplate(TWO_COL_TEMPLATE)('', 0, 0)
+    expect(result.body).toContain('::::two-col{ratio="1:1"}')
+    expect(result.body.slice(0, result.selectionStart)).toBe(
+      '::::two-col{ratio="1:1"}\n:::col\n',
+    )
+  })
+
+  it('pads the block away from surrounding prose', () => {
+    const result = insertTemplate(CALLOUT_TEMPLATE)('text', 4, 4)
+    expect(result.body).toBe('text\n\n:::note\n\n:::\n\n')
+  })
+
+  it('produces templates the validator accepts', () => {
+    for (const template of [CALLOUT_TEMPLATE, TWO_COL_TEMPLATE]) {
+      const { body } = insertTemplate(template)('', 0, 0)
+      expect(validateDirectives(body)).toEqual([])
+    }
   })
 })

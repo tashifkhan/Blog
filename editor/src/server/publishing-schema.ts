@@ -10,6 +10,7 @@ import {
   SLUG_PATTERN,
   findAssetReferences,
 } from '../lib/publishing-rules'
+import { formatDirectiveIssues, validateDirectives } from '../markdown/validate'
 
 export const imageUploadSchema = z.object({
   filename: z.string().regex(IMAGE_FILENAME_PATTERN, 'Unsafe image filename'),
@@ -68,6 +69,19 @@ export const publishArticleSchema = z
         message: `Unresolved editor image reference: ${unresolved
           .slice(0, 3)
           .join(', ')}. Re-attach the image or remove the link.`,
+        path: ['articleContent'],
+      })
+    }
+
+    // A malformed directive does not fail loudly — markdown-it leaves it as
+    // prose — so a typo like `:::waring` would ship as literal colons. It is
+    // worth catching here because tashif.codes builds post content into its
+    // pages, so it would keep serving the broken render until its next deploy.
+    const directiveIssues = validateDirectives(value.articleContent)
+    if (directiveIssues.length) {
+      context.addIssue({
+        code: 'custom',
+        message: `Directive error — ${formatDirectiveIssues(directiveIssues)}`,
         path: ['articleContent'],
       })
     }

@@ -78,9 +78,20 @@ const HEADING_NODES: Record<string, number> = {
 const BLOCK_NODES = new Set([
   ...Object.keys(HEADING_NODES),
   'Blockquote',
+  'DirectiveMark',
   'FencedCode',
   'HorizontalRule',
   'ListItem',
+])
+
+/** Callout directives get their accent from the directive name. */
+const CALLOUT_DIRECTIVES = new Set([
+  'note',
+  'tip',
+  'important',
+  'warning',
+  'caution',
+  'danger',
 ])
 
 class ImageWidget extends WidgetType {
@@ -140,6 +151,60 @@ class RuleWidget extends WidgetType {
     rule.className = 'cm-inline-rule'
     return rule
   }
+}
+
+/**
+ * Stands in for a `:::` fence line.
+ *
+ * The fences carry the structure of the block, so hiding them outright would
+ * leave the columns of a grid indistinguishable from each other. A chip keeps
+ * the boundary visible without showing the colons.
+ */
+class DirectiveWidget extends WidgetType {
+  constructor(
+    private readonly label: string,
+    private readonly kind: string,
+  ) {
+    super()
+  }
+
+  eq(other: DirectiveWidget): boolean {
+    return other.label === this.label && other.kind === this.kind
+  }
+
+  toDOM(): HTMLElement {
+    const chip = document.createElement('span')
+    chip.className = `cm-directive-chip cm-directive-chip-${this.kind}`
+    chip.textContent = this.label
+    return chip
+  }
+
+  ignoreEvent(): boolean {
+    return false
+  }
+}
+
+/** Turn a fence's raw text into the chip label and its styling kind. */
+export function describeDirectiveFence(raw: string): {
+  label: string
+  kind: string
+} {
+  const info = raw.trim().replace(/^:+/, '').trim()
+  if (!info) return { label: 'end', kind: 'end' }
+
+  const name = /^([a-z][a-z0-9-]*)/i.exec(info)?.[1]?.toLowerCase() ?? ''
+  const attributes = info.slice(name.length).trim().replace(/^\{|\}$/g, '')
+
+  if (name === 'two-col') {
+    const ratio = /(\d+:\d+)/.exec(attributes)?.[1] ?? '1:1'
+    return { label: `columns ${ratio}`, kind: 'grid' }
+  }
+  if (name === 'col') return { label: 'column', kind: 'col' }
+  if (CALLOUT_DIRECTIVES.has(name)) {
+    const title = /title\s*=\s*["']?([^"'}]+)/.exec(attributes)?.[1]?.trim()
+    return { label: title || attributes || name, kind: name }
+  }
+  return { label: info, kind: 'end' }
 }
 
 class BulletWidget extends WidgetType {
@@ -248,6 +313,29 @@ export function computeDecorations(
               ),
             )
             return
+
+          case 'DirectiveBlock': {
+            decorations.push(
+              Decoration.mark({ class: 'cm-md-directive' }).range(
+                node.from,
+                node.to,
+              ),
+            )
+            return
+          }
+
+          case 'DirectiveMark': {
+            if (editing(node)) return
+            const { label, kind } = describeDirectiveFence(
+              state.doc.sliceString(node.from, node.to),
+            )
+            decorations.push(
+              Decoration.replace({
+                widget: new DirectiveWidget(label, kind),
+              }).range(node.from, node.to),
+            )
+            return
+          }
 
           case 'HorizontalRule': {
             if (editing(node)) return

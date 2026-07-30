@@ -1,3 +1,6 @@
+/* Structural styles for the reading pane, shared with both published sites. */
+@import "./markdown/markdown.css";
+
 :root {
   /* Surfaces */
   --paper: #f3efe4;
@@ -991,6 +994,41 @@ html[data-theme='dark'] .login-aside {
   cursor: text;
 }
 
+/*
+ * Directive blocks. The fences carry the structure, so they are replaced by a
+ * chip rather than hidden outright — otherwise the two columns of a grid would
+ * be indistinguishable from one another in Live mode.
+ */
+.cm-md-directive {
+  box-shadow: inset 2px 0 0 var(--red-margin);
+}
+
+.cm-directive-chip {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  border-radius: 999px;
+  background: var(--red-soft);
+  color: var(--red-dark);
+  font-family: 'DM Sans Variable', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.cm-directive-chip-end {
+  background: transparent;
+  color: var(--ink-soft);
+  opacity: 0.5;
+}
+
+.cm-directive-chip-grid,
+.cm-directive-chip-col {
+  background: var(--ink-faint);
+  color: var(--ink-soft);
+}
+
 .cm-inline-bullet {
   display: inline-block;
   width: 1em;
@@ -1799,4 +1837,37 @@ html[data-theme='dark'] .login-aside {
   .drop-zone.dragging {
     transform: none;
   }
+}
+
+/*
+ * Reading pane theming.
+ *
+ * The pane renders through the same module the sites use, so it only has to map
+ * the shared `--md-*` hooks onto the editor's palette. The `.article-preview`
+ * element rules above still apply — they target tags, not classes — so prose
+ * keeps its Newsreader setting while directives pick up the shared layout.
+ */
+.article-preview .markdown-body {
+  --md-fg: var(--ink);
+  --md-fg-muted: var(--ink-soft);
+  --md-accent: var(--red);
+  --md-border: var(--rule);
+  --md-surface: var(--paper-deep);
+  --md-surface-muted: var(--ink-faint);
+  --md-radius: 4px;
+}
+
+/* The shared code block supplies the chrome; `.article-preview pre` the ink. */
+.article-preview .md-code-pre {
+  color: var(--code-fg);
+  background: var(--code-bg);
+}
+
+.article-preview .md-code-copy {
+  cursor: default;
+}
+
+/* A column is already narrow, so its code blocks must not push it wider. */
+.article-preview .md-col .md-code-pre {
+  font-size: 0.74rem;
 }

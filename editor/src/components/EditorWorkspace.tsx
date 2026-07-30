@@ -5,10 +5,12 @@ import {
   Check,
   ChevronRight,
   Code2,
+  Columns2,
   FilePlus2,
   GitBranch,
   Heading2,
   ImagePlus,
+  Info,
   Italic,
   Link as LinkIcon,
   List,
@@ -34,9 +36,9 @@ import {
   useRef,
   useState,
 } from 'react'
-import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
+import { renderMarkdown } from '../markdown'
+import { validateDirectives } from '../markdown/validate'
 import {
   type Draft,
   buildArticle,
@@ -51,8 +53,11 @@ import {
 import { ClientApiError, apiRequest, fileToBase64 } from '../lib/client-api'
 import {
   type BodyEdit,
+  CALLOUT_TEMPLATE,
+  TWO_COL_TEMPLATE,
   insertBlock,
   insertLink,
+  insertTemplate,
   normalizeLinkDestination,
   prefixLines,
   wrapSelection,
@@ -156,15 +161,6 @@ function freshDraft(): Draft {
   }
 }
 
-/**
- * `asset:` is not a protocol react-markdown considers safe, so its default
- * transform would blank the `src` before the preview could match it against an
- * attached file. Everything else keeps the stock sanitising behaviour.
- */
-function previewUrlTransform(url: string): string {
-  return url.startsWith('asset:') ? url : defaultUrlTransform(url)
-}
-
 function shortSha(sha: string): string {
   return sha.slice(0, 7)
 }
@@ -217,8 +213,31 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   // Anything still shaped like `asset:name.png` after resolution points at an
   // image that is no longer attached, and the API would reject it.
   const unresolved = useMemo(() => findAssetReferences(article), [article])
+  // The same check the publish endpoint runs, surfaced while writing so a
+  // malformed directive is caught before it is committed rather than after.
+  const directiveIssues = useMemo(
+    () => validateDirectives(draft.body),
+    [draft.body],
+  )
   const words = useMemo(() => wordCount(draft.body), [draft.body])
   const tags = useMemo(() => parseTags(draft.tags), [draft.tags])
+
+  // The reading pane runs the same renderer the sites do, so a directive that
+  // previews correctly here publishes correctly. Diagrams stay as code blocks:
+  // the editor does not ship the mermaid bundle.
+  const previewHtml = useMemo(
+    () =>
+      renderMarkdown(draft.body, {
+        mermaid: false,
+        resolveImage: (src) => {
+          if (!src.startsWith('asset:')) return { src }
+          const filename = src.slice('asset:'.length)
+          const attached = assets.get(filename)
+          return attached ? { src: attached } : { src, missing: true }
+        },
+      }),
+    [draft.body, assets],
+  )
 
   const blockers = useMemo(() => {
     const list: string[] = []
@@ -227,12 +246,13 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     if (!draft.body.trim()) list.push('Article body')
     if (!draft.commitMessage.trim()) list.push('Commit message')
     if (unresolved.length) list.push('Unresolved image links')
+    if (directiveIssues.length) list.push('Directive errors')
     if (slugCheck.state === 'taken' && !overwrite) {
       list.push('Replacement confirmation')
     }
     if (!head) list.push('Branch sync')
     return list
-  }, [draft, unresolved, slugCheck, overwrite, head])
+  }, [draft, unresolved, directiveIssues, slugCheck, overwrite, head])
 
   useEffect(() => {
     const storedMode = window.localStorage.getItem(MODE_KEY)
@@ -905,8 +925,34 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
               >
                 <Code2 size={17} aria-hidden="true" />
               </ToolButton>
+              <ToolButton
+                label="Callout"
+                hint=":::note"
+                onClick={() => applyEdit(insertTemplate(CALLOUT_TEMPLATE))}
+              >
+                <Info size={17} aria-hidden="true" />
+              </ToolButton>
+              <ToolButton
+                label="Two columns"
+                hint="::::two-col"
+                onClick={() => applyEdit(insertTemplate(TWO_COL_TEMPLATE))}
+              >
+                <Columns2 size={17} aria-hidden="true" />
+              </ToolButton>
             </div>
           </div>
+
+          {directiveIssues.length ? (
+            <p className="inline-warning" role="alert">
+              <AlertTriangle size={14} aria-hidden="true" />
+              <span>
+                {`Line ${directiveIssues[0].line}: ${directiveIssues[0].message}`}
+                {directiveIssues.length > 1
+                  ? ` (+${directiveIssues.length - 1} more)`
+                  : ''}
+              </span>
+            </p>
+          ) : null}
 
           {mode !== 'reading' ? (
             <div
@@ -943,40 +989,17 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
                 <p className="preview-deck">{draft.excerpt}</p>
               ) : null}
               <div className="preview-rule" />
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                urlTransform={previewUrlTransform}
-                components={{
-                  img: ({ src, alt }) => {
-                    const reference =
-                      typeof src === 'string' && src.startsWith('asset:')
-                        ? src.slice('asset:'.length)
-                        : null
-                    const attached = reference
-                      ? images.find((image) => image.filename === reference)
-                      : null
-
-                    if (reference && !attached) {
-                      return (
-                        <span className="missing-asset">
-                          <AlertTriangle size={14} aria-hidden="true" />
-                          Missing image “{reference}” — re-attach it or remove
-                          the link
-                        </span>
-                      )
-                    }
-
-                    return (
-                      <figure>
-                        <img src={attached?.previewUrl || src} alt={alt || ''} />
-                        {alt ? <figcaption>{alt}</figcaption> : null}
-                      </figure>
-                    )
-                  },
-                }}
-              >
-                {draft.body}
-              </ReactMarkdown>
+              {/*
+                Rendered by the same module both sites use, so what the reading
+                pane shows is what publishes — directives and callouts included.
+                The body is Markdown the author is currently typing, not
+                third-party input, and it renders with `html: true` exactly as it
+                will on the sites.
+              */}
+              <div
+                className="markdown-body"
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
+              />
             </article>
           )}
         </section>

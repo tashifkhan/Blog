@@ -2,12 +2,20 @@ import { markdown } from '@codemirror/lang-markdown'
 import { EditorState } from '@codemirror/state'
 import { describe, expect, it } from 'vitest'
 
-import { computeDecorations, livePreview, setAssets } from './live-preview'
+import { directiveSyntax } from './directive-syntax'
+import {
+  computeDecorations,
+  describeDirectiveFence,
+  livePreview,
+  setAssets,
+} from './live-preview'
 
 function stateFor(doc: string, cursor?: number) {
   const state = EditorState.create({
     doc,
-    extensions: [markdown(), livePreview()],
+    // Matches MarkdownEditor: the directive extension has to be present or
+    // `:::` blocks parse as paragraphs and their contents never decorate.
+    extensions: [markdown({ extensions: [directiveSyntax] }), livePreview()],
     selection: cursor === undefined ? undefined : { anchor: cursor },
   })
   return state
@@ -131,5 +139,109 @@ describe('revealing source at the caret', () => {
   it('shows the raw image source while the caret is on it', () => {
     const doc = '![Cover](asset:cover.png)'
     expect(classesOn(doc, 4)).not.toContain('widget:ImageWidget')
+  })
+})
+
+describe('directives', () => {
+  const grid = [
+    '::::two-col{ratio="2:1"}',
+    ':::col',
+    '## Left',
+    ':::',
+    ':::col',
+    'right',
+    ':::',
+    '::::',
+  ].join('\n')
+
+  it('replaces each fence with a chip', () => {
+    // The caret defaults to position 0, which sits on the opening fence and
+    // would correctly reveal it, so park it past the block.
+    const doc = `${grid}\n\ncaret away`
+    const chips = describeDecorations(doc, doc.length)
+      .filter((entry) => entry.kind === 'widget:DirectiveWidget')
+      .map((entry) => entry.text)
+
+    expect(chips).toEqual([
+      '::::two-col{ratio="2:1"}',
+      ':::col',
+      ':::',
+      ':::col',
+      ':::',
+      '::::',
+    ])
+  })
+
+  it('parses Markdown inside a column rather than as raw text', () => {
+    // The whole point of the Lezer extension: without it the block folds into
+    // one paragraph and this heading never gets decorated.
+    expect(classesOn(grid)).toContain('cm-md-heading cm-md-h2')
+    expect(hiddenText(grid)).toContain('##')
+  })
+
+  it('marks the block so it can be outlined', () => {
+    expect(classesOn(grid)).toContain('cm-md-directive')
+  })
+
+  it('reveals the fence source while the caret is on it', () => {
+    const chips = describeDecorations(grid, 2).filter(
+      (entry) => entry.kind === 'widget:DirectiveWidget',
+    )
+    expect(chips.map((entry) => entry.text)).not.toContain(
+      '::::two-col{ratio="2:1"}',
+    )
+  })
+
+  it('leaves a stray colon run as ordinary text', () => {
+    const doc = 'ratio ::: something'
+    expect(
+      describeDecorations(doc).filter(
+        (entry) => entry.kind === 'widget:DirectiveWidget',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not treat an unknown directive name as a fence', () => {
+    const doc = ':::waring\nbody\n:::'
+    const chips = describeDecorations(doc)
+      .filter((entry) => entry.kind === 'widget:DirectiveWidget')
+      .map((entry) => entry.text)
+    // The closing fence is still a fence; the misspelled opener is not.
+    expect(chips).not.toContain(':::waring')
+  })
+})
+
+describe('describeDirectiveFence', () => {
+  it('labels a grid with its ratio', () => {
+    expect(describeDirectiveFence('::::two-col{ratio="2:1"}')).toEqual({
+      label: 'columns 2:1',
+      kind: 'grid',
+    })
+  })
+
+  it('defaults a grid without a ratio to 1:1', () => {
+    expect(describeDirectiveFence(':::two-col')).toEqual({
+      label: 'columns 1:1',
+      kind: 'grid',
+    })
+  })
+
+  it('prefers a callout title over its name', () => {
+    expect(describeDirectiveFence(':::tip{title="Go faster"}')).toEqual({
+      label: 'Go faster',
+      kind: 'tip',
+    })
+    expect(describeDirectiveFence(':::tip Go faster')).toEqual({
+      label: 'Go faster',
+      kind: 'tip',
+    })
+    expect(describeDirectiveFence(':::warning')).toEqual({
+      label: 'warning',
+      kind: 'warning',
+    })
+  })
+
+  it('labels a closing fence', () => {
+    expect(describeDirectiveFence(':::')).toEqual({ label: 'end', kind: 'end' })
   })
 })

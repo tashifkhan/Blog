@@ -144,3 +144,43 @@ export function insertBlock(text: string): BodyEdit {
     }
   }
 }
+
+/** Marks where the caret should land inside a template. */
+export const CARET = '$0'
+
+/**
+ * Insert a multi-line snippet and put the caret where the writing starts.
+ *
+ * Directive skeletons are several lines of fences; leaving the caret after the
+ * closing fence, which is what `insertBlock` does, would mean navigating back
+ * into the block by hand every time.
+ */
+export function insertTemplate(template: string): BodyEdit {
+  const caret = template.indexOf(CARET)
+  const text = caret === -1 ? template : template.replace(CARET, '')
+
+  return (body, start, end) => {
+    const result = insertBlock(text)(body, start, end)
+    if (caret === -1) return result
+
+    // `insertBlock` reports the caret at the end of the inserted text, so the
+    // lead padding it added is the difference from where the text begins.
+    const textStart = result.selectionStart - text.length
+    const position = textStart + caret
+    return { ...result, selectionStart: position, selectionEnd: position }
+  }
+}
+
+/** Skeletons behind the directive toolbar buttons. */
+export const CALLOUT_TEMPLATE = [':::note', CARET, ':::'].join('\n')
+
+export const TWO_COL_TEMPLATE = [
+  '::::two-col{ratio="1:1"}',
+  ':::col',
+  CARET,
+  ':::',
+  ':::col',
+  '',
+  ':::',
+  '::::',
+].join('\n')
