@@ -25,9 +25,10 @@ const html = content
 			// `/images/blog/...` is served by this site, so root-relative URLs are
 			// left alone rather than rewritten onto raw.githubusercontent.
 			rootRelative: "site",
-			// No post uses a diagram, so the mermaid bundle is not shipped; a
-			// diagram fence renders as a readable code block instead.
-			mermaid: false,
+			// tashif.codes renders these same posts with diagrams enabled, so a
+			// post containing one has to render the same here. The bundle is
+			// imported lazily below, so prose-only posts pay nothing for it.
+			mermaid: true,
 		})
 	: "<p>No content provided.</p>";
 ---
@@ -38,7 +39,23 @@ const html = content
 />
 
 <script>
-	import { initCopyButtons } from "../../packages/markdown/client";
+	import {
+		initCopyButtons,
+		isDarkTheme,
+		renderMermaidBlocks,
+		watchForContent,
+		watchThemeChanges,
+	} from "../../packages/markdown/client";
+
+	// Only fetched when a post actually contains a diagram, so the mermaid
+	// bundle stays out of the critical path for ordinary prose posts.
+	async function drawDiagrams(force = false) {
+		if (!document.querySelector(".md-mermaid")) return;
+		const { default: mermaid } = await import("mermaid");
+		await renderMermaidBlocks(mermaid, { dark: isDarkTheme(), force });
+	}
 
 	initCopyButtons();
+	watchForContent(() => void drawDiagrams());
+	watchThemeChanges(() => void drawDiagrams(true));
 </script>

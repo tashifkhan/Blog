@@ -122,13 +122,23 @@ export function isDarkTheme(): boolean {
   return document.documentElement.classList.contains('dark')
 }
 
-/** Render every `.md-mermaid` block under `root`. */
+/**
+ * Render every `.md-mermaid` block under `root`.
+ *
+ * Blocks are marked once drawn so this is safe to call repeatedly — the blog
+ * watches for content appearing inside a React island and would otherwise
+ * redraw every diagram on each mutation. Pass `force` when the theme flips and
+ * the diagrams genuinely need regenerating.
+ */
 export async function renderMermaidBlocks(
   mermaid: MermaidLike,
-  options: { dark?: boolean; root?: ParentNode } = {},
+  options: { dark?: boolean; root?: ParentNode; force?: boolean } = {},
 ): Promise<void> {
   const root = options.root ?? document
-  const blocks = root.querySelectorAll<HTMLElement>('.md-mermaid')
+  const selector = options.force
+    ? '.md-mermaid'
+    : '.md-mermaid:not([data-md-diagram])'
+  const blocks = root.querySelectorAll<HTMLElement>(selector)
   if (!blocks.length) return
 
   const dark = options.dark ?? isDarkTheme()
@@ -150,6 +160,7 @@ export async function renderMermaidBlocks(
     if (!source || !target) continue
 
     const id = `md-mermaid-${++diagramSequence}`
+    block.dataset.mdDiagram = 'done'
     try {
       const { svg } = await mermaid.render(id, source)
       target.innerHTML = svg
@@ -163,6 +174,32 @@ export async function renderMermaidBlocks(
       if (code) code.textContent = source
     }
   }
+}
+
+/**
+ * Run `draw` once now, then again whenever new content appears.
+ *
+ * The blog renders posts inside a `client:only` React island, so the markup
+ * does not exist yet when this module first runs and neither `DOMContentLoaded`
+ * nor a one-shot call would find anything. Watching the document covers that
+ * without the caller having to know how the page is hydrated.
+ */
+export function watchForContent(draw: () => void): () => void {
+  draw()
+
+  let queued = false
+  const observer = new MutationObserver(() => {
+    if (queued) return
+    queued = true
+    // Coalesce the burst of mutations a framework emits while mounting.
+    window.requestAnimationFrame(() => {
+      queued = false
+      draw()
+    })
+  })
+
+  observer.observe(document.body, { childList: true, subtree: true })
+  return () => observer.disconnect()
 }
 
 /**
