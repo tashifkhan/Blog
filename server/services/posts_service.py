@@ -47,10 +47,10 @@ class PostsService:
         return resolved_dir
 
     def _list_blog_files(self) -> list[Path]:
-        blogs_dir = self._resolve_blogs_dir()
-        md_files = list(blogs_dir.glob("*.md"))
-        mdx_files = list(blogs_dir.glob("*.mdx"))
-        return md_files + mdx_files
+        # Posts are plain Markdown. `.mdx` used to be globbed here, but the
+        # endpoint returns the raw source either way, so an MDX file would have
+        # been served as unrendered JSX rather than working as a component.
+        return list(self._resolve_blogs_dir().glob("*.md"))
 
     @staticmethod
     def _serialize_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
@@ -133,10 +133,9 @@ class PostsService:
     def _find_file_by_slug(self, slug: str) -> Path:
         blogs_dir = self._resolve_blogs_dir()
         safe_slug = Path(slug).name
-        for extension in (".md", ".mdx"):
-            file_path = blogs_dir / f"{safe_slug}{extension}"
-            if file_path.exists() and file_path.is_file():
-                return file_path
+        file_path = blogs_dir / f"{safe_slug}.md"
+        if file_path.exists() and file_path.is_file():
+            return file_path
         raise HTTPException(status_code=404, detail="Post not found")
 
     async def list_posts(self) -> list[PostSummary]:
