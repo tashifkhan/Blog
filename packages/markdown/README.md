@@ -62,7 +62,54 @@ on GitHub.
 Nesting works with equal-length fences, but writing the outer fence with one
 extra colon (`::::` around `:::`) keeps it unambiguous to a human reader.
 
+## Images
+
+Sizing uses Obsidian's suffix, so a note drafted in Obsidian renders the same
+once pasted in:
+
+```markdown
+![A diagram|400](/images/blog/post/diagram.png)      width only
+![A diagram|400x260](/images/blog/post/diagram.png)  width and height
+```
+
+The numbers become real `width`/`height` attributes, which give the browser an
+aspect ratio before the bytes arrive so a sized image does not shift the page as
+it loads. `max-width: 100%` still scales it down inside a narrow column, and
+`height: auto` keeps the ratio while it does — a 900px image in a 300px column
+renders at 300px wide, not squashed.
+
+A pipe is legal in alt text, so the suffix only applies when digits follow it:
+`![Rock|Paper](x.png)` keeps its alt text.
+
+Images work inside columns, and combine with sizing:
+
+````markdown
+::::two-col{ratio="1:1"}
+:::col
+![Before|300](/images/blog/post/before.png)
+:::
+:::col
+![After|300](/images/blog/post/after.png)
+:::
+::::
+````
+
+An image alone in its paragraph becomes a `<figure>` with the alt text as its
+caption. An image inside a sentence stays a bare inline `<img>` with no caption
+and no frame — a caption under an inline icon reads as nonsense, and `<figure>`
+is not valid inside `<p>`.
+
 ## Layout notes
+
+Below the two-column breakpoint the columns stack, and a rule is drawn between
+them — without it the split the author wrote is invisible and the two columns
+read as one continuous block of prose. The rule disappears once they sit side by
+side, where the gap already communicates it.
+
+Callouts and columns are themed per site: `blog.tashif.codes` draws a callout as
+a small system dialog with a full-width title bar and a hard offset shadow, to
+match its desktop metaphor, while `tashif.codes` uses a soft rounded panel on
+its shadow scale with a mono uppercase label. Both come from the same markup.
 
 `markdown.css` sizes the two-column grid with a **container query**, not a media
 query. The blog renders posts inside resizable desktop windows and a mobile

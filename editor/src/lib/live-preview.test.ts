@@ -245,3 +245,27 @@ describe('describeDirectiveFence', () => {
     expect(describeDirectiveFence(':::')).toEqual({ label: 'end', kind: 'end' })
   })
 })
+
+describe('image sizing in live preview', () => {
+  it('previews at the size the post will publish at', () => {
+    const doc = '![Cover|400x260](asset:cover.png)\n\ncaret away'
+    const spec = computeDecorations(stateFor(doc, doc.length), [
+      { from: 0, to: doc.length },
+    ]).iter().value?.spec as {
+      widget?: { alt?: string; width?: number; height?: number }
+    }
+    expect(spec.widget).toMatchObject({
+      alt: 'Cover',
+      width: 400,
+      height: 260,
+    })
+  })
+
+  it('leaves an unsized image unsized', () => {
+    const doc = '![Cover](asset:cover.png)\n\ncaret away'
+    const spec = computeDecorations(stateFor(doc, doc.length), [
+      { from: 0, to: doc.length },
+    ]).iter().value?.spec as { widget?: { width?: number } }
+    expect(spec.widget?.width).toBeUndefined()
+  })
+})

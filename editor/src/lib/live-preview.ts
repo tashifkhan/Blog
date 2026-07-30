@@ -15,6 +15,7 @@ import {
   WidgetType,
 } from '@codemirror/view'
 
+import { parseImageAlt } from '../markdown/images'
 import { publicImageUrl } from './publishing-rules'
 
 /**
@@ -99,6 +100,8 @@ class ImageWidget extends WidgetType {
     private readonly src: string,
     private readonly alt: string,
     private readonly missing: boolean,
+    private readonly width?: number,
+    private readonly height?: number,
   ) {
     super()
   }
@@ -107,7 +110,9 @@ class ImageWidget extends WidgetType {
     return (
       other.src === this.src &&
       other.alt === this.alt &&
-      other.missing === this.missing
+      other.missing === this.missing &&
+      other.width === this.width &&
+      other.height === this.height
     )
   }
 
@@ -124,6 +129,13 @@ class ImageWidget extends WidgetType {
     const image = document.createElement('img')
     image.src = this.src
     image.alt = this.alt
+    // Mirror the published size so `|400` is judged at the width it will ship
+    // at rather than at whatever the pane happens to be.
+    if (this.width) {
+      image.width = this.width
+      figure.style.maxWidth = `${this.width}px`
+    }
+    if (this.height) image.height = this.height
     figure.appendChild(image)
 
     if (this.alt) {
@@ -382,7 +394,10 @@ export function computeDecorations(
             const raw = state.doc.sliceString(node.from, node.to)
             const match = /^!\[([^\]]*)\]\(([^)]*)\)$/.exec(raw)
             if (!match) return
-            const [, alt, target] = match
+            const [, rawAlt, target] = match
+            // Same parser the renderer uses, so `![Shot|400](…)` previews at
+            // the size it publishes at.
+            const { alt, width, height } = parseImageAlt(rawAlt)
 
             let src = target
             let missing = false
@@ -399,7 +414,7 @@ export function computeDecorations(
 
             decorations.push(
               Decoration.replace({
-                widget: new ImageWidget(src, alt, missing),
+                widget: new ImageWidget(src, alt, missing, width, height),
               }).range(node.from, node.to),
             )
             return

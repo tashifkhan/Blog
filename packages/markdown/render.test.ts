@@ -220,3 +220,68 @@ describe('tag balance', () => {
     }
   })
 })
+
+/**
+ * Both sites render the same post bodies, so their option sets have to agree on
+ * everything except where the assets are hosted. These are the options each
+ * call site passes today:
+ *
+ *   blog.tashif.codes  src/components/MarkdownRenderer.astro
+ *   tashif.codes       src/pages/blog/[slug].astro
+ *
+ * A relative image, a `file://` link, and a `<cite>` block all need
+ * `githubBaseUrl`. It was missing on the portfolio, so those three rendered
+ * broken there while working on the blog.
+ */
+describe('cross-site parity for post bodies', () => {
+  const REPO = 'https://github.com/tashifkhan/Blog'
+  const BLOG = { githubBaseUrl: REPO, rootRelative: 'site' as const, mermaid: true }
+  const PORTFOLIO = {
+    githubBaseUrl: REPO,
+    rootRelative: 'site' as const,
+    assetBaseUrl: 'https://blog.tashif.codes',
+    mermaid: true,
+  }
+
+  const POST = [
+    '# Title', '', 'Text with `code`, **bold**, [a link](https://x.com).', '',
+    '- bullet', '', '- [x] task', '', '> [!NOTE]', '> callout', '',
+    ':::tip Heads up', 'directive', ':::', '',
+    '::::two-col{ratio="2:1"}', ':::col', '### Left', ':::', ':::col', 'right', ':::', '::::', '',
+    '| a | b |', '| --- | --- |', '| 1 | 2 |', '',
+    '```python', 'x = 1', '```', '', '```mermaid', 'graph TD', '  A --> B', '```', '',
+    '![Sized|300](./rel.png)', '', '[src](file://src/main.py)',
+  ].join('\n')
+
+  it('produces identical markup apart from the asset origin', () => {
+    const blog = renderMarkdown(POST, BLOG)
+    const portfolio = renderMarkdown(POST, PORTFOLIO)
+    // The portfolio prefixes root-relative assets because they are served by
+    // the blog's origin; nothing else may differ.
+    expect(portfolio.replaceAll('https://blog.tashif.codes/', '/')).toBe(blog)
+  })
+
+  it('resolves relative images against the repository on both sites', () => {
+    for (const options of [BLOG, PORTFOLIO]) {
+      expect(renderMarkdown('![a](./rel.png)', options)).toContain(
+        'https://raw.githubusercontent.com/tashifkhan/Blog/HEAD/rel.png',
+      )
+    }
+  })
+
+  it('renders cite blocks as reference cards on both sites', () => {
+    for (const options of [BLOG, PORTFOLIO]) {
+      const html = renderMarkdown('<cite>[main.py](file://src/main.py)</cite>', options)
+      expect(html).toContain('md-cite')
+      expect(html).toContain(`${REPO}/blob/HEAD/src/main.py`)
+    }
+  })
+
+  it('renders diagrams as diagrams on both sites', () => {
+    for (const options of [BLOG, PORTFOLIO]) {
+      expect(renderMarkdown('```mermaid\ngraph TD\n```', options)).toContain(
+        'md-mermaid',
+      )
+    }
+  })
+})

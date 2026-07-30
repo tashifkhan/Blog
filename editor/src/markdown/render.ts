@@ -29,6 +29,7 @@ import {
   COPY_ICON,
   TERMINAL_ICON,
 } from './icons'
+import { parseImageAlt, sizeAttributes } from './images'
 import { taskListsPlugin } from './tasklists'
 import { cx, type MarkdownTheme } from './theme'
 import {
@@ -108,6 +109,39 @@ export function slugifyHeading(text: string): string {
 
 function env(rawEnv: unknown): RenderEnv {
   return rawEnv as RenderEnv
+}
+
+/**
+ * Does this paragraph hold nothing but images?
+ *
+ * Whitespace and line breaks between them still count, so two images on
+ * consecutive lines are treated as a figure group rather than prose.
+ */
+function isImageOnlyParagraph(tokens: any[], idx: number): boolean {
+  const inline = tokens[idx + 1]
+  if (inline?.type !== 'inline') return false
+
+  const children = inline.children ?? []
+  if (!children.some((child: any) => child.type === 'image')) return false
+
+  const alone = children.every(
+    (child: any) =>
+      child.type === 'image' ||
+      child.type === 'softbreak' ||
+      child.type === 'hardbreak' ||
+      (child.type === 'text' && child.content.trim() === ''),
+  )
+  if (!alone) return false
+
+  // Tag the images so the image rule knows it may emit block-level `<figure>`.
+  // An image sitting in a sentence stays a bare `<img>`: a caption under an
+  // inline icon reads as nonsense, and `<figure>` inside `<p>` is invalid.
+  for (const child of children) {
+    if (child.type === 'image') {
+      child.meta = { ...(child.meta || {}), figure: true }
+    }
+  }
+  return true
 }
 
 function isMermaid(lang: string, code: string): boolean {
@@ -253,10 +287,27 @@ function createParser(): MarkdownIt {
     // still skips, leaving every tight list item with an unclosed `<p>`.
     if (tokens[idx].hidden) return ''
 
+    // markdown-it wraps a standalone image in a paragraph, but this renderer
+    // emits a `<figure>` for it, and `<figure>` is not allowed inside `<p>`.
+    // The browser would silently close the paragraph early, stranding an empty
+    // `<p></p>` before every captioned image. Drop the wrapper instead.
+    if (isImageOnlyParagraph(tokens, idx)) {
+      tokens[idx].meta = { ...(tokens[idx].meta || {}), imageOnly: true }
+      return ''
+    }
+
     const { theme, itemStack } = env(rawEnv)
     return itemStack.length > 0
       ? `<p class="${cx('md-p md-p--tight', theme.paragraphTight)}">`
       : `<p class="${cx('md-p', theme.paragraph)}">`
+  }
+
+  rules.paragraph_close = (tokens: any[], idx: number) => {
+    if (tokens[idx].hidden) return ''
+    // open, inline, close — so the matching open sits two tokens back.
+    const open = tokens[idx - 2]
+    if (open?.type === 'paragraph_open' && open.meta?.imageOnly) return ''
+    return '</p>'
   }
 
   rules.code_inline = (tokens: any[], idx: number, _opts: any, rawEnv: any) =>
@@ -346,7 +397,8 @@ function createParser(): MarkdownIt {
     const { theme, urls, resolveImage } = env(rawEnv)
     const token = tokens[idx]
     const rawSrc = token.attrGet('src') || ''
-    const alt = token.content || ''
+    const parsed = parseImageAlt(token.content || '')
+    const alt = parsed.alt
 
     const resolved = resolveImage?.(rawSrc)
     if (resolved?.missing) {
@@ -354,10 +406,18 @@ function createParser(): MarkdownIt {
     }
 
     const src = convertRelativeUrl(resolved?.src ?? rawSrc, urls)
+    const asFigure = token.meta?.figure === true
+    const image =
+      `<img src="${md.utils.escapeHtml(src)}" alt="${md.utils.escapeHtml(alt)}"` +
+      `${sizeAttributes(parsed)} loading="lazy" decoding="async" ` +
+      `class="${cx(asFigure ? 'md-image' : 'md-image md-image--inline', theme.image)}" />`
+
+    if (!asFigure) return image
+
     const caption = alt
       ? `<figcaption class="md-image-caption">${md.utils.escapeHtml(alt)}</figcaption>`
       : ''
-    return `<figure class="${cx('md-figure', theme.imageWrap)}"><img src="${md.utils.escapeHtml(src)}" alt="${md.utils.escapeHtml(alt)}" loading="lazy" decoding="async" class="${cx('md-image', theme.image)}" />${caption}</figure>`
+    return `<figure class="${cx('md-figure', theme.imageWrap)}">${image}${caption}</figure>`
   }
 
   rules.link_open = (
