@@ -77,6 +77,10 @@ import {
   assetReference,
   findAssetReferences,
 } from '../lib/publishing-rules'
+import {
+  filesFromDataTransfer,
+  materializeImageFile,
+} from '../lib/transfer-files'
 
 type EditorWorkspaceProps = {
   onSignedOut: () => void
@@ -190,7 +194,6 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
 
   const formRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<MarkdownEditorHandle>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const linkDestinationRef = useRef<HTMLInputElement>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
   const imagesRef = useRef<EditorImage[]>([])
@@ -496,15 +499,21 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     const accepted: EditorImage[] = []
     let room = MAX_IMAGES - images.length
 
-    for (const file of Array.from(fileList)) {
+    for (const raw of Array.from(fileList)) {
       if (room <= 0) {
         setError(`A post can carry at most ${MAX_IMAGES} images`)
         break
       }
 
+      // File-picker paths usually already have a name; clipboard pastes may
+      // not. Materializing also copies bytes out of Firefox's short-lived
+      // clipboard File objects so later publish reads still work.
+      const file = materializeImageFile(raw)
       const filename = normalizeFilename(file.name)
       if (!IMAGE_FILENAME_PATTERN.test(filename)) {
-        setError(`${file.name} is not a supported image format`)
+        setError(
+          `${raw.name || file.name || 'That file'} is not a supported image format`,
+        )
         continue
       }
       if (file.size > MAX_IMAGE_BYTES) {
@@ -568,7 +577,8 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
     setDragging(false)
-    if (event.dataTransfer.files.length) addFiles(event.dataTransfer.files)
+    const files = filesFromDataTransfer(event.dataTransfer)
+    if (files.length) addFiles(files)
   }
 
   function removeImage(id: string) {
@@ -1024,23 +1034,24 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
               onDrop={handleDrop}
             >
               <input
-                ref={fileInputRef}
+                id="media-desk-files"
                 type="file"
                 accept={IMAGE_ACCEPT_ATTRIBUTE}
                 multiple
-                hidden
+                className="media-desk-file-input"
                 onChange={handleFileInput}
               />
               <UploadCloud size={24} aria-hidden="true" />
               <strong>Drop images to attach & insert</strong>
               <span>AVIF, WebP, PNG, JPEG or GIF · 3 MB max</span>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-              >
+              {/*
+                Native label activation is more reliable than a programmatic
+                `.click()` on a hidden file input, especially in Firefox.
+              */}
+              <label className="media-desk-choose" htmlFor="media-desk-files">
                 <Plus size={15} aria-hidden="true" />
                 Choose & insert
-              </button>
+              </label>
             </div>
 
             {unresolved.length ? (

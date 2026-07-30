@@ -17,6 +17,10 @@ import {
   setSlug,
 } from '../lib/live-preview'
 import type { BodyEdit } from '../lib/markdown-editing'
+import {
+  filesFromDataTransfer,
+  isDraggingFiles,
+} from '../lib/transfer-files'
 
 export type MarkdownEditorHandle = {
   applyEdit: (edit: BodyEdit) => void
@@ -38,14 +42,7 @@ type MarkdownEditorProps = {
   value: string
 }
 
-/**
- * A drag only exposes its file list on drop; during `dragover` the browser
- * withholds it and advertises the payload through `types` instead. Reading
- * `files` here would always see zero and refuse the drop.
- */
-export function isDraggingFiles(transfer: DataTransfer | null): boolean {
-  return transfer ? Array.from(transfer.types).includes('Files') : false
-}
+export { isDraggingFiles }
 
 /**
  * CodeMirror surface for the article body.
@@ -109,7 +106,9 @@ export function MarkdownEditor({
               return true
             },
             drop(event, view) {
-              const files = Array.from(event.dataTransfer?.files ?? [])
+              // Must read the transfer synchronously — Firefox clears
+              // clipboard/drag-backed File data once this handler returns.
+              const files = filesFromDataTransfer(event.dataTransfer)
               if (!files.length) return false
               event.preventDefault()
 
@@ -126,7 +125,10 @@ export function MarkdownEditor({
               return true
             },
             paste(event) {
-              const files = Array.from(event.clipboardData?.files ?? [])
+              // Firefox screenshot pastes often leave `files` empty and only
+              // expose the image via `items` + `getAsFile()`. Capture in this
+              // frame before the engine clears the clipboard payload.
+              const files = filesFromDataTransfer(event.clipboardData)
               if (!files.length) return false
               event.preventDefault()
               onFilesRef.current?.(files)

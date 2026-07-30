@@ -19,8 +19,10 @@ export const SLUG_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]{0,119}$/
 export const IMAGE_FILENAME_PATTERN =
   /^[A-Za-z0-9][A-Za-z0-9._-]{0,159}\.(?:avif|gif|jpe?g|png|webp)$/i
 
+// MIME types plus extensions: Firefox's file picker is stricter about MIME
+// alone on some platforms, and extensions keep .jpg/.jpeg both selectable.
 export const IMAGE_ACCEPT_ATTRIBUTE =
-  'image/avif,image/gif,image/jpeg,image/png,image/webp'
+  'image/avif,image/gif,image/jpeg,image/png,image/webp,.avif,.gif,.jpg,.jpeg,.png,.webp'
 
 /**
  * `asset:cover.webp` — the editor-only placeholder the media desk inserts, and
