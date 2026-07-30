@@ -494,21 +494,36 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     return `![${alt}](${assetReference(image.filename)})`
   }
 
-  function addFiles(fileList: FileList | File[]) {
+  async function addFiles(fileList: FileList | File[]) {
     setError('')
+    const rawFiles = Array.from(fileList)
+    if (!rawFiles.length) return
+
+    // Start every arrayBuffer() read in this turn — before any await yields —
+    // so Firefox keeps clipboard/drag-backed bytes available for the copy.
+    // A soft `new File([blob])` wrap is not enough on that engine.
+    const materializing = rawFiles.map((raw) => materializeImageFile(raw))
+
+    let materialized: File[]
+    try {
+      materialized = await Promise.all(materializing)
+    } catch {
+      setError('Could not read one of the selected images. Try again.')
+      return
+    }
+
     const accepted: EditorImage[] = []
     let room = MAX_IMAGES - images.length
 
-    for (const raw of Array.from(fileList)) {
+    for (let index = 0; index < materialized.length; index += 1) {
+      const file = materialized[index]!
+      const raw = rawFiles[index]!
+
       if (room <= 0) {
         setError(`A post can carry at most ${MAX_IMAGES} images`)
         break
       }
 
-      // File-picker paths usually already have a name; clipboard pastes may
-      // not. Materializing also copies bytes out of Firefox's short-lived
-      // clipboard File objects so later publish reads still work.
-      const file = materializeImageFile(raw)
       const filename = normalizeFilename(file.name)
       if (!IMAGE_FILENAME_PATTERN.test(filename)) {
         setError(
@@ -570,7 +585,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   }
 
   function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
-    if (event.target.files) addFiles(event.target.files)
+    if (event.target.files) void addFiles(event.target.files)
     event.target.value = ''
   }
 
@@ -578,7 +593,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     event.preventDefault()
     setDragging(false)
     const files = filesFromDataTransfer(event.dataTransfer)
-    if (files.length) addFiles(files)
+    if (files.length) void addFiles(files)
   }
 
   function removeImage(id: string) {
@@ -1029,26 +1044,31 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
                 event.preventDefault()
                 setDragging(true)
               }}
-              onDragOver={(event) => event.preventDefault()}
+              onDragOver={(event) => {
+                // Firefox needs preventDefault + dropEffect or it refuses the drop.
+                event.preventDefault()
+                if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+              }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
             >
-              <input
-                id="media-desk-files"
-                type="file"
-                accept={IMAGE_ACCEPT_ATTRIBUTE}
-                multiple
-                className="media-desk-file-input"
-                onChange={handleFileInput}
-              />
               <UploadCloud size={24} aria-hidden="true" />
               <strong>Drop images to attach & insert</strong>
               <span>AVIF, WebP, PNG, JPEG or GIF · 3 MB max</span>
               {/*
-                Native label activation is more reliable than a programmatic
-                `.click()` on a hidden file input, especially in Firefox.
+                Nest the file input inside the label and cover the control with
+                opacity:0. Firefox is unreliable with programmatic `.click()` on
+                a hidden input and with clipped sibling inputs activated only
+                via htmlFor.
               */}
-              <label className="media-desk-choose" htmlFor="media-desk-files">
+              <label className="media-desk-choose">
+                <input
+                  type="file"
+                  accept={IMAGE_ACCEPT_ATTRIBUTE}
+                  multiple
+                  className="media-desk-file-input"
+                  onChange={handleFileInput}
+                />
                 <Plus size={15} aria-hidden="true" />
                 Choose & insert
               </label>

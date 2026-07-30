@@ -88,19 +88,31 @@ describe('filenameForImage', () => {
   })
 
   it('names an empty clipboard screenshot from its type', () => {
+    // Real Firefox pastes use ""; some runtimes leave name undefined.
     expect(filenameForImage(fakeFile('', 'image/png'))).toBe('image.png')
     expect(filenameForImage(fakeFile('', 'image/jpeg'))).toBe('image.jpg')
+    expect(
+      filenameForImage({ type: 'image/webp' } as File),
+    ).toBe('image.webp')
   })
 })
 
 describe('materializeImageFile', () => {
   it('returns a fresh File the publish path can still read later', async () => {
     const source = fakeFile('shot.png', 'image/png', 'png-payload')
-    const copy = materializeImageFile(source)
+    const copy = await materializeImageFile(source)
 
     expect(copy).not.toBe(source)
     expect(copy.name).toBe('shot.png')
     expect(copy.type).toBe('image/png')
+    expect(await copy.text()).toBe('png-payload')
+  })
+
+  it('assigns a durable name to a nameless clipboard image', async () => {
+    const source = fakeFile('', 'image/png', 'png-payload')
+    const copy = await materializeImageFile(source)
+
+    expect(copy.name).toBe('image.png')
     expect(await copy.text()).toBe('png-payload')
   })
 })

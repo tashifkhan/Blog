@@ -1214,17 +1214,23 @@ html[data-theme='dark'] .login-aside {
   line-height: 1.4;
 }
 
-/* Visually hide without `display: none` / `hidden`, so Firefox still treats
-   the control as activatable via its label. */
+/* Opacity-0 overlay over the choose control — more reliable in Firefox than
+   `display: none`, `hidden`, or a clipped 1×1 sibling activated via htmlFor. */
+.drop-zone .media-desk-choose {
+  position: relative;
+  overflow: hidden;
+}
+
 .media-desk-file-input {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 0;
   border: 0;
 }
 

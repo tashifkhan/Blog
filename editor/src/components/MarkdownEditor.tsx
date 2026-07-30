@@ -106,8 +106,8 @@ export function MarkdownEditor({
               return true
             },
             drop(event, view) {
-              // Must read the transfer synchronously — Firefox clears
-              // clipboard/drag-backed File data once this handler returns.
+              // getAsFile() must run in this turn — Firefox clears the transfer
+              // once the handler returns. onFiles deep-copies via arrayBuffer.
               const files = filesFromDataTransfer(event.dataTransfer)
               if (!files.length) return false
               event.preventDefault()
@@ -126,8 +126,9 @@ export function MarkdownEditor({
             },
             paste(event) {
               // Firefox screenshot pastes often leave `files` empty and only
-              // expose the image via `items` + `getAsFile()`. Capture in this
-              // frame before the engine clears the clipboard payload.
+              // expose the image via `items` + `getAsFile()`. Hand off to
+              // onFiles in this turn so arrayBuffer() can start before the
+              // engine clears the clipboard payload.
               const files = filesFromDataTransfer(event.clipboardData)
               if (!files.length) return false
               event.preventDefault()

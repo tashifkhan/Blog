@@ -4,8 +4,16 @@
  * Clipboard and drag payloads differ across engines. Firefox is the awkward
  * one: screenshot pastes often leave `files` empty while still exposing the
  * image through `items` + `getAsFile()`, and clipboard-backed File objects can
- * become unreadable once the paste handler returns. Everything here stays
- * synchronous so the bytes are captured in the same turn as the event.
+ * become unreadable once the paste handler returns.
+ *
+ * Capture stays two-step on purpose:
+ * 1. `filesFromDataTransfer` / `getAsFile()` run synchronously in the event
+ *    turn (required — Firefox clears the transfer after the handler returns).
+ * 2. `materializeImageFile` starts `arrayBuffer()` in that same turn so the
+ *    engine keeps the bytes available, then builds a durable File the publish
+ *    path can still read later. A soft `new File([blob])` wrap is not enough:
+ *    it keeps a reference to the short-lived clipboard blob rather than
+ *    copying the bytes.
  */
 
 const IMAGE_MIME_TO_EXT: Record<string, string> = {
@@ -21,7 +29,7 @@ const IMAGE_EXTENSION_PATTERN = /\.(avif|gif|jpe?g|png|webp)$/i
 
 function isImageFile(file: File): boolean {
   if (file.type.startsWith('image/')) return true
-  return IMAGE_EXTENSION_PATTERN.test(file.name)
+  return IMAGE_EXTENSION_PATTERN.test(file.name || '')
 }
 
 function mimeFromFilename(filename: string): string {
@@ -38,15 +46,19 @@ function mimeFromFilename(filename: string): string {
  * Clipboard screenshots sometimes arrive with an empty name or no extension.
  * Infer a usable `image.png`-style name from the MIME type so the rest of the
  * pipeline (filename validation, publish paths) still accepts them.
+ *
+ * Some runtimes (and occasional engine quirks) expose a missing name as
+ * `undefined` rather than `""` — treat both the same.
  */
 export function filenameForImage(file: File): string {
-  if (file.name && IMAGE_EXTENSION_PATTERN.test(file.name)) return file.name
+  const rawName = typeof file.name === 'string' ? file.name : ''
+  if (rawName && IMAGE_EXTENSION_PATTERN.test(rawName)) return rawName
 
-  const extension = IMAGE_MIME_TO_EXT[file.type.toLowerCase()]
-  if (!extension) return file.name || 'image.png'
+  const extension = IMAGE_MIME_TO_EXT[(file.type || '').toLowerCase()]
+  if (!extension) return rawName || 'image.png'
 
   const stem =
-    file.name
+    rawName
       .replace(/\.[^.]*$/, '')
       .trim()
       .replace(/[^\w.-]+/g, '-')
@@ -55,25 +67,26 @@ export function filenameForImage(file: File): string {
 }
 
 /**
- * Re-wrap a file so its bytes outlive the paste/drop event.
+ * Deep-copy a file so its bytes outlive the paste/drop event.
  *
- * Firefox can clear clipboard-backed File data after the handler returns.
- * Building a fresh `File` during the event copies the blob into one the
- * editor can still read when publishing.
+ * Call this (and thereby `arrayBuffer()`) in the same turn as the paste/drop
+ * handler. Awaiting the promise may finish later; starting the read is what
+ * keeps Firefox from discarding clipboard-backed data.
  */
-export function materializeImageFile(file: File): File {
+export async function materializeImageFile(file: File): Promise<File> {
   const name = filenameForImage(file)
-  return new File([file], name, {
-    type: file.type || mimeFromFilename(name),
-    lastModified: file.lastModified || Date.now(),
-  })
+  const type = file.type || mimeFromFilename(name)
+  const lastModified = file.lastModified || Date.now()
+  const buffer = await file.arrayBuffer()
+  return new File([buffer], name, { type, lastModified })
 }
 
 /**
  * Collect image files from a paste or drop payload.
  *
  * Prefer `items` + `getAsFile()` (Firefox screenshot pastes), then fall back
- * to `files`. Always materialize so later `FileReader` / publish steps work.
+ * to `files`. Returns the live transfer Files — pass them straight into
+ * `materializeImageFile` before the event turn ends.
  */
 export function filesFromDataTransfer(
   transfer: DataTransfer | null | undefined,
@@ -85,11 +98,10 @@ export function filesFromDataTransfer(
 
   const take = (file: File | null) => {
     if (!file || !isImageFile(file)) return
-    const materialized = materializeImageFile(file)
-    const key = `${materialized.name}:${materialized.size}:${materialized.type}:${materialized.lastModified}`
+    const key = `${file.name}:${file.size}:${file.type}:${file.lastModified}`
     if (seen.has(key)) return
     seen.add(key)
-    out.push(materialized)
+    out.push(file)
   }
 
   if (transfer.items?.length) {
