@@ -77,6 +77,7 @@ import {
   assetReference,
   findAssetReferences,
 } from '../lib/publishing-rules'
+import { createId } from '../lib/id'
 import {
   filesFromDataTransfer,
   materializeImageFile,
@@ -559,13 +560,22 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
         new Set(attached.map((candidate) => candidate.filename.toLowerCase())),
       )
 
-      accepted.push({
-        file,
-        filename: unique,
-        id: crypto.randomUUID(),
-        previewUrl: URL.createObjectURL(file),
-        status: 'ready',
-      })
+      try {
+        accepted.push({
+          file,
+          filename: unique,
+          id: createId(),
+          previewUrl: URL.createObjectURL(file),
+          status: 'ready',
+        })
+      } catch (caught) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : 'Could not attach that image',
+        )
+        continue
+      }
       room -= 1
     }
 

@@ -7,6 +7,9 @@
     "build": "vite build && tsc --noEmit",
     "start": "node .output/server/index.mjs",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:firefox:docker": "bash scripts/e2e-firefox-docker.sh",
     "icons": "bun scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
@@ -29,6 +32,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.9",
