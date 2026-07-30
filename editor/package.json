@@ -23,11 +23,13 @@
     "@tanstack/react-start": "^1.168.32",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.536.0",
+    "markdown-it": "^14.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
