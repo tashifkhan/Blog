@@ -14,6 +14,7 @@ class PostSummary(BaseModel):
     author: str | None = None
     tags: list[str] = Field(default_factory=list)
     excerpt: str | None = None
+    cover_image: str | None = Field(default=None, alias="coverImage")
     category: str | None = None
     socials: list[str] | dict[str, Any] | None = None
     word_count: int = Field(default=0, alias="wordCount", ge=0)

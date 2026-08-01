@@ -4,6 +4,7 @@ import {
   buildArticle,
   normalizeFilename,
   resolveAssetReferences,
+  resolveCoverImage,
   slugify,
   uniqueFilename,
 } from './article'
@@ -12,6 +13,7 @@ import { findAssetReferences } from './publishing-rules'
 const DRAFT = {
   body: 'Body text.',
   commitMessage: 'content: publish',
+  coverImage: '',
   date: '2026-07-29',
   excerpt: 'A crisp sentence.',
   slug: 'React-Native-Architecture',
@@ -76,6 +78,28 @@ describe('buildArticle', () => {
     expect(buildArticle({ ...DRAFT, tags: '' }, [])).toContain('tags: []')
   })
 
+  it('omits coverImage when none is set', () => {
+    expect(buildArticle(DRAFT, [])).not.toContain('coverImage:')
+  })
+
+  it('emits a public cover path when the cover is attached', () => {
+    const article = buildArticle(
+      { ...DRAFT, coverImage: 'cover.webp' },
+      ['cover.webp'],
+    )
+    expect(article).toContain(
+      'coverImage: "/images/blog/React-Native-Architecture/cover.webp"',
+    )
+  })
+
+  it('omits coverImage when the cover file is not attached', () => {
+    const article = buildArticle(
+      { ...DRAFT, coverImage: 'missing.webp' },
+      [],
+    )
+    expect(article).not.toContain('coverImage:')
+  })
+
   it('rewrites attached asset references to their published paths', () => {
     const article = buildArticle(
       { ...DRAFT, body: '![Cover](asset:cover.webp)' },
@@ -93,6 +117,32 @@ describe('buildArticle', () => {
       [],
     )
     expect(findAssetReferences(article)).toEqual(['missing.webp'])
+  })
+})
+
+describe('resolveCoverImage', () => {
+  it('returns null for an empty cover', () => {
+    expect(resolveCoverImage('', ['cover.webp'], 'Post')).toBeNull()
+  })
+
+  it('resolves an attached filename to its public path', () => {
+    expect(resolveCoverImage('cover.webp', ['cover.webp'], 'Post')).toBe(
+      '/images/blog/Post/cover.webp',
+    )
+  })
+
+  it('passes through an already-public path', () => {
+    expect(
+      resolveCoverImage(
+        '/images/blog/Post/hero.png',
+        [],
+        'Post',
+      ),
+    ).toBe('/images/blog/Post/hero.png')
+  })
+
+  it('returns null when the cover is not among attachments', () => {
+    expect(resolveCoverImage('gone.webp', ['other.png'], 'Post')).toBeNull()
   })
 })
 

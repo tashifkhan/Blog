@@ -9,6 +9,7 @@ interface BlogPostWrapperProps {
 	title?: string;
 	date?: string;
 	excerpt?: string;
+	coverImage?: string;
 	tags?: string[];
 	slug?: string;
 	author?: {
@@ -28,6 +29,7 @@ export function BlogPostWrapper({
 	title,
 	date,
 	excerpt,
+	coverImage,
 	tags,
 	slug,
 	author,
@@ -60,6 +62,7 @@ export function BlogPostWrapper({
 				title={title}
 				date={date}
 				excerpt={excerpt}
+				coverImage={coverImage}
 				tags={tags}
 				slug={slug}
 				author={author}
@@ -76,7 +79,13 @@ export function BlogPostWrapper({
 		>
 			{/* Main blog post window */}
 			<div className="flex-1" style={{ minWidth: "100%" }}>
-				<BlogPostPage title={title} date={date} excerpt={excerpt} tags={tags}>
+				<BlogPostPage
+					title={title}
+					date={date}
+					excerpt={excerpt}
+					coverImage={coverImage}
+					tags={tags}
+				>
 					<PostMetaHeader slug={slug || ""} author={author} />
 					{children}
 					<div style={{ marginTop: "1.5rem" }}>

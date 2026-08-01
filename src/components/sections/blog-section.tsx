@@ -84,7 +84,7 @@ export function BlogSection({
 						onClick={() => (window.location.href = `/blog/${post.slug}/`)}
 					>
 						<div
-							className="p-4 rounded border transition-all duration-200 hover:shadow-lg"
+							className="rounded border transition-all duration-200 hover:shadow-lg overflow-hidden"
 							style={{
 								backgroundColor: theme.windowBackground,
 								borderColor: theme.borderColor,
@@ -100,6 +100,23 @@ export function BlogSection({
 								e.currentTarget.style.transform = "translateY(0)";
 							}}
 						>
+							{post.coverImage && (
+								<div
+									className="w-full aspect-[16/9] overflow-hidden"
+									style={{
+										backgroundColor: theme.borderColor,
+										borderBottom: `1px solid ${theme.borderColor}`,
+									}}
+								>
+									<img
+										src={post.coverImage}
+										alt=""
+										className="w-full h-full object-cover"
+										loading="lazy"
+									/>
+								</div>
+							)}
+							<div className="p-4">
 							<h3
 								className="font-semibold text-lg mb-2 group-hover:opacity-80 transition-opacity line-clamp-2"
 								style={{ color: theme.accentColor }}
@@ -152,6 +169,7 @@ export function BlogSection({
 									{new Date(post.date).toLocaleDateString()}
 								</small>
 							)}
+							</div>
 						</div>
 					</motion.article>
 				))}

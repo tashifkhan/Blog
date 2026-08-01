@@ -85,6 +85,7 @@ class PostsService:
         author = data.pop("author", None)
         tags = data.pop("tags", None) or []
         excerpt = data.pop("excerpt", None)
+        cover_image = data.pop("coverImage", None) or data.pop("cover_image", None)
         category = data.pop("category", None)
         socials = data.pop("socials", None)
         # Prefer computed body stats over any stale frontmatter keys
@@ -114,6 +115,7 @@ class PostsService:
             author=str(author) if author is not None else None,
             tags=normalized_tags,
             excerpt=str(excerpt) if excerpt is not None else None,
+            cover_image=str(cover_image) if cover_image else None,
             category=str(category) if category is not None else None,
             socials=socials,
             word_count=word_count,

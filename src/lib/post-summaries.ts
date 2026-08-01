@@ -15,11 +15,17 @@ export async function getPostSummaries(): Promise<Post[]> {
 	return posts.map(({ slug, frontmatter, rawContent }) => {
 		const wordCount = rawContent.split(/\s+/).filter(Boolean).length;
 
+		const coverImage =
+			typeof frontmatter.coverImage === "string" && frontmatter.coverImage
+				? frontmatter.coverImage
+				: undefined;
+
 		return {
 			slug,
 			title: frontmatter.title ?? slug,
 			date: frontmatter.date ? String(frontmatter.date) : "",
 			excerpt: frontmatter.excerpt,
+			coverImage,
 			category: frontmatter.category,
 			tags: frontmatter.tags ?? [],
 			author: frontmatter.author,

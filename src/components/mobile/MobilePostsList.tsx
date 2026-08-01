@@ -234,50 +234,62 @@ export function MobilePostsList({ initialPosts }: MobilePostsListProps) {
 									href={p.slug ? `/blog/${p.slug}/` : "/blog/"}
 									className={`block ${
 										theme.name === "neoBrutalism" ? "rounded-none" : "rounded"
-									} border p-3 no-underline`}
+									} border overflow-hidden no-underline`}
 									style={{ ...getCardStyle(), color: theme.textColor }}
 									aria-label={`Read post ${p.title}`}
 								>
-									<div
-										className="text-sm font-semibold"
-										style={{ color: theme.accentColor }}
-									>
-										{p.title}
-									</div>
-									{p.excerpt && (
-										<div className="text-xs opacity-80 line-clamp-2 mt-1">
-											{p.excerpt}
+									{p.coverImage && (
+										<div className="w-full aspect-[2/1] overflow-hidden">
+											<img
+												src={p.coverImage}
+												alt=""
+												className="w-full h-full object-cover"
+												loading="lazy"
+											/>
 										</div>
 									)}
-									<div className="mt-1 flex items-center gap-2">
-										{p.date && (
-											<span className="text-[10px] opacity-60">
-												{new Date(p.date).toLocaleDateString()}
-											</span>
+									<div className="p-3">
+										<div
+											className="text-sm font-semibold"
+											style={{ color: theme.accentColor }}
+										>
+											{p.title}
+										</div>
+										{p.excerpt && (
+											<div className="text-xs opacity-80 line-clamp-2 mt-1">
+												{p.excerpt}
+											</div>
 										)}
-										{p.tags?.slice(0, 3).map((t) => (
-											<span
-												key={t}
-												className="px-1.5 py-0.5 rounded text-[10px]"
-												style={{
-													background: theme.accentColor,
-													color: theme.windowBackground,
-												}}
-											>
-												{t}
-											</span>
-										))}
-										{p.tags && p.tags.length > 3 && (
-											<span
-												className="px-1.5 py-0.5 rounded text-[10px]"
-												style={{
-													background: theme.borderColor,
-													color: theme.textColor,
-												}}
-											>
-												+{p.tags.length - 3}
-											</span>
-										)}
+										<div className="mt-1 flex items-center gap-2 flex-wrap">
+											{p.date && (
+												<span className="text-[10px] opacity-60">
+													{new Date(p.date).toLocaleDateString()}
+												</span>
+											)}
+											{p.tags?.slice(0, 3).map((t) => (
+												<span
+													key={t}
+													className="px-1.5 py-0.5 rounded text-[10px]"
+													style={{
+														background: theme.accentColor,
+														color: theme.windowBackground,
+													}}
+												>
+													{t}
+												</span>
+											))}
+											{p.tags && p.tags.length > 3 && (
+												<span
+													className="px-1.5 py-0.5 rounded text-[10px]"
+													style={{
+														background: theme.borderColor,
+														color: theme.textColor,
+													}}
+												>
+													+{p.tags.length - 3}
+												</span>
+											)}
+										</div>
 									</div>
 								</a>
 							</li>

@@ -4,6 +4,7 @@ export type LoadedPost = {
     title?: string;
     date?: string;
     excerpt?: string;
+    coverImage?: string;
     tags?: string[];
   };
   /** Post body with the frontmatter block stripped. */

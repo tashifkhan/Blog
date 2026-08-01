@@ -12,6 +12,7 @@ interface MobilePostReaderProps {
 	title?: string;
 	date?: string;
 	excerpt?: string;
+	coverImage?: string;
 	tags?: string[];
 	slug?: string;
 	author?: {
@@ -33,6 +34,7 @@ export function MobilePostReader({
 	title,
 	date,
 	excerpt,
+	coverImage,
 	tags,
 	slug,
 	author,
@@ -477,6 +479,22 @@ export function MobilePostReader({
 						}}
 					>
 						<header className="mb-4">
+							{coverImage && (
+								<div
+									className={`mb-4 overflow-hidden ${
+										theme.name === "neoBrutalism" ? "" : "rounded"
+									}`}
+									style={{
+										border: `1px solid ${theme.borderColor}`,
+									}}
+								>
+									<img
+										src={coverImage}
+										alt=""
+										className="w-full max-h-56 object-cover"
+									/>
+								</div>
+							)}
 							<h1
 								className="text-2xl font-extrabold mb-4"
 								style={{ color: theme.accentColor }}

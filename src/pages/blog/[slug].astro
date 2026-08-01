@@ -39,6 +39,7 @@ const author = post?.frontmatter.author
 <BlogLayout
 	title={post?.frontmatter.title}
 	description={post?.frontmatter.excerpt}
+	image={post?.frontmatter.coverImage}
 >
 	{
 		post ? (
@@ -47,6 +48,7 @@ const author = post?.frontmatter.author
 				title={post.frontmatter.title}
 				date={post.frontmatter.date}
 				excerpt={post.frontmatter.excerpt}
+				coverImage={post.frontmatter.coverImage}
 				tags={post.frontmatter.tags}
 				slug={slug ?? ""}
 				author={author}

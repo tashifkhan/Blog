@@ -23,7 +23,7 @@ export function PostList({ posts, theme, setWindowTitle }: PostListProps) {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: index * 0.05 }}
 					onClick={() => handlePostClick(post)}
-					className="p-6 rounded-xl shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-2xl cursor-pointer bg-[var(--card)] border border-[var(--border)]"
+					className="rounded-xl shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-2xl cursor-pointer bg-[var(--card)] border border-[var(--border)] overflow-hidden"
 					style={{
 						color: "var(--card-foreground)",
 						boxShadow:
@@ -32,6 +32,17 @@ export function PostList({ posts, theme, setWindowTitle }: PostListProps) {
 								: "0 8px 24px rgba(0,0,0,0.10)",
 					}}
 				>
+					{post.coverImage && (
+						<div className="w-full aspect-[16/9] overflow-hidden">
+							<img
+								src={post.coverImage}
+								alt=""
+								className="w-full h-full object-cover"
+								loading="lazy"
+							/>
+						</div>
+					)}
+					<div className="p-6">
 					<h3 className="text-xl font-bold mb-2 group-hover:text-[var(--accent)] transition-colors">
 						{post.title}
 					</h3>
@@ -48,6 +59,7 @@ export function PostList({ posts, theme, setWindowTitle }: PostListProps) {
 							))}
 					</div>
 					<small className="text-xs opacity-60">{post.date}</small>
+					</div>
 				</motion.div>
 			))}
 			{posts.length === 0 && (

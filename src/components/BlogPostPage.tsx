@@ -8,6 +8,7 @@ interface BlogPostPageProps {
 	title?: string;
 	date?: string;
 	excerpt?: string;
+	coverImage?: string;
 	tags?: string[];
 	children?: React.ReactNode;
 	setWindowTitle?: (title: string) => void;
@@ -18,6 +19,7 @@ export function BlogPostPage({
 	title = "Blog Post",
 	date,
 	excerpt,
+	coverImage,
 	tags,
 	children,
 	setWindowTitle: setWindowTitleProp,
@@ -205,6 +207,24 @@ export function BlogPostPage({
 					>
 						{/* Article Header */}
 						<header className="mb-6">
+							{coverImage && (
+								<div
+									className={`mb-5 overflow-hidden ${
+										theme.name === "neoBrutalism" ? "border-2 border-black" : "rounded-lg"
+									}`}
+									style={{
+										borderColor: theme.borderColor,
+										borderWidth: theme.name === "neoBrutalism" ? undefined : 1,
+										borderStyle: theme.name === "neoBrutalism" ? undefined : "solid",
+									}}
+								>
+									<img
+										src={coverImage}
+										alt=""
+										className="w-full max-h-[360px] object-cover"
+									/>
+								</div>
+							)}
 							<h1
 								className={`text-3xl md:text-4xl font-bold mb-3 ${
 									theme.name === "neoBrutalism"

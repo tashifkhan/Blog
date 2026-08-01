@@ -8,6 +8,12 @@ import {
 export type Draft = {
   body: string
   commitMessage: string
+  /**
+   * Filename of an attached image used as the post cover (e.g. `hero.webp`).
+   * Empty when the post has no cover. Resolved to a public `/images/blog/...`
+   * path when the article is built.
+   */
+  coverImage: string
   date: string
   excerpt: string
   slug: string
@@ -97,8 +103,29 @@ export function resolveAssetReferences(
   return resolved
 }
 
+/**
+ * Resolve the draft cover to a published public path, or `null` when unset /
+ * not among the attached files (so a detached cover never ships).
+ */
+export function resolveCoverImage(
+  coverImage: string,
+  filenames: string[],
+  slug: string,
+): string | null {
+  const filename = coverImage.trim()
+  if (!filename) return null
+  // Already a site path (e.g. restored from a previous publish).
+  if (filename.startsWith('/images/blog/')) return filename
+  const match = filenames.find(
+    (entry) => entry.toLowerCase() === filename.toLowerCase(),
+  )
+  if (!match) return null
+  return publicImageUrl(slug, match)
+}
+
 export function buildArticle(draft: Draft, filenames: string[]): string {
-  return [
+  const cover = resolveCoverImage(draft.coverImage, filenames, draft.slug)
+  const frontmatter = [
     '---',
     `title: ${yamlString(draft.title.trim())}`,
     `date: ${yamlString(draft.date)}`,
@@ -106,7 +133,14 @@ export function buildArticle(draft: Draft, filenames: string[]): string {
     `socials: ${yamlList(AUTHOR_SOCIALS)}`,
     `tags: ${yamlList(parseTags(draft.tags))}`,
     `excerpt: ${yamlString(draft.excerpt.trim())}`,
-    '---',
+  ]
+  if (cover) {
+    frontmatter.push(`coverImage: ${yamlString(cover)}`)
+  }
+  frontmatter.push('---')
+
+  return [
+    ...frontmatter,
     '',
     resolveAssetReferences(draft.body, filenames, draft.slug).trim(),
     '',

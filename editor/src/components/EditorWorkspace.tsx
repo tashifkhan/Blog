@@ -6,9 +6,11 @@ import {
   ChevronRight,
   Code2,
   Columns2,
+  ArrowLeft,
   FilePlus2,
   GitBranch,
   Heading2,
+  ImageIcon,
   ImagePlus,
   Info,
   Italic,
@@ -22,8 +24,10 @@ import {
   RefreshCw,
   Send,
   Sparkles,
+  Star,
   Trash2,
   UploadCloud,
+  X,
 } from 'lucide-react'
 import {
   type ChangeEvent,
@@ -76,24 +80,48 @@ import {
   MAX_IMAGE_BYTES,
   assetReference,
   findAssetReferences,
+  publicImageUrl,
 } from '../lib/publishing-rules'
+import { DRAFT_KEY, MODE_KEY } from '../lib/draft-storage'
 import { createId } from '../lib/id'
 import {
   filesFromDataTransfer,
   materializeImageFile,
 } from '../lib/transfer-files'
 
+export type PublishedImageSeed = {
+  downloadUrl: string
+  filename: string
+  publicUrl: string
+}
+
+export type EditorSession =
+  | { kind: 'new' }
+  | { kind: 'local'; draft: Draft }
+  | {
+      kind: 'edit'
+      draft: Draft
+      images: PublishedImageSeed[]
+      sourceSlug: string
+    }
+
 type EditorWorkspaceProps = {
+  session: EditorSession
+  onBackToDesk: () => void
   onSignedOut: () => void
 }
 
 type EditorImage = {
-  file: File
+  /** Null for images already on the branch (edit mode). */
+  file: File | null
   filename: string
   id: string
   previewUrl: string
-  status: 'ready' | 'uploading' | 'staged'
+  publicUrl?: string
+  status: 'ready' | 'uploading' | 'staged' | 'published'
 }
+
+const BLOG_ORIGIN = 'https://blog.tashif.codes'
 
 type PublishHead = {
   branch: string
@@ -145,8 +173,6 @@ const MODES: Array<{ id: Mode; label: string; hint: string }> = [
   { id: 'reading', label: 'Reading', hint: 'Read-only page' },
 ]
 
-const DRAFT_KEY = 'pressroom:draft:v1'
-const MODE_KEY = 'pressroom:mode:v1'
 const SAVE_DEBOUNCE_MS = 450
 const SLUG_CHECK_DEBOUNCE_MS = 500
 
@@ -158,6 +184,7 @@ function freshDraft(): Draft {
   return {
     body: '## Begin with the idea\n\nWrite the story here. Keep the opening sharp.',
     commitMessage: '',
+    coverImage: '',
     date: new Date().toISOString().slice(0, 10),
     excerpt: '',
     slug: '',
@@ -170,13 +197,40 @@ function shortSha(sha: string): string {
   return sha.slice(0, 7)
 }
 
-export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
-  const [draft, setDraft] = useState<Draft>(freshDraft)
-  const [images, setImages] = useState<EditorImage[]>([])
+function seedImages(seeds: PublishedImageSeed[]): EditorImage[] {
+  return seeds.map((seed) => ({
+    file: null,
+    filename: seed.filename,
+    id: createId(),
+    previewUrl: seed.downloadUrl,
+    publicUrl: seed.publicUrl,
+    status: 'published' as const,
+  }))
+}
+
+function initialDraft(session: EditorSession): Draft {
+  if (session.kind === 'new') return freshDraft()
+  return session.draft
+}
+
+export function EditorWorkspace({
+  session,
+  onBackToDesk,
+  onSignedOut,
+}: EditorWorkspaceProps) {
+  const sourceSlug = session.kind === 'edit' ? session.sourceSlug : null
+  const [draft, setDraft] = useState<Draft>(() => initialDraft(session))
+  const [images, setImages] = useState<EditorImage[]>(() =>
+    session.kind === 'edit' ? seedImages(session.images) : [],
+  )
   const [mode, setMode] = useState<Mode>('live')
-  const [slugEdited, setSlugEdited] = useState(false)
-  const [slugCheck, setSlugCheck] = useState<SlugCheck>({ state: 'idle' })
-  const [overwrite, setOverwrite] = useState(false)
+  const [slugEdited, setSlugEdited] = useState(session.kind !== 'new')
+  const [slugCheck, setSlugCheck] = useState<SlugCheck>(() =>
+    session.kind === 'edit'
+      ? { state: 'taken', path: `src/blogs/${session.sourceSlug}.md` }
+      : { state: 'idle' },
+  )
+  const [overwrite, setOverwrite] = useState(session.kind === 'edit')
   const [dragging, setDragging] = useState(false)
   const [phase, setPhase] = useState<Phase>('idle')
   const [head, setHead] = useState<PublishHead | null>(null)
@@ -225,6 +279,25 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   )
   const words = useMemo(() => wordCount(draft.body), [draft.body])
   const tags = useMemo(() => parseTags(draft.tags), [draft.tags])
+  // Preview URL for the cover: attached blob first, then published / public path.
+  const coverPreviewUrl = useMemo(() => {
+    if (!draft.coverImage) return null
+    if (draft.coverImage.startsWith('http')) return draft.coverImage
+    const byName = assets.get(draft.coverImage)
+    if (byName) return byName
+    if (draft.coverImage.startsWith('/images/blog/')) {
+      const filename = draft.coverImage.split('/').pop() || ''
+      const published = images.find(
+        (image) => image.filename.toLowerCase() === filename.toLowerCase(),
+      )
+      if (published) return published.previewUrl
+      return `${BLOG_ORIGIN}${draft.coverImage}`
+    }
+    return null
+  }, [draft.coverImage, assets, images])
+
+  const isUpdatingExisting =
+    sourceSlug !== null && draft.slug === sourceSlug
 
   // The reading pane runs the same renderer the sites do, so a directive that
   // previews correctly here publishes correctly. Diagrams stay as code blocks:
@@ -234,10 +307,16 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
       renderMarkdown(draft.body, {
         mermaid: false,
         resolveImage: (src) => {
-          if (!src.startsWith('asset:')) return { src }
-          const filename = src.slice('asset:'.length)
-          const attached = assets.get(filename)
-          return attached ? { src: attached } : { src, missing: true }
+          if (src.startsWith('asset:')) {
+            const filename = src.slice('asset:'.length)
+            const attached = assets.get(filename)
+            return attached ? { src: attached } : { src, missing: true }
+          }
+          // Published paths and absolute URLs render as-is (or via blog origin).
+          if (src.startsWith('/images/blog/')) {
+            return { src: `${BLOG_ORIGIN}${src}` }
+          }
+          return { src }
         },
       }),
     [draft.body, assets],
@@ -251,29 +330,30 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     if (!draft.commitMessage.trim()) list.push('Commit message')
     if (unresolved.length) list.push('Unresolved image links')
     if (directiveIssues.length) list.push('Directive errors')
-    if (slugCheck.state === 'taken' && !overwrite) {
+    if (slugCheck.state === 'taken' && !overwrite && !isUpdatingExisting) {
       list.push('Replacement confirmation')
     }
     if (!head) list.push('Branch sync')
     return list
-  }, [draft, unresolved, directiveIssues, slugCheck, overwrite, head])
+  }, [
+    draft,
+    unresolved,
+    directiveIssues,
+    slugCheck,
+    overwrite,
+    head,
+    isUpdatingExisting,
+  ])
 
   useEffect(() => {
     const storedMode = window.localStorage.getItem(MODE_KEY)
     if (isMode(storedMode)) setMode(storedMode)
-
-    const stored = window.localStorage.getItem(DRAFT_KEY)
-    if (!stored) return
-    try {
-      const parsed = { ...freshDraft(), ...(JSON.parse(stored) as Partial<Draft>) }
-      setDraft(parsed)
-      // Only treat the slug as hand-written if there actually is one, otherwise
-      // restoring an untouched draft would permanently disable slug-from-title.
-      setSlugEdited(Boolean(parsed.slug))
-    } catch {
-      window.localStorage.removeItem(DRAFT_KEY)
-    }
   }, [])
+
+  // Keep overwrite true while revising the opened post's original slug.
+  useEffect(() => {
+    if (sourceSlug && draft.slug === sourceSlug) setOverwrite(true)
+  }, [sourceSlug, draft.slug])
 
   useEffect(() => {
     window.localStorage.setItem(MODE_KEY, mode)
@@ -296,7 +376,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   useEffect(
     () => () => {
       for (const image of imagesRef.current) {
-        URL.revokeObjectURL(image.previewUrl)
+        if (image.file) URL.revokeObjectURL(image.previewUrl)
       }
     },
     [],
@@ -338,11 +418,21 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   }, [refreshHead])
 
   // Surface a slug collision while it is still cheap to rename, rather than
-  // after every image has been uploaded.
+  // after every image has been uploaded. Editing the opened post keeps
+  // overwrite armed; any other slug starts unverified.
   useEffect(() => {
-    setOverwrite(false)
+    const editingOpened = sourceSlug !== null && draft.slug === sourceSlug
+    setOverwrite(editingOpened)
     if (!draft.slug) {
       setSlugCheck({ state: 'idle' })
+      return
+    }
+
+    if (editingOpened) {
+      setSlugCheck({
+        state: 'taken',
+        path: `src/blogs/${sourceSlug}.md`,
+      })
       return
     }
 
@@ -368,7 +458,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
       active = false
       window.clearTimeout(timeout)
     }
-  }, [draft.slug])
+  }, [draft.slug, sourceSlug])
 
   useEffect(() => {
     if (error) errorRef.current?.scrollIntoView({ block: 'nearest' })
@@ -492,6 +582,10 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
 
   function imageMarkdown(image: EditorImage): string {
     const alt = image.filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')
+    // Keep published images on their public path so we do not re-upload them.
+    if (image.status === 'published' || image.publicUrl) {
+      return `![${alt}](${image.publicUrl || publicImageUrl(draft.slug, image.filename)})`
+    }
     return `![${alt}](${assetReference(image.filename)})`
   }
 
@@ -547,6 +641,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
       const attached = [...images, ...accepted]
       const alreadyAttached = attached.some(
         (candidate) =>
+          candidate.file !== null &&
           candidate.filename.toLowerCase() === filename.toLowerCase() &&
           candidate.file.size === file.size &&
           candidate.file.lastModified === file.lastModified,
@@ -609,7 +704,19 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
   function removeImage(id: string) {
     setImages((current) => {
       const target = current.find((image) => image.id === id)
-      if (target) URL.revokeObjectURL(target.previewUrl)
+      if (target) {
+        // Only blob URLs are revoked; published previews are remote.
+        if (target.file) URL.revokeObjectURL(target.previewUrl)
+        setDraft((draftState) => {
+          const cover = draftState.coverImage.toLowerCase()
+          const name = target.filename.toLowerCase()
+          const publicPath = (target.publicUrl || '').toLowerCase()
+          if (cover === name || (publicPath && cover === publicPath)) {
+            return { ...draftState, coverImage: '' }
+          }
+          return draftState
+        })
+      }
       return current.filter((image) => image.id !== id)
     })
   }
@@ -618,8 +725,22 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     applyEdit(insertBlock(imageMarkdown(image)))
   }
 
+  function setCoverImage(image: EditorImage) {
+    // Prefer public path for published covers so re-publish keeps the path.
+    updateDraft(
+      'coverImage',
+      image.publicUrl || image.filename,
+    )
+  }
+
+  function clearCoverImage() {
+    updateDraft('coverImage', '')
+  }
+
   function startNewDraft() {
-    for (const image of imagesRef.current) URL.revokeObjectURL(image.previewUrl)
+    for (const image of imagesRef.current) {
+      if (image.file) URL.revokeObjectURL(image.previewUrl)
+    }
     window.localStorage.removeItem(DRAFT_KEY)
     setImages([])
     setResult(null)
@@ -628,6 +749,13 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     setSlugEdited(false)
     setOverwrite(false)
     setDraft(freshDraft())
+  }
+
+  function leaveToDesk() {
+    for (const image of imagesRef.current) {
+      if (image.file) URL.revokeObjectURL(image.previewUrl)
+    }
+    onBackToDesk()
   }
 
   async function signOut() {
@@ -649,14 +777,24 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
     }
     if (!head) return
 
+    // Only new attachments need staging. Images already on the branch stay.
+    const toUpload = images.filter(
+      (image): image is EditorImage & { file: File } =>
+        Boolean(image.file) && image.status !== 'published',
+    )
+
     setPhase('staging')
     setImages((current) =>
-      current.map((image) => ({ ...image, status: 'uploading' })),
+      current.map((image) =>
+        image.file && image.status !== 'published'
+          ? { ...image, status: 'uploading' }
+          : image,
+      ),
     )
 
     try {
       const stagedImages = await Promise.all(
-        images.map(async (image) => {
+        toUpload.map(async (image) => {
           const contentBase64 = await fileToBase64(image.file)
           const staged = await apiRequest<StagedImage>('/api/publish/assets', {
             method: 'POST',
@@ -687,7 +825,7 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
             blobSha,
             filename,
           })),
-          overwrite,
+          overwrite: overwrite || isUpdatingExisting,
           slug: draft.slug,
         }),
       })
@@ -698,11 +836,17 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
       // need a round trip to become publishable again.
       setHead({ branch: published.branch, headSha: published.commitSha })
       setSlugCheck({ state: 'taken', path: published.articlePath })
-      setOverwrite(false)
+      setOverwrite(true)
+      // After a successful edit publish, treat the new slug as the source.
+      // (sourceSlug is fixed from session; overwrite stays true while on it.)
     } catch (caught) {
       setPhase('idle')
       setImages((current) =>
-        current.map((image) => ({ ...image, status: 'ready' })),
+        current.map((image) =>
+          image.status === 'published'
+            ? image
+            : { ...image, status: 'ready' },
+        ),
       )
 
       if (caught instanceof ClientApiError) {
@@ -753,6 +897,16 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
 
         <div className="header-actions">
           <button
+            className="quiet-button"
+            type="button"
+            onClick={leaveToDesk}
+            title="Back to story library"
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            <span>Desk</span>
+          </button>
+
+          <button
             className={`branch-chip ${headStale ? 'stale' : ''}`}
             type="button"
             onClick={() => void refreshHead()}
@@ -784,9 +938,20 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
           <div className="rail-heading">
             <span>Story file</span>
             <span className="draft-badge">
-              {result ? 'Published' : 'Draft'}
+              {result
+                ? 'Published'
+                : isUpdatingExisting
+                  ? 'Editing'
+                  : 'Draft'}
             </span>
           </div>
+
+          {isUpdatingExisting ? (
+            <p className="edit-mode-note">
+              Revising <code>src/blogs/{sourceSlug}.md</code>. Publishing
+              replaces that file on the branch.
+            </p>
+          ) : null}
 
           <label className="field-group">
             <span>Headline</span>
@@ -856,6 +1021,44 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
               {draft.excerpt.length}/{MAX_EXCERPT_LENGTH} characters
             </small>
           </label>
+
+          <div className="field-group">
+            <span>Cover image</span>
+            {coverPreviewUrl ? (
+              <div className="cover-picker has-cover">
+                <img
+                  src={coverPreviewUrl}
+                  alt=""
+                  className="cover-picker-preview"
+                />
+                <div className="cover-picker-meta">
+                  <strong title={draft.coverImage}>
+                    {draft.coverImage.startsWith('/images/blog/')
+                      ? draft.coverImage.split('/').pop()
+                      : draft.coverImage}
+                  </strong>
+                  <span>Shown on cards and at the top of the post</span>
+                  <button
+                    type="button"
+                    className="cover-clear-button"
+                    onClick={clearCoverImage}
+                    disabled={publishing}
+                  >
+                    <X size={14} aria-hidden="true" />
+                    Remove cover
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="cover-picker">
+                <ImageIcon size={22} aria-hidden="true" />
+                <p>
+                  Optional. Attach an image in the media desk, then mark it as
+                  the cover.
+                </p>
+              </div>
+            )}
+          </div>
 
           <div className="story-stats">
             <div>
@@ -1015,6 +1218,11 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
               role="tabpanel"
               aria-labelledby="tab-reading"
             >
+              {coverPreviewUrl ? (
+                <figure className="preview-cover">
+                  <img src={coverPreviewUrl} alt="" />
+                </figure>
+              ) : null}
               <p className="preview-date">
                 {draft.date}
                 {tags.length ? ` · ${tags.join(' · ')}` : ''}
@@ -1102,51 +1310,94 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
                   the same commit.
                 </p>
               ) : null}
-              {images.map((image) => (
-                <div className="image-card" key={image.id}>
-                  <img src={image.previewUrl} alt="" />
-                  <div>
-                    <strong title={image.filename}>{image.filename}</strong>
-                    <span>
-                      {image.status === 'uploading' ? (
-                        <>
-                          <LoaderCircle
-                            className="spin"
-                            size={10}
-                            aria-hidden="true"
-                          />{' '}
-                          Uploading…
-                        </>
-                      ) : image.status === 'staged' ? (
-                        'Staged'
-                      ) : (
-                        formatBytes(image.file.size)
-                      )}
-                    </span>
+              {images.map((image) => {
+                const coverKey = draft.coverImage.toLowerCase()
+                const isCover =
+                  coverKey === image.filename.toLowerCase() ||
+                  Boolean(
+                    image.publicUrl &&
+                      coverKey === image.publicUrl.toLowerCase(),
+                  )
+                return (
+                  <div
+                    className={`image-card ${isCover ? 'is-cover' : ''}`}
+                    key={image.id}
+                  >
+                    <img src={image.previewUrl} alt="" />
+                    <div>
+                      <strong title={image.filename}>{image.filename}</strong>
+                      <span>
+                        {isCover ? (
+                          <>
+                            <Star size={10} aria-hidden="true" /> Cover
+                          </>
+                        ) : image.status === 'published' ? (
+                          'On branch'
+                        ) : image.status === 'uploading' ? (
+                          <>
+                            <LoaderCircle
+                              className="spin"
+                              size={10}
+                              aria-hidden="true"
+                            />{' '}
+                            Uploading…
+                          </>
+                        ) : image.status === 'staged' ? (
+                          'Staged'
+                        ) : image.file ? (
+                          formatBytes(image.file.size)
+                        ) : (
+                          'Attached'
+                        )}
+                      </span>
+                    </div>
+                    <div className="image-actions">
+                      <button
+                        className={
+                          isCover
+                            ? 'cover-image-button is-active'
+                            : 'cover-image-button'
+                        }
+                        type="button"
+                        title={
+                          isCover ? 'Remove as cover' : 'Use as cover image'
+                        }
+                        aria-label={
+                          isCover
+                            ? `Remove ${image.filename} as cover`
+                            : `Use ${image.filename} as cover`
+                        }
+                        aria-pressed={isCover}
+                        onClick={() =>
+                          isCover ? clearCoverImage() : setCoverImage(image)
+                        }
+                        disabled={publishing}
+                      >
+                        <Star size={15} aria-hidden="true" />
+                      </button>
+                      <button
+                        className="insert-image-button"
+                        type="button"
+                        title="Insert into article"
+                        aria-label={`Insert ${image.filename} into article`}
+                        onClick={() => insertImage(image)}
+                      >
+                        <ImagePlus size={15} aria-hidden="true" />
+                        <span>Insert</span>
+                      </button>
+                      <button
+                        type="button"
+                        title="Remove"
+                        aria-label={`Remove ${image.filename}`}
+                        onClick={() => removeImage(image.id)}
+                        disabled={publishing}
+                      >
+                        <Trash2 size={15} aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="image-actions">
-                    <button
-                      className="insert-image-button"
-                      type="button"
-                      title="Insert into article"
-                      aria-label={`Insert ${image.filename} into article`}
-                      onClick={() => insertImage(image)}
-                    >
-                      <ImagePlus size={15} aria-hidden="true" />
-                      <span>Insert</span>
-                    </button>
-                    <button
-                      type="button"
-                      title="Remove"
-                      aria-label={`Remove ${image.filename}`}
-                      onClick={() => removeImage(image.id)}
-                      disabled={publishing}
-                    >
-                      <Trash2 size={15} aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
 
@@ -1200,7 +1451,20 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
               </div>
             ) : null}
 
-            {slugCheck.state === 'taken' && !result ? (
+            {slugCheck.state === 'taken' && !result && isUpdatingExisting ? (
+              <div className="callout warning">
+                <AlertTriangle size={15} aria-hidden="true" />
+                <div>
+                  <strong>Updating existing post.</strong>
+                  <p>
+                    Commit will replace <code>{slugCheck.path}</code> and keep
+                    images already on the branch unless you upload new ones.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {slugCheck.state === 'taken' && !result && !isUpdatingExisting ? (
               <div className="callout danger">
                 <AlertTriangle size={15} aria-hidden="true" />
                 <div>
@@ -1257,10 +1521,16 @@ export function EditorWorkspace({ onSignedOut }: EditorWorkspaceProps) {
                       }`
                     : ''}
                 </p>
-                <button type="button" onClick={startNewDraft}>
-                  <FilePlus2 size={14} aria-hidden="true" />
-                  Start a new story
-                </button>
+                <div className="publish-success-actions">
+                  <button type="button" onClick={leaveToDesk}>
+                    <ArrowLeft size={14} aria-hidden="true" />
+                    Back to desk
+                  </button>
+                  <button type="button" onClick={startNewDraft}>
+                    <FilePlus2 size={14} aria-hidden="true" />
+                    Start a new story
+                  </button>
+                </div>
               </div>
             ) : null}
 

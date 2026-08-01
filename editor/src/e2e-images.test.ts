@@ -167,6 +167,7 @@ describe('image pipeline, end to end', () => {
       {
         body: inserted.body,
         commitMessage: 'content: publish',
+        coverImage: '',
         date: '2026-07-30',
         excerpt: 'Excerpt.',
         slug: SLUG,

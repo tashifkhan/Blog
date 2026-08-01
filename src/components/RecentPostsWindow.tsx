@@ -182,7 +182,7 @@ export function RecentPostsWindow({
 										}}
 									>
 										<div
-											className={`p-3 rounded border transition-all hover:shadow-md ${
+											className={`rounded border transition-all hover:shadow-md overflow-hidden ${
 												theme.name === "neoBrutalism"
 													? "rounded-none border-2 border-black hover:shadow-[4px_4px_0px_#000]"
 													: ""
@@ -193,6 +193,17 @@ export function RecentPostsWindow({
 												borderColor: theme.borderColor,
 											}}
 										>
+											{post.coverImage && (
+												<div className="w-full h-20 overflow-hidden">
+													<img
+														src={post.coverImage}
+														alt=""
+														className="w-full h-full object-cover"
+														loading="lazy"
+													/>
+												</div>
+											)}
+											<div className="p-3">
 											<h4
 												className="font-semibold text-sm mb-1 group-hover:opacity-80 transition-opacity"
 												style={{ color: theme.accentColor }}
@@ -245,6 +256,7 @@ export function RecentPostsWindow({
 													{new Date(post.date).toLocaleDateString()}
 												</small>
 											)}
+											</div>
 										</div>
 									</motion.div>
 								))}

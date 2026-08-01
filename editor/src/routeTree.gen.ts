@@ -16,7 +16,9 @@ import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
 import { Route as ApiPublishAssetsRouteImport } from './routes/api.publish.assets'
 import { Route as ApiPublishHeadRouteImport } from './routes/api.publish.head'
+import { Route as ApiPublishPostsRouteImport } from './routes/api.publish.posts'
 import { Route as ApiPublishSlugRouteImport } from './routes/api.publish.slug'
+import { Route as ApiPublishPostsSlugRouteImport } from './routes/api.publish.posts.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,10 +55,20 @@ const ApiPublishHeadRoute = ApiPublishHeadRouteImport.update({
   path: '/head',
   getParentRoute: () => ApiPublishRoute,
 } as any)
+const ApiPublishPostsRoute = ApiPublishPostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
+  getParentRoute: () => ApiPublishRoute,
+} as any)
 const ApiPublishSlugRoute = ApiPublishSlugRouteImport.update({
   id: '/slug',
   path: '/slug',
   getParentRoute: () => ApiPublishRoute,
+} as any)
+const ApiPublishPostsSlugRoute = ApiPublishPostsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ApiPublishPostsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -67,7 +79,9 @@ export interface FileRoutesByFullPath {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/publish/assets': typeof ApiPublishAssetsRoute
   '/api/publish/head': typeof ApiPublishHeadRoute
+  '/api/publish/posts': typeof ApiPublishPostsRouteWithChildren
   '/api/publish/slug': typeof ApiPublishSlugRoute
+  '/api/publish/posts/$slug': typeof ApiPublishPostsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,7 +91,9 @@ export interface FileRoutesByTo {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/publish/assets': typeof ApiPublishAssetsRoute
   '/api/publish/head': typeof ApiPublishHeadRoute
+  '/api/publish/posts': typeof ApiPublishPostsRouteWithChildren
   '/api/publish/slug': typeof ApiPublishSlugRoute
+  '/api/publish/posts/$slug': typeof ApiPublishPostsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,7 +104,9 @@ export interface FileRoutesById {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/publish/assets': typeof ApiPublishAssetsRoute
   '/api/publish/head': typeof ApiPublishHeadRoute
+  '/api/publish/posts': typeof ApiPublishPostsRouteWithChildren
   '/api/publish/slug': typeof ApiPublishSlugRoute
+  '/api/publish/posts/$slug': typeof ApiPublishPostsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,7 +118,9 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/publish/assets'
     | '/api/publish/head'
+    | '/api/publish/posts'
     | '/api/publish/slug'
+    | '/api/publish/posts/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -110,7 +130,9 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/publish/assets'
     | '/api/publish/head'
+    | '/api/publish/posts'
     | '/api/publish/slug'
+    | '/api/publish/posts/$slug'
   id:
     | '__root__'
     | '/'
@@ -120,7 +142,9 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/publish/assets'
     | '/api/publish/head'
+    | '/api/publish/posts'
     | '/api/publish/slug'
+    | '/api/publish/posts/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -182,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublishHeadRouteImport
       parentRoute: typeof ApiPublishRoute
     }
+    '/api/publish/posts': {
+      id: '/api/publish/posts'
+      path: '/posts'
+      fullPath: '/api/publish/posts'
+      preLoaderRoute: typeof ApiPublishPostsRouteImport
+      parentRoute: typeof ApiPublishRoute
+    }
     '/api/publish/slug': {
       id: '/api/publish/slug'
       path: '/slug'
@@ -189,18 +220,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublishSlugRouteImport
       parentRoute: typeof ApiPublishRoute
     }
+    '/api/publish/posts/$slug': {
+      id: '/api/publish/posts/$slug'
+      path: '/$slug'
+      fullPath: '/api/publish/posts/$slug'
+      preLoaderRoute: typeof ApiPublishPostsSlugRouteImport
+      parentRoute: typeof ApiPublishPostsRoute
+    }
   }
 }
+
+interface ApiPublishPostsRouteChildren {
+  ApiPublishPostsSlugRoute: typeof ApiPublishPostsSlugRoute
+}
+
+const ApiPublishPostsRouteChildren: ApiPublishPostsRouteChildren = {
+  ApiPublishPostsSlugRoute: ApiPublishPostsSlugRoute,
+}
+
+const ApiPublishPostsRouteWithChildren = ApiPublishPostsRoute._addFileChildren(
+  ApiPublishPostsRouteChildren,
+)
 
 interface ApiPublishRouteChildren {
   ApiPublishAssetsRoute: typeof ApiPublishAssetsRoute
   ApiPublishHeadRoute: typeof ApiPublishHeadRoute
+  ApiPublishPostsRoute: typeof ApiPublishPostsRouteWithChildren
   ApiPublishSlugRoute: typeof ApiPublishSlugRoute
 }
 
 const ApiPublishRouteChildren: ApiPublishRouteChildren = {
   ApiPublishAssetsRoute: ApiPublishAssetsRoute,
   ApiPublishHeadRoute: ApiPublishHeadRoute,
+  ApiPublishPostsRoute: ApiPublishPostsRouteWithChildren,
   ApiPublishSlugRoute: ApiPublishSlugRoute,
 }
 

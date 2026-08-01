@@ -1,10 +1,14 @@
 import { createAppAuth } from '@octokit/auth-app'
 import matter from 'gray-matter'
 
+import type { Draft } from '../lib/article'
+import { draftFromMarkdown, summaryFromMarkdown } from '../lib/parse-article'
 import {
+  IMAGE_FILENAME_PATTERN,
   MAX_IMAGE_BYTES,
   articlePathForSlug,
   imagePathFor,
+  publicImageUrl,
 } from '../lib/publishing-rules'
 import { ApiError } from './http.server'
 import type { ImageUploadInput, PublishArticleInput } from './publishing-schema'
@@ -315,6 +319,215 @@ export async function inspectSlug(slug: string): Promise<{
     branch: config.branch,
     exists: await pathExists(config, token, path),
     path,
+  }
+}
+
+type ContentsEntry = {
+  download_url?: string | null
+  name?: string
+  path?: string
+  sha?: string
+  type?: string
+  encoding?: string
+  content?: string
+}
+
+export type PostListItem = {
+  coverImage: string | null
+  date: string
+  excerpt: string
+  path: string
+  slug: string
+  tags: string[]
+  title: string
+}
+
+export type LoadedPostImage = {
+  downloadUrl: string
+  filename: string
+  publicUrl: string
+}
+
+export type LoadedPost = {
+  branch: string
+  draft: Draft
+  images: LoadedPostImage[]
+  path: string
+  slug: string
+}
+
+async function readFileText(
+  config: PublishingConfig,
+  token: string,
+  path: string,
+): Promise<string> {
+  try {
+    const entry = await githubRequest<ContentsEntry>(
+      `${repositoryPath(config)}/contents/${path}?ref=${encodeURIComponent(
+        config.branch,
+      )}`,
+      token,
+      {},
+      { quietStatuses: [404] },
+    )
+    if (entry.encoding === 'base64' && typeof entry.content === 'string') {
+      return Buffer.from(entry.content.replace(/\n/g, ''), 'base64').toString(
+        'utf8',
+      )
+    }
+    if (entry.download_url) {
+      const response = await fetch(entry.download_url, {
+        headers: {
+          Accept: 'application/vnd.github.raw',
+          Authorization: `Bearer ${token}`,
+          'User-Agent': 'Tashif-Pressroom',
+        },
+      })
+      if (!response.ok) {
+        throw new ApiError(502, `Could not download ${path}`)
+      }
+      return await response.text()
+    }
+    throw new ApiError(502, `GitHub returned no content for ${path}`)
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.githubStatus === 404) {
+      throw new ApiError(404, `No post at ${path}`)
+    }
+    throw error
+  }
+}
+
+/**
+ * Every Markdown post under `src/blogs/` on the publish branch, newest first.
+ * Frontmatter is read from each file so the desk can show titles without a
+ * separate metadata store.
+ */
+export async function listPosts(): Promise<{
+  branch: string
+  posts: PostListItem[]
+}> {
+  const config = publishingConfig()
+  const token = await installationToken(config)
+  const dirPath = 'src/blogs'
+
+  let entries: ContentsEntry[] = []
+  try {
+    const payload = await githubRequest<ContentsEntry[] | ContentsEntry>(
+      `${repositoryPath(config)}/contents/${dirPath}?ref=${encodeURIComponent(
+        config.branch,
+      )}`,
+      token,
+      {},
+      { quietStatuses: [404] },
+    )
+    entries = Array.isArray(payload) ? payload : []
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.githubStatus === 404) {
+      return { branch: config.branch, posts: [] }
+    }
+    throw error
+  }
+
+  const markdownFiles = entries.filter(
+    (entry) =>
+      entry.type === 'file' &&
+      typeof entry.name === 'string' &&
+      entry.name.toLowerCase().endsWith('.md') &&
+      typeof entry.path === 'string',
+  )
+
+  const posts = await Promise.all(
+    markdownFiles.map(async (entry) => {
+      const name = entry.name as string
+      const path = entry.path as string
+      const slug = name.replace(/\.md$/i, '')
+      try {
+        const markdown = await readFileText(config, token, path)
+        const summary = summaryFromMarkdown(slug, markdown)
+        return {
+          ...summary,
+          path,
+          slug,
+        } satisfies PostListItem
+      } catch {
+        return {
+          coverImage: null,
+          date: '',
+          excerpt: '',
+          path,
+          slug,
+          tags: [],
+          title: slug,
+        } satisfies PostListItem
+      }
+    }),
+  )
+
+  posts.sort((a, b) => {
+    const byDate = new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+    if (byDate !== 0) return byDate
+    return a.slug.localeCompare(b.slug)
+  })
+
+  return { branch: config.branch, posts }
+}
+
+async function listPostImages(
+  config: PublishingConfig,
+  token: string,
+  slug: string,
+): Promise<LoadedPostImage[]> {
+  const dirPath = `public/images/blog/${slug}`
+  try {
+    const payload = await githubRequest<ContentsEntry[] | ContentsEntry>(
+      `${repositoryPath(config)}/contents/${dirPath}?ref=${encodeURIComponent(
+        config.branch,
+      )}`,
+      token,
+      {},
+      { quietStatuses: [404] },
+    )
+    const entries = Array.isArray(payload) ? payload : []
+    return entries
+      .filter(
+        (entry) =>
+          entry.type === 'file' &&
+          typeof entry.name === 'string' &&
+          IMAGE_FILENAME_PATTERN.test(entry.name),
+      )
+      .map((entry) => {
+        const filename = entry.name as string
+        return {
+          filename,
+          publicUrl: publicImageUrl(slug, filename),
+          downloadUrl:
+            entry.download_url ||
+            `https://raw.githubusercontent.com/${config.owner}/${config.repository}/${config.branch}/${dirPath}/${filename}`,
+        }
+      })
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.githubStatus === 404) {
+      return []
+    }
+    throw error
+  }
+}
+
+/** Load one post into a draft the editor can open for editing. */
+export async function loadPost(slug: string): Promise<LoadedPost> {
+  const config = publishingConfig()
+  const token = await installationToken(config)
+  const path = articlePathForSlug(slug)
+  const markdown = await readFileText(config, token, path)
+  const draft = draftFromMarkdown(slug, markdown)
+  const images = await listPostImages(config, token, slug)
+
+  return {
+    branch: config.branch,
+    draft,
+    images,
+    path,
+    slug,
   }
 }
 

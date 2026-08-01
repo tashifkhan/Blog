@@ -377,27 +377,39 @@ export function MobileHome({ initialPosts }: MobileHomeProps) {
 							<a
 								key={p.slug}
 								href={p.slug ? `/blog/${p.slug}/` : "/blog/"}
-								className={`no-underline ${
+								className={`no-underline overflow-hidden ${
 									theme.name === "neoBrutalism" ? "rounded-none" : "rounded"
-								} border p-3`}
+								} border`}
 								style={getCardStyle()}
 							>
-								<div
-									className="text-sm font-medium"
-									style={{ color: theme.accentColor }}
-								>
-									{p.title}
+								{p.coverImage && (
+									<div className="w-full h-28 overflow-hidden">
+										<img
+											src={p.coverImage}
+											alt=""
+											className="w-full h-full object-cover"
+											loading="lazy"
+										/>
+									</div>
+								)}
+								<div className="p-3">
+									<div
+										className="text-sm font-medium"
+										style={{ color: theme.accentColor }}
+									>
+										{p.title}
+									</div>
+									{p.excerpt && (
+										<div className="text-xs opacity-80 mt-1 line-clamp-2">
+											{p.excerpt}
+										</div>
+									)}
+									{p.date && (
+										<div className="text-[10px] opacity-60 mt-1">
+											{new Date(p.date).toLocaleDateString()}
+										</div>
+									)}
 								</div>
-								{p.excerpt && (
-									<div className="text-xs opacity-80 mt-1 line-clamp-2">
-										{p.excerpt}
-									</div>
-								)}
-								{p.date && (
-									<div className="text-[10px] opacity-60 mt-1">
-										{new Date(p.date).toLocaleDateString()}
-									</div>
-								)}
 							</a>
 						))}
 					</div>
