@@ -1,4 +1,3 @@
-import { createAppAuth } from '@octokit/auth-app'
 import matter from 'gray-matter'
 
 import type { Draft } from '../lib/article'
@@ -21,12 +20,11 @@ const COMMIT_AUTHOR = {
 } as const
 
 type PublishingConfig = {
-  appId: string
   branch: string
-  installationId: number
   owner: string
-  privateKey: string
   repository: string
+  /** Classic or fine-grained personal access token. */
+  token: string
 }
 
 type GitHubErrorPayload = {
@@ -48,10 +46,10 @@ class GitHubApiError extends ApiError {
  */
 function githubFailureMessage(status: number): string {
   if (status === 401 || status === 403) {
-    return 'GitHub rejected the App credentials. Check the App ID, private key, and installation.'
+    return 'GitHub rejected the personal access token. Check GITHUB_TOKEN scopes (Contents read/write on the blog repo) and that the token has not expired.'
   }
   if (status === 404) {
-    return 'GitHub could not find the repository or branch. Check the repository settings and that the App is installed on it.'
+    return 'GitHub could not find the repository or branch. Check GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, and that the token can access the repo.'
   }
   if (status === 429) {
     return 'GitHub rate limit reached. Wait a moment and publish again.'
@@ -59,16 +57,40 @@ function githubFailureMessage(status: number): string {
   return 'GitHub rejected the publishing request'
 }
 
+/**
+ * Prefer `GITHUB_TOKEN`; accept `GITHUB_PAT` as an alias.
+ * Values that look like placeholders are treated as unset.
+ */
+function readGitHubToken(): string | null {
+  const raw =
+    process.env.GITHUB_TOKEN?.trim() ||
+    process.env.GITHUB_PAT?.trim() ||
+    ''
+  if (!raw) return null
+  if (/^(changeme|your[_-]?token|xxx+|<.*>)$/i.test(raw)) return null
+  return raw
+}
+
+/** True when a GitHub personal access token is present. */
+export function isGitHubConfigured(): boolean {
+  return Boolean(readGitHubToken())
+}
+
+export function publishBranchName(): string {
+  return process.env.GITHUB_PUBLISH_BRANCH?.trim() || 'main'
+}
+
 function publishingConfig(): PublishingConfig {
-  const appId = process.env.GITHUB_APP_ID
-  const privateKey = process.env.GITHUB_APP_PRIVATE_KEY?.replace(/\\n/g, '\n')
-  const installationId = Number(process.env.GITHUB_APP_INSTALLATION_ID)
+  const token = readGitHubToken()
   const owner = process.env.GITHUB_REPOSITORY_OWNER || 'tashifkhan'
   const repository = process.env.GITHUB_REPOSITORY_NAME || 'Blog'
   const branch = process.env.GITHUB_PUBLISH_BRANCH || 'main'
 
-  if (!appId || !privateKey || !Number.isSafeInteger(installationId)) {
-    throw new ApiError(503, 'GitHub publishing is not configured')
+  if (!token) {
+    throw new ApiError(
+      503,
+      'GitHub publishing is not configured. Set GITHUB_TOKEN (a personal access token with Contents read/write on the blog repo) on the editor server.',
+    )
   }
   if (
     !branch ||
@@ -81,28 +103,16 @@ function publishingConfig(): PublishingConfig {
   }
 
   return {
-    appId,
     branch,
-    installationId,
     owner,
-    privateKey,
     repository,
+    token,
   }
 }
 
-async function installationToken(config: PublishingConfig): Promise<string> {
-  try {
-    const auth = createAppAuth({
-      appId: config.appId,
-      privateKey: config.privateKey,
-      installationId: config.installationId,
-    })
-    const authentication = await auth({ type: 'installation' })
-    return authentication.token
-  } catch {
-    console.error('Could not create GitHub App installation token')
-    throw new ApiError(502, 'GitHub App authentication failed')
-  }
+/** PAT is used directly — no App installation exchange. */
+function accessToken(config: PublishingConfig): string {
+  return config.token
 }
 
 async function githubRequest<T>(
@@ -295,7 +305,7 @@ export async function getPublishHead(): Promise<{
   headSha: string
 }> {
   const config = publishingConfig()
-  const token = await installationToken(config)
+  const token = accessToken(config)
   return {
     branch: config.branch,
     headSha: await branchHead(config, token),
@@ -313,7 +323,7 @@ export async function inspectSlug(slug: string): Promise<{
   path: string
 }> {
   const config = publishingConfig()
-  const token = await installationToken(config)
+  const token = accessToken(config)
   const path = articlePathForSlug(slug)
   return {
     branch: config.branch,
@@ -402,12 +412,12 @@ async function readFileText(
  * Frontmatter is read from each file so the desk can show titles without a
  * separate metadata store.
  */
-export async function listPosts(): Promise<{
+export async function listPostsFromGitHub(): Promise<{
   branch: string
   posts: PostListItem[]
 }> {
   const config = publishingConfig()
-  const token = await installationToken(config)
+  const token = accessToken(config)
   const dirPath = 'src/blogs'
 
   let entries: ContentsEntry[] = []
@@ -514,9 +524,9 @@ async function listPostImages(
 }
 
 /** Load one post into a draft the editor can open for editing. */
-export async function loadPost(slug: string): Promise<LoadedPost> {
+export async function loadPostFromGitHub(slug: string): Promise<LoadedPost> {
   const config = publishingConfig()
-  const token = await installationToken(config)
+  const token = accessToken(config)
   const path = articlePathForSlug(slug)
   const markdown = await readFileText(config, token, path)
   const draft = draftFromMarkdown(slug, markdown)
@@ -531,6 +541,19 @@ export async function loadPost(slug: string): Promise<LoadedPost> {
   }
 }
 
+/** @deprecated Use listPostsFromGitHub or posts-source.listPosts */
+export async function listPosts(): Promise<{
+  branch: string
+  posts: PostListItem[]
+}> {
+  return listPostsFromGitHub()
+}
+
+/** @deprecated Use loadPostFromGitHub or posts-source.loadPost */
+export async function loadPost(slug: string): Promise<LoadedPost> {
+  return loadPostFromGitHub(slug)
+}
+
 export async function stageImage(input: ImageUploadInput): Promise<{
   filename: string
   blobSha: string
@@ -542,7 +565,7 @@ export async function stageImage(input: ImageUploadInput): Promise<{
   }
 
   const config = publishingConfig()
-  const token = await installationToken(config)
+  const token = accessToken(config)
   const blobSha = await createBlob(config, token, content)
   return {
     filename: input.filename,
@@ -563,7 +586,7 @@ export async function publishArticle(input: PublishArticleInput): Promise<{
 }> {
   validateArticle(input.articleContent)
   const config = publishingConfig()
-  const token = await installationToken(config)
+  const token = accessToken(config)
   const currentHead = await branchHead(config, token)
 
   if (currentHead !== input.expectedHeadSha) {

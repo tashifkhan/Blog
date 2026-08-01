@@ -11,9 +11,9 @@ FastAPI backend.
 - Login creates an encrypted, HTTP-only, `SameSite=Strict` session cookie.
 - Every publishing API handler validates the session itself.
 - Every mutation also validates the request `Origin`.
-- GitHub App credentials exist only in this editor server's environment.
-- The GitHub App should be installed only on the blog repository with
-  **Contents: Read and write**. It does not need a webhook.
+- A GitHub **personal access token** (`GITHUB_TOKEN`, alias `GITHUB_PAT`) lives
+  only in this editor server's environment. Prefer a fine-grained token limited
+  to the blog repository with **Contents: Read and write**.
 - For a second perimeter, put the deployed URL behind Cloudflare Access (or
   equivalent deployment protection) and allow only your identity.
 
@@ -47,8 +47,11 @@ openssl rand -base64 48
 Use one as `EDITOR_PASSWORD` and the other as `EDITOR_SESSION_SECRET`.
 `EDITOR_SESSION_SECRET` must be at least 32 characters.
 
-For `GITHUB_APP_PRIVATE_KEY`, either store the PEM with real line breaks or use
-escaped `\n` line breaks. The server normalizes both forms.
+Set `GITHUB_TOKEN` to a personal access token:
+
+- **Fine-grained:** resource owner = you; repository access = this blog repo
+  only; **Contents** = Read and write (metadata read is included).
+- **Classic:** `repo` for private blogs, or `public_repo` if the blog is public.
 
 ## Publishing API routes
 
@@ -69,6 +72,17 @@ action.
 Reports whether `src/blogs/{slug}.md` already exists on the publish branch. The
 editor calls this while the slug is being typed, so a collision surfaces next to
 the field rather than after every image has been uploaded.
+
+### `GET /api/publish/posts` and `GET /api/publish/posts/:slug`
+
+List and open posts for the desk. Source order:
+
+1. **GitHub** when `GITHUB_TOKEN` is set (matches the publish branch)
+2. **Local** monorepo `src/blogs/` (or `BLOGS_DIR`)
+3. **Public blog API** (`BLOG_API_BASE`, default `https://blog.tashif.codes/api`)
+
+The response includes `source` and `publishingReady`. Publishing (`POST
+/api/publish`) always requires `GITHUB_TOKEN`.
 
 ### `POST /api/publish/assets`
 
@@ -126,9 +140,9 @@ src/blogs/{slug}.md
 public/images/blog/{slug}/{filename}
 ```
 
-The GitHub App is the authenticated actor/committer. To have GitHub associate
-the author with the `tashifkhan` account, ensure
-`tashifkhan010@gmail.com` is verified on that account.
+The PAT authenticates the API calls. Commits still use the fixed author
+`tashifkhan <tashifkhan010@gmail.com>` so GitHub can associate them when that
+email is verified on the account.
 
 ## Images and `asset:` references
 

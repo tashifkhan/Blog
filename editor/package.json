@@ -21,7 +21,6 @@
     "@lezer/markdown": "^1.6.0",
     "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource-variable/newsreader": "^5.2.8",
-    "@octokit/auth-app": "^8.2.0",
     "@tanstack/react-router": "^1.170.18",
     "@tanstack/react-start": "^1.168.32",
     "gray-matter": "^4.0.3",

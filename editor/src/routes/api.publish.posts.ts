@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { requireEditorRequest } from '../server/auth.server'
-import { listPosts } from '../server/github.server'
+import { listPosts, publishingReady } from '../server/posts-source'
 import { errorResponse, json } from '../server/http.server'
 
 export const Route = createFileRoute('/api/publish/posts')({
@@ -10,7 +10,11 @@ export const Route = createFileRoute('/api/publish/posts')({
       GET: async ({ request }) => {
         try {
           await requireEditorRequest(request)
-          return json(await listPosts())
+          const result = await listPosts()
+          return json({
+            ...result,
+            publishingReady: publishingReady(),
+          })
         } catch (error) {
           return errorResponse(error)
         }

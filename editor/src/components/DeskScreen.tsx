@@ -23,6 +23,14 @@ export type DeskPost = {
   title: string
 }
 
+type PostsSource = 'github' | 'local' | 'blog-api'
+
+const SOURCE_LABEL: Record<PostsSource, string> = {
+  github: 'GitHub',
+  local: 'local files',
+  'blog-api': 'blog.tashif.codes',
+}
+
 export type LocalDraftSummary = {
   date: string
   excerpt: string
@@ -69,6 +77,8 @@ export function DeskScreen({
 }: DeskScreenProps) {
   const [posts, setPosts] = useState<DeskPost[]>([])
   const [branch, setBranch] = useState('')
+  const [source, setSource] = useState<PostsSource | null>(null)
+  const [publishingReady, setPublishingReady] = useState(true)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -78,11 +88,16 @@ export function DeskScreen({
     setLoading(true)
     setError('')
     try {
-      const response = await apiRequest<{ branch: string; posts: DeskPost[] }>(
-        '/api/publish/posts',
-      )
+      const response = await apiRequest<{
+        branch: string
+        posts: DeskPost[]
+        source?: PostsSource
+        publishingReady?: boolean
+      }>('/api/publish/posts')
       setPosts(response.posts)
       setBranch(response.branch)
+      setSource(response.source ?? null)
+      setPublishingReady(response.publishingReady !== false)
     } catch (caught) {
       if (caught instanceof ClientApiError && caught.status === 401) {
         onSignedOut()
@@ -91,7 +106,7 @@ export function DeskScreen({
       setError(
         caught instanceof Error
           ? caught.message
-          : 'Could not load posts from GitHub',
+          : 'Could not load posts',
       )
     } finally {
       setLoading(false)
@@ -143,9 +158,11 @@ export function DeskScreen({
           <span>
             {loading
               ? 'Loading stories…'
-              : branch
-                ? `${posts.length} on ${branch}`
-                : 'Stories'}
+              : source
+                ? `${posts.length} via ${SOURCE_LABEL[source]}`
+                : branch
+                  ? `${posts.length} on ${branch}`
+                  : 'Stories'}
           </span>
         </div>
 
@@ -187,6 +204,19 @@ export function DeskScreen({
             New story
           </button>
         </section>
+
+        {!publishingReady && !loading ? (
+          <section className="desk-github-hint" role="status">
+            <strong>Reading works — publishing needs a GitHub token.</strong>
+            <p>
+              Stories are loaded from{' '}
+              {source ? SOURCE_LABEL[source] : 'a fallback source'}. To commit
+              changes, set <code>GITHUB_TOKEN</code> (a personal access token
+              with Contents read/write on the blog repo) in the editor server
+              env (Docker: <code>editor/.env</code>), then restart Pressroom.
+            </p>
+          </section>
+        ) : null}
 
         {localDraft ? (
           <section className="desk-local-draft" aria-label="Local draft">

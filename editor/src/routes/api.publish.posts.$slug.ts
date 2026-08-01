@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { requireEditorRequest } from '../server/auth.server'
-import { loadPost } from '../server/github.server'
+import { loadPost, publishingReady } from '../server/posts-source'
 import { ApiError, errorResponse, json } from '../server/http.server'
 import { slugSchema } from '../server/publishing-schema'
 
@@ -18,7 +18,11 @@ export const Route = createFileRoute('/api/publish/posts/$slug')({
               parsed.error.issues[0]?.message || 'Invalid slug',
             )
           }
-          return json(await loadPost(parsed.data))
+          const loaded = await loadPost(parsed.data)
+          return json({
+            ...loaded,
+            publishingReady: publishingReady(),
+          })
         } catch (error) {
           return errorResponse(error)
         }

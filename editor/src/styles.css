@@ -525,6 +525,30 @@ html[data-theme='dark'] .login-aside {
   border-color: var(--red-dark);
 }
 
+.desk-github-hint {
+  padding: 14px 16px;
+  border: 1px solid var(--amber-border);
+  background: var(--amber-soft);
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.desk-github-hint strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+}
+
+.desk-github-hint p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.desk-github-hint code {
+  font-size: 0.72rem;
+}
+
 .desk-local-draft {
   display: flex;
   flex-wrap: wrap;

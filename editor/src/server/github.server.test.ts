@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@octokit/auth-app', () => ({
-  createAppAuth: () => async () => ({ token: 'installation-token' }),
-}))
-
 import { publishArticle, stageImage } from './github.server'
 
 const BASE_SHA = 'a'.repeat(40)
@@ -80,9 +76,11 @@ const BASE_INPUT = {
 
 describe('GitHub publishing', () => {
   beforeEach(() => {
-    process.env.GITHUB_APP_ID = '123'
-    process.env.GITHUB_APP_PRIVATE_KEY = 'test-private-key'
-    process.env.GITHUB_APP_INSTALLATION_ID = '456'
+    process.env.GITHUB_TOKEN = 'ghp_test_personal_access_token'
+    delete process.env.GITHUB_PAT
+    delete process.env.GITHUB_APP_ID
+    delete process.env.GITHUB_APP_PRIVATE_KEY
+    delete process.env.GITHUB_APP_INSTALLATION_ID
     process.env.GITHUB_REPOSITORY_OWNER = 'tashifkhan'
     process.env.GITHUB_REPOSITORY_NAME = 'Blog'
     process.env.GITHUB_PUBLISH_BRANCH = 'main'

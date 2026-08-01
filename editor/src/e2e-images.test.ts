@@ -8,10 +8,6 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@octokit/auth-app', () => ({
-  createAppAuth: () => async () => ({ token: 'installation-token' }),
-}))
-
 import { buildArticle, normalizeFilename } from './lib/article'
 import { insertBlock } from './lib/markdown-editing'
 import {
@@ -114,9 +110,8 @@ function convertRelativeUrl(url: string, githubBaseUrl: string): string {
 
 describe('image pipeline, end to end', () => {
   beforeEach(() => {
-    process.env.GITHUB_APP_ID = '123'
-    process.env.GITHUB_APP_PRIVATE_KEY = 'test-private-key'
-    process.env.GITHUB_APP_INSTALLATION_ID = '456'
+    process.env.GITHUB_TOKEN = 'ghp_test_personal_access_token'
+    delete process.env.GITHUB_PAT
     process.env.GITHUB_REPOSITORY_OWNER = 'tashifkhan'
     process.env.GITHUB_REPOSITORY_NAME = 'Blog'
     process.env.GITHUB_PUBLISH_BRANCH = 'main'
