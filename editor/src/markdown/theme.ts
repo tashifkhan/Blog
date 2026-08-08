@@ -52,6 +52,44 @@ export type MarkdownTheme = {
   twoCol?: string
   col?: string
 
+  // Layout
+  panel?: string
+  inkBand?: string
+  strips?: string
+
+  // Document structure
+  toc?: string
+  steps?: string
+  step?: string
+  phases?: string
+  phase?: string
+  checklist?: string
+  lede?: string
+
+  // Data
+  meters?: string
+  meter?: string
+  kpi?: string
+  stat?: string
+  bars?: string
+  bar?: string
+  legend?: string
+
+  // Marginalia
+  sticker?: string
+  hand?: string
+  tape?: string
+  mark?: string
+
+  // Media
+  ascii?: string
+  embed?: string
+
+  // Interaction
+  tabs?: string
+  tab?: string
+  details?: string
+
   tableWrap?: string
   table?: string
   thead?: string

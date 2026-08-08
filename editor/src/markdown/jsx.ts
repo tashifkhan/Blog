@@ -30,7 +30,7 @@
  */
 
 import { type ComponentSpec, findByTag } from './components'
-import { codeFenceMarker, type DirectiveInfo } from './directives'
+import { codeFenceMarker, type DirectiveInfo, rawBody } from './directives'
 
 /** `<Name`, the cheap test before doing real work. */
 const TAG_START = /^<([A-Za-z][A-Za-z0-9]*)/
@@ -318,7 +318,16 @@ function jsxBlockRule(
   open.map = [startLine, bodyEnd]
 
   state.line = startLine + 1
-  state.md.block.tokenize(state, state.line, bodyEnd)
+  if (tag.spec.body === 'raw') {
+    // See the matching branch in `directives.ts`: a raw body is captured
+    // verbatim rather than re-tokenized.
+    const raw = state.push('component_raw', '', 0)
+    raw.content = rawBody(state, startLine, bodyEnd)
+    raw.block = true
+    state.line = bodyEnd
+  } else {
+    state.md.block.tokenize(state, state.line, bodyEnd)
+  }
 
   const close = state.push('directive_close', 'div', -1)
   close.block = true

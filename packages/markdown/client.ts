@@ -69,6 +69,125 @@ export function initCopyButtons(): void {
   })
 }
 
+let tabsDelegateInstalled = false
+let tabSequence = 0
+
+/** The panels of one `<Tabs>` group, in document order. */
+function tabPanels(group: Element): HTMLElement[] {
+  return Array.from(group.children).filter(
+    (child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains('md-tab'),
+  )
+}
+
+function selectTab(group: HTMLElement, index: number): void {
+  const panels = tabPanels(group)
+  const buttons = group.querySelectorAll<HTMLButtonElement>('.md-tab-button')
+
+  panels.forEach((panel, position) => {
+    panel.hidden = position !== index
+  })
+  buttons.forEach((button, position) => {
+    const selected = position === index
+    button.setAttribute('aria-selected', String(selected))
+    // Roving tabindex: only the selected tab is a tab stop, so Tab moves past
+    // the strip rather than through every label in it.
+    button.tabIndex = selected ? 0 : -1
+  })
+}
+
+/**
+ * Build the tab strip for every `<Tabs>` group under `root`.
+ *
+ * The strip is generated here rather than rendered server-side because a
+ * component's `render` sees only its own attributes, and the buttons have to
+ * carry the titles of siblings that have not been rendered yet. Building it
+ * client-side also means the no-JS fallback is the honest one: every panel
+ * visible under its own heading, which reads as a document rather than as a
+ * widget that failed to load.
+ *
+ * Groups are marked once built, so this is safe to call repeatedly alongside
+ * `watchForContent`.
+ */
+export function initTabs(root: ParentNode = document): void {
+  const groups = root.querySelectorAll<HTMLElement>(
+    '[data-md-tabs]:not([data-md-tabs-ready])',
+  )
+
+  for (const group of groups) {
+    const panels = tabPanels(group)
+    if (!panels.length) continue
+
+    const groupId = `md-tabs-${++tabSequence}`
+    const strip = document.createElement('div')
+    strip.className = 'md-tab-strip'
+    strip.setAttribute('role', 'tablist')
+
+    panels.forEach((panel, index) => {
+      const title = panel.dataset.mdTabTitle ?? `Tab ${index + 1}`
+      const panelId = `${groupId}-panel-${index}`
+      const buttonId = `${groupId}-tab-${index}`
+
+      panel.id = panelId
+      panel.setAttribute('role', 'tabpanel')
+      panel.setAttribute('aria-labelledby', buttonId)
+
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.className = 'md-tab-button'
+      button.id = buttonId
+      button.textContent = title
+      button.setAttribute('role', 'tab')
+      button.setAttribute('aria-controls', panelId)
+      strip.appendChild(button)
+    })
+
+    group.prepend(strip)
+    group.dataset.mdTabsReady = 'true'
+    selectTab(group, 0)
+  }
+
+  if (tabsDelegateInstalled) return
+  tabsDelegateInstalled = true
+
+  document.addEventListener('click', (event) => {
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const button = target.closest<HTMLButtonElement>('.md-tab-button')
+    const group = button?.closest<HTMLElement>('[data-md-tabs]')
+    if (!button || !group) return
+
+    const buttons = Array.from(group.querySelectorAll('.md-tab-button'))
+    selectTab(group, buttons.indexOf(button))
+  })
+
+  // Left/right to move between tabs, Home/End to jump to the ends, as the
+  // WAI-ARIA tabs pattern expects.
+  document.addEventListener('keydown', (event) => {
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const button = target.closest<HTMLButtonElement>('.md-tab-button')
+    const group = button?.closest<HTMLElement>('[data-md-tabs]')
+    if (!button || !group) return
+
+    const buttons = Array.from(
+      group.querySelectorAll<HTMLButtonElement>('.md-tab-button'),
+    )
+    const current = buttons.indexOf(button)
+    const last = buttons.length - 1
+
+    let next = current
+    if (event.key === 'ArrowRight') next = current === last ? 0 : current + 1
+    else if (event.key === 'ArrowLeft') next = current === 0 ? last : current - 1
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = last
+    else return
+
+    event.preventDefault()
+    selectTab(group, next)
+    buttons[next].focus()
+  })
+}
+
 export const MERMAID_DARK: Record<string, unknown> = {
   darkMode: true,
   background: '#0d0e15',

@@ -241,11 +241,16 @@ function isMermaid(lang: string, code: string): boolean {
  * back state stashed on a token — one less piece of mutable parse state, at the
  * cost of building two short strings instead of one.
  */
-function directiveCtx(info: DirectiveInfo, renderEnv: RenderEnv): RenderCtx {
+function directiveCtx(
+  token: any,
+  info: DirectiveInfo,
+  renderEnv: RenderEnv,
+): RenderCtx {
   return {
     attrs: resolveAttrs(info.spec, info.attrs),
     theme: renderEnv.theme,
     headings: renderEnv.headings,
+    inline: token.block === false,
   }
 }
 
@@ -266,13 +271,17 @@ function createParser(): MarkdownIt {
   // ---- components, from either `:::name` or `<Name>` ----
   rules.directive_open = (tokens: any[], idx: number, _opts: any, rawEnv: any) => {
     const info = tokens[idx].meta as DirectiveInfo
-    return info.spec.render(directiveCtx(info, env(rawEnv))).open
+    return info.spec.render(directiveCtx(tokens[idx], info, env(rawEnv))).open
   }
 
   rules.directive_close = (tokens: any[], idx: number, _opts: any, rawEnv: any) => {
     const info = tokens[idx].meta as DirectiveInfo
-    return info.spec.render(directiveCtx(info, env(rawEnv))).close
+    return info.spec.render(directiveCtx(tokens[idx], info, env(rawEnv))).close
   }
+
+  // A `body: 'raw'` component's contents, escaped but otherwise untouched.
+  rules.component_raw = (tokens: any[], idx: number) =>
+    md.utils.escapeHtml(tokens[idx].content)
 
   // ---- code fences and diagrams ----
   rules.fence = (tokens: any[], idx: number, _opts: any, rawEnv: any) => {

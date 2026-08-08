@@ -186,4 +186,32 @@ describe('validateDocument on tag syntax', () => {
   it('ignores tags that are not registered components', () => {
     expect(validateDocument('<Aside>\nnot ours\n</Aside>')).toEqual([])
   })
+
+  // A post that documents the components is the case most likely to trip the
+  // linter, and it is also the post most likely to exist.
+  it('ignores a component named inside an inline code span', () => {
+    expect(
+      validateDocument('Write `<Steps>` or `:::steps` to open a sequence.'),
+    ).toEqual([])
+  })
+
+  it('ignores a directive named inside an inline code span at line start', () => {
+    expect(validateDocument('`:::note` opens a callout.')).toEqual([])
+  })
+
+  it('still sees a real tag alongside a quoted one', () => {
+    // The quoted `<Note>` is ignored; the bare one is reported both for
+    // sitting mid-line and for never being closed.
+    expect(messagesFor('`<Note>` is written like <Note>this')).toEqual([
+      expect.stringContaining('must start its own line'),
+      expect.stringContaining('is never closed'),
+    ])
+  })
+
+  it('does not treat an unterminated backtick as a code span', () => {
+    expect(messagesFor('a ` b <Col>c</Col>')).toEqual([
+      expect.stringContaining('must start its own line'),
+      expect.stringContaining('must sit directly inside'),
+    ])
+  })
 })

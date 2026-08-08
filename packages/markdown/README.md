@@ -118,6 +118,128 @@ two-column layout. `.md-col` carries `min-width: 0` because a grid item's
 default `min-width: auto` resolves against its widest content, and a code block
 would otherwise push the track past the container.
 
+## Components
+
+Beyond plain Markdown the renderer understands a closed set of components,
+described once in `components.ts`. That table is the single source of truth for
+the parsers, the renderer, the validator and the editor's insert palette, so
+adding a component is one entry rather than four edits.
+
+### Two spellings
+
+Every component can be written as a JSX-style tag or as a `:::` directive. Both
+parse to the same tokens and produce byte-identical HTML.
+
+```md
+<Cols ratio="2:1">
+<Col>left</Col>
+<Col>right</Col>
+</Cols>
+
+::::cols{ratio="2:1"}
+:::col
+left
+:::
+:::col
+right
+:::
+::::
+```
+
+Tags nest by name, so they avoid the colon-counting that `::::`/`:::` requires.
+Directives survive being read on GitHub, where an unrecognised tag would simply
+not display. Already-published posts use the directive form, and `two-col` is
+kept as an alias for `Cols`, so nothing had to be rewritten.
+
+**This is not MDX.** There is no import, no component scope and no expression
+evaluation — `score={8}` is read as the literal `8`, never evaluated. A tag
+resolves against the registry or it stays raw HTML. That is deliberate: posts
+travel to the API, two sites and the editor as plain strings, and a construct
+needing a component scope could never be resolved on the consuming side.
+
+### Attributes
+
+```md
+<Panel title="Setup" tape tilt={-2} tone="warn">
+<Meter label="Leak risk" level="high" score={8}>why</Meter>
+<Note>Heads up</Note>            <!-- positional: maps to `title` -->
+:::note Heads up                 <!-- same, in directive form -->
+```
+
+A bare attribute (`tape`) is boolean true. Values may be quoted, braced, or
+unquoted. Each component names one attribute as *positional*, which is what
+lets `:::tip Performance` work without braces.
+
+### The vocabulary
+
+| Group | Components |
+| --- | --- |
+| Layout | `Cols` / `Col`, `Panel`, `InkBand`, `Strips` |
+| Structure | `Toc`, `Steps` / `Step`, `Phases` / `Phase`, `Checklist`, `Lede`, `Details` |
+| Data | `Meters` / `Meter`, `Kpi` / `Stat`, `Bars` / `Bar`, `Legend` |
+| Marginalia | `Sticker`, `Hand`, `Tape`, `Mark` |
+| Media | `Figure`, `Ascii`, `Embed` |
+| Interaction | `Tabs` / `Tab` |
+| Callouts | `Note`, `Tip`, `Important`, `Warning`, `Caution`, `Danger` |
+
+`src/blogs/component-gallery.md` in the Blog repo exercises all of them and
+doubles as the visual regression fixture.
+
+A few behaviours worth knowing:
+
+- **`Toc`** builds itself from the document's own headings, including explicit
+  `{#id}` anchors, so its links always match what the renderer emitted.
+- **`Ascii`** captures its body verbatim. Alignment, pipes and underscores
+  survive, which they would not if the content went through the parser. Its
+  `label` is required and becomes the `aria-label`.
+- **`Embed`** accepts only an allowlisted provider with a pattern-checked id,
+  never a URL. The content crosses an API boundary and is rendered by two other
+  sites, so an arbitrary author-supplied `src` is not on offer.
+- **`Tabs`** has its strip built client-side by `client.ts`, because a
+  component's `render` sees only its own attributes and the buttons need the
+  titles of siblings. Without JavaScript every panel stays visible under its
+  own heading — a readable document rather than a broken widget.
+- **`Hand`** and `Sticker` render a `span` inline and a `div` when they stand
+  alone, since a `span` cannot hold paragraphs.
+
+### Theming
+
+Structural classes (`md-step`, `md-meter`, …) live in `markdown.css` and are
+driven entirely by `--md-*` custom properties. Sites map those onto their own
+tokens; `MarkdownTheme` additionally injects per-slot class names for hosts that
+want utilities.
+
+Three tokens carry the zine look and are **off by default**, so the same post
+reads as a designed artifact on one site and a clean article on another without
+the Markdown changing:
+
+| Token | Default | Turns on |
+| --- | --- | --- |
+| `--md-rotate` | `0` | Panel/sticker/strip tilt |
+| `--md-hand-font` | `inherit` | Handwritten marginalia |
+| `--md-panel-shadow` | `none` | Hard offset shadows |
+
+### Validation
+
+`validateDocument()` walks the registry and reports unknown components and
+attributes, bad enum values, missing required attributes, wrong parents, child
+counts, unclosed and crossed tags, and a block tag buried mid-line (which would
+otherwise render as raw HTML). Inline code spans are masked first, so a post
+that documents the components does not flag itself.
+
+It is dependency-free — the editor's publish route imports it server-side
+without pulling in a parser — and runs both on every keystroke in the editor and
+as a publish gate.
+
+### Outline
+
+`extractOutline()` returns the headings, the components used, a word count and a
+reading time, plus `RENDERER_VERSION`. This is what the API ships alongside the
+Markdown so a consumer can build a table of contents before paint and can tell
+whether its vendored mirror is current. `server/services/outline.py` asserts the
+same version constant, so a vocabulary bump cannot ship to only half the
+pipeline.
+
 ## Sync
 
 `editor/`'s Docker build context is `editor/` alone and `tashif.codes` is a
