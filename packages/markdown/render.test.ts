@@ -31,6 +31,36 @@ describe('headings', () => {
       expect(html).toContain(`id="${heading.slug}"`)
     }
   })
+
+  it('honours Pandoc-style explicit heading ids and hides the marker', () => {
+    const source =
+      '## The Foundation: Understanding Basic Web Architecture {#foundation}\n\n' +
+      '### Nested Topic {#nested-topic}'
+    const html = renderMarkdown(source)
+
+    expect(html).toContain('id="foundation"')
+    expect(html).toContain('id="nested-topic"')
+    expect(html).toContain('The Foundation: Understanding Basic Web Architecture')
+    expect(html).toContain('Nested Topic')
+    expect(html).not.toContain('{#foundation}')
+    expect(html).not.toContain('{#nested-topic}')
+
+    expect(extractHeadings(source)).toEqual([
+      {
+        depth: 2,
+        text: 'The Foundation: Understanding Basic Web Architecture',
+        slug: 'foundation',
+      },
+      { depth: 3, text: 'Nested Topic', slug: 'nested-topic' },
+    ])
+  })
+
+  it('still dedupes when the same explicit id is used twice', () => {
+    const html = renderMarkdown('## One {#same}\n\n## Two {#same}')
+    expect(html).toContain('id="same"')
+    expect(html).toContain('id="same-1"')
+    expect(html).not.toContain('{#same}')
+  })
 })
 
 describe('code blocks', () => {

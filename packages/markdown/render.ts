@@ -105,6 +105,96 @@ export function slugifyHeading(text: string): string {
     .replace(/(^-|-$)+/g, '')
 }
 
+/**
+ * Pandoc/kramdown explicit heading id: `## Title {#custom-id}`.
+ * Strips the marker from the visible title and returns the custom id when set.
+ */
+const EXPLICIT_HEADING_ID_RE = /\s*\{#([^\s{}]+)\}\s*$/
+
+export function parseExplicitHeadingId(text: string): {
+  text: string
+  id?: string
+} {
+  const match = text.match(EXPLICIT_HEADING_ID_RE)
+  if (!match || match.index === undefined) return { text }
+  return {
+    text: text.slice(0, match.index).replace(/\s+$/, ''),
+    id: match[1],
+  }
+}
+
+/**
+ * Remove a trailing `{#id}` from an inline heading token so it never renders,
+ * and return the custom id when present.
+ */
+function consumeExplicitHeadingId(inline: {
+  content: string
+  children?: Array<{ type: string; content: string }> | null
+}): string | undefined {
+  const match = inline.content.match(EXPLICIT_HEADING_ID_RE)
+  if (!match || match.index === undefined) return undefined
+
+  const id = match[1]
+  inline.content = inline.content.slice(0, match.index).replace(/\s+$/, '')
+
+  const children = inline.children
+  if (!children?.length) return id
+
+  // The marker sits at the end of the heading; nibble it off trailing text
+  // tokens so bold/code earlier in the title is left alone.
+  let remaining = match[0]
+  for (let i = children.length - 1; i >= 0 && remaining.length > 0; i--) {
+    const child = children[i]
+    if (child.type !== 'text') break
+
+    const text = child.content
+    if (remaining.endsWith(text) && text.length > 0) {
+      remaining = remaining.slice(0, -text.length)
+      children.splice(i, 1)
+      continue
+    }
+
+    if (text.endsWith(remaining)) {
+      child.content = text.slice(0, -remaining.length)
+      if (child.content.length === 0) children.splice(i, 1)
+      remaining = ''
+      break
+    }
+
+    const local = text.match(EXPLICIT_HEADING_ID_RE)
+    if (local && local.index !== undefined) {
+      child.content = text.slice(0, local.index).replace(/\s+$/, '')
+      if (child.content.length === 0) children.splice(i, 1)
+      remaining = ''
+    }
+    break
+  }
+
+  for (let i = children.length - 1; i >= 0; i--) {
+    if (children[i].type !== 'text') break
+    children[i].content = children[i].content.replace(/\s+$/, '')
+    if (children[i].content.length === 0) children.splice(i, 1)
+    else break
+  }
+
+  return id
+}
+
+/** Resolve the final anchor id for a heading, honouring `{#custom}` when set. */
+function resolveHeadingSlug(
+  inline: {
+    content: string
+    children?: Array<{ type: string; content: string }> | null
+  },
+  slugs: Map<string, number>,
+): string {
+  const explicit = consumeExplicitHeadingId(inline)
+  const base = explicit ?? (slugifyHeading(inline.content) || 'section')
+  const seen = slugs.get(base) ?? 0
+  slugs.set(base, seen + 1)
+  return seen === 0 ? base : `${base}-${seen}`
+}
+
 function env(rawEnv: unknown): RenderEnv {
   return rawEnv as RenderEnv
 }
@@ -242,10 +332,8 @@ function createParser(): MarkdownIt {
     const tag = tokens[idx].tag as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
     const inline = tokens[idx + 1]
 
-    const base = slugifyHeading(inline.content) || 'section'
-    const seen = slugs.get(base) ?? 0
-    slugs.set(base, seen + 1)
-    const id = seen === 0 ? base : `${base}-${seen}`
+    // Honour Pandoc/kramdown `{#id}` and strip it from the visible title.
+    const id = resolveHeadingSlug(inline, slugs)
     // Stash the resolved id so heading_close reuses it rather than recounting.
     inline.meta = { ...(inline.meta || {}), headingSlug: id }
 
@@ -501,8 +589,9 @@ export function extractHeadings(
 
   for (let index = 0; index < tokens.length; index++) {
     if (tokens[index].type !== 'heading_open') continue
-    const text = tokens[index + 1]?.content ?? ''
-    const base = slugifyHeading(text) || 'section'
+    const raw = tokens[index + 1]?.content ?? ''
+    const { text, id: explicit } = parseExplicitHeadingId(raw)
+    const base = explicit ?? (slugifyHeading(text) || 'section')
     const seen = slugs.get(base) ?? 0
     slugs.set(base, seen + 1)
     headings.push({
