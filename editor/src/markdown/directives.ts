@@ -3,16 +3,16 @@
 /**
  * Container directives (`:::name`) for markdown-it.
  *
- * This is the extension point that replaces MDX for this content pipeline.
- * Posts travel between the API, two sites, and the editor as plain Markdown
- * strings, so a construct that needs a component scope to resolve against —
- * which is what `<TwoCol>` in MDX needs — can never be evaluated on the
- * consuming side. A container directive is ordinary block Markdown: the body is
- * handed back to the normal block tokenizer, so every existing renderer rule
- * (headings, fences, mermaid, callouts, task lists) applies inside a column
- * with no extra work.
+ * This and its `<Tag>` sibling in `jsx.ts` are the extension point that
+ * replaces MDX for this content pipeline. Posts travel between the API, two
+ * sites, and the editor as plain Markdown strings, so a construct that needs a
+ * component scope to resolve against — which is what an MDX `<TwoCol>` needs —
+ * can never be evaluated on the consuming side. A container directive is
+ * ordinary block Markdown: the body is handed back to the normal block
+ * tokenizer, so every existing renderer rule (headings, fences, mermaid,
+ * callouts, task lists) applies inside a column with no extra work.
  *
- *     ::::two-col{ratio="2:1"}
+ *     ::::cols{ratio="2:1"}
  *     :::col
  *     left
  *     :::
@@ -21,46 +21,26 @@
  *     :::
  *     ::::
  *
+ * Which components exist, and what attributes they take, is not decided here —
+ * `components.ts` owns that. This module only knows how to find the fences.
+ *
  * Written here rather than pulled from `markdown-it-container` for two reasons:
  * the nesting rules below have to be exact (a column directive sits inside a
  * grid directive), and the module is vendored into three build roots, so every
  * avoided dependency is one less thing to keep in step.
  */
 
-export const COLUMN_RATIOS = {
-  '1:1': '1fr 1fr',
-  '2:1': '2fr 1fr',
-  '1:2': '1fr 2fr',
-} as const
+import { type ComponentSpec, findByDirective } from './components'
 
-export type ColumnRatio = keyof typeof COLUMN_RATIOS
-
-export const CALLOUT_NAMES = [
-  'note',
-  'tip',
-  'important',
-  'warning',
-  'caution',
-  'danger',
-] as const
-
-export type CalloutName = (typeof CALLOUT_NAMES)[number]
-
-export const DIRECTIVE_NAMES = ['two-col', 'col', ...CALLOUT_NAMES] as const
-
-export type DirectiveName = (typeof DIRECTIVE_NAMES)[number]
-
-const DIRECTIVE_NAME_SET: ReadonlySet<string> = new Set(DIRECTIVE_NAMES)
-
-export function isCalloutName(name: string): name is CalloutName {
-  return (CALLOUT_NAMES as readonly string[]).includes(name)
-}
-
-export type DirectiveInfo = {
-  name: DirectiveName
-  /** Parsed `{key="value"}` attributes. */
-  attrs: Record<string, string>
-}
+export {
+  CALLOUT_NAMES,
+  COLUMN_RATIOS,
+  COMPONENT_NAMES,
+  DIRECTIVE_NAMES,
+  type CalloutName,
+  type ColumnRatio,
+  isCalloutName,
+} from './components'
 
 const MARKER = ':'
 export const MIN_MARKERS = 3
@@ -69,50 +49,44 @@ const INFO_PATTERN = /^([a-z][a-z0-9-]*)\s*([\s\S]*)$/i
 const ATTR_PATTERN =
   /([a-z][a-z0-9-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s}'"]+))/gi
 
-/**
- * The attribute a bare value maps to, so `:::note Heads up` and
- * `::::two-col 2:1` work without anyone having to remember `{key="…"}`.
- */
-const POSITIONAL_ATTR: Partial<Record<DirectiveName, string>> = {
-  'two-col': 'ratio',
-  note: 'title',
-  tip: 'title',
-  important: 'title',
-  warning: 'title',
-  caution: 'title',
-  danger: 'title',
+export type DirectiveInfo = {
+  /** Canonical component name, e.g. `Cols`. */
+  name: string
+  /** The spelling the author used, for error messages. */
+  raw: string
+  spec: ComponentSpec
+  /** Raw `{key="value"}` attributes, before coercion. */
+  attrs: Record<string, string>
 }
 
 /**
  * Parse the text after the opening colons.
  *
- * Returns `null` for anything that is not a known directive, which leaves the
+ * Returns `null` for anything that is not a known component, which leaves the
  * line to be parsed as ordinary Markdown rather than silently swallowed.
  */
 export function parseDirectiveInfo(info: string): DirectiveInfo | null {
   const match = INFO_PATTERN.exec(info.trim())
   if (!match) return null
 
-  const name = match[1].toLowerCase()
-  if (!DIRECTIVE_NAME_SET.has(name)) return null
-  const directiveName = name as DirectiveName
+  const raw = match[1].toLowerCase()
+  const spec = findByDirective(raw)
+  if (!spec) return null
 
   const rest = match[2].trim()
-  if (!rest) return { name: directiveName, attrs: {} }
+  if (!rest) return { name: spec.name, raw, spec, attrs: {} }
 
   if (rest.startsWith('{')) {
     if (!rest.endsWith('}')) return null
     const attrs: Record<string, string> = {}
-    const body = rest.slice(1, -1)
-    for (const attr of body.matchAll(ATTR_PATTERN)) {
+    for (const attr of rest.slice(1, -1).matchAll(ATTR_PATTERN)) {
       attrs[attr[1].toLowerCase()] = attr[2] ?? attr[3] ?? attr[4] ?? ''
     }
-    return { name: directiveName, attrs }
+    return { name: spec.name, raw, spec, attrs }
   }
 
-  const positional = POSITIONAL_ATTR[directiveName]
-  if (!positional) return null
-  return { name: directiveName, attrs: { [positional]: rest } }
+  if (!spec.positional) return null
+  return { name: spec.name, raw, spec, attrs: { [spec.positional]: rest } }
 }
 
 /** Number of leading colons on a line, ignoring indentation. */
@@ -160,7 +134,7 @@ function findClosingFence(
 
     const run = leadingMarkers(line)
     // A shorter run belongs to a nested directive and cannot close this one,
-    // which is what lets `::::two-col` wrap `:::col` unambiguously.
+    // which is what lets `::::cols` wrap `:::col` unambiguously.
     if (run < MIN_MARKERS || run < markerCount) continue
 
     const rest = line.trimStart().slice(run).trim()
@@ -169,7 +143,7 @@ function findClosingFence(
       if (depth === 0) return index
       continue
     }
-    // An equal-length opener nests, so `:::two-col` can also wrap `:::col`.
+    // An equal-length opener nests, so `:::cols` can also wrap `:::col`.
     if (parseDirectiveInfo(rest)) depth++
   }
 
@@ -246,6 +220,8 @@ function directiveRule(
   const close = state.push('directive_close', 'div', -1)
   close.markup = markup
   close.block = true
+  // The same object as the opener's, which is what lets the close rule read
+  // back the closing HTML the open rule computed.
   close.meta = directive
 
   state.parentType = oldParentType

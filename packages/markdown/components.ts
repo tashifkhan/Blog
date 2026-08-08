@@ -1,0 +1,283 @@
+/**
+ * The component registry.
+ *
+ * One declarative table describing every component an author can reach, shared
+ * by four consumers that would otherwise each hold their own copy of the rules:
+ *
+ *   - `directives.ts` — resolves `:::name` against it
+ *   - `jsx.ts`        — resolves `<Name>` against it
+ *   - `render.ts`     — dispatches `directive_open` through `render`
+ *   - `validate.ts`   — walks `attrs` / `parents` / `children` to lint a draft
+ *
+ * Adding a component means adding one entry here. Nothing else has to learn
+ * about it, and the editor's insert palette picks it up for free.
+ *
+ * This module must stay free of any markdown-it dependency: the editor's
+ * publish route imports the validator server-side and must not pull in a
+ * parser to do it.
+ */
+
+import { CALLOUT_ICONS } from './icons'
+import { cx, type MarkdownTheme } from './theme'
+
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+}
+
+export function escapeHtml(value: string): string {
+  return value.replace(/[&<>"]/g, (char) => HTML_ESCAPES[char])
+}
+
+export type AttrSpec = {
+  type: 'string' | 'number' | 'boolean' | 'enum'
+  /** Permitted values, for `type: 'enum'`. */
+  values?: readonly string[]
+  default?: string | number | boolean
+  required?: boolean
+  /** Shown in the editor palette and in validation messages. */
+  describe?: string
+}
+
+export type AttrValues = Record<string, string | number | boolean | undefined>
+
+export type HeadingEntry = { depth: number; text: string; slug: string }
+
+export type RenderCtx = {
+  /** Attributes after coercion, defaults applied. */
+  attrs: AttrValues
+  theme: MarkdownTheme
+  /**
+   * Headings of the document being rendered. Only populated when the source
+   * actually uses a component that asks for them, so the common case does not
+   * pay for a second parse.
+   */
+  headings: readonly HeadingEntry[]
+}
+
+export type ComponentSpec = {
+  /** PascalCase tag name: `<Steps>`. */
+  name: string
+  /** Kebab-case directive name: `:::steps`. */
+  directive: string
+  /** Additional directive spellings kept working for already-published posts. */
+  aliases?: readonly string[]
+  /**
+   * `block`  — body is re-tokenized as Markdown (the default)
+   * `items`  — body is a Markdown list whose items the component restyles
+   * `none`   — no body; the tag must be self-closing
+   */
+  body: 'block' | 'items' | 'none'
+  /**
+   * Where the tag may appear. `block` components are claimed only on a line of
+   * their own; `inline` ones only inside a paragraph. Defaults to `block`.
+   */
+  placement?: 'block' | 'inline' | 'both'
+  attrs: Record<string, AttrSpec>
+  /** Attribute a bare value maps to, so `:::note Heads up` needs no braces. */
+  positional?: string
+  /** Component must sit directly inside one of these (by `name`). */
+  parents?: readonly string[]
+  /** Direct-child requirement, enforced by the validator. */
+  children?: { name: string; min?: number; max?: number }
+  /** Set when `render` reads `ctx.headings`, so the renderer knows to fill it. */
+  needsHeadings?: boolean
+  /** One-line description for the editor palette. */
+  describe: string
+  render: (ctx: RenderCtx) => { open: string; close: string }
+}
+
+// ---------------------------------------------------------------------------
+// Shared attribute shapes
+// ---------------------------------------------------------------------------
+
+export const COLUMN_RATIOS = {
+  '1:1': '1fr 1fr',
+  '2:1': '2fr 1fr',
+  '1:2': '1fr 2fr',
+} as const
+
+export type ColumnRatio = keyof typeof COLUMN_RATIOS
+
+export const CALLOUT_NAMES = [
+  'note',
+  'tip',
+  'important',
+  'warning',
+  'caution',
+  'danger',
+] as const
+
+export type CalloutName = (typeof CALLOUT_NAMES)[number]
+
+const CALLOUT_LABELS: Record<string, string> = {
+  note: 'Note',
+  tip: 'Tip',
+  important: 'Important',
+  warning: 'Warning',
+  caution: 'Caution',
+  danger: 'Danger',
+}
+
+const TITLE_ATTR: Record<string, AttrSpec> = {
+  title: { type: 'string', describe: 'Heading shown in the callout bar' },
+}
+
+/** A callout entry, built the same way six times. */
+function calloutSpec(name: CalloutName): ComponentSpec {
+  const pascal = name[0].toUpperCase() + name.slice(1)
+  return {
+    name: pascal,
+    directive: name,
+    body: 'block',
+    attrs: TITLE_ATTR,
+    positional: 'title',
+    describe: `${CALLOUT_LABELS[name]} callout`,
+    render: ({ attrs, theme }) => {
+      const label = String(attrs.title || CALLOUT_LABELS[name])
+      const icon = CALLOUT_ICONS[name] ?? CALLOUT_ICONS.note
+      return {
+        open:
+          `<div class="${cx(`md-callout md-callout--${name}`, theme.callout)}">` +
+          `<div class="${cx('md-callout-title', theme.calloutTitle)}">${icon}<span>${escapeHtml(label)}</span></div>` +
+          `<div class="md-callout-body">`,
+        // Two wrappers: the title must not inherit the body's typography.
+        close: '</div></div>',
+      }
+    },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The registry
+// ---------------------------------------------------------------------------
+
+export const COMPONENTS: readonly ComponentSpec[] = [
+  {
+    name: 'Cols',
+    directive: 'cols',
+    aliases: ['two-col'],
+    body: 'block',
+    attrs: {
+      ratio: {
+        type: 'enum',
+        values: Object.keys(COLUMN_RATIOS),
+        default: '1:1',
+        describe: 'Relative track widths',
+      },
+    },
+    positional: 'ratio',
+    children: { name: 'Col', min: 2, max: 2 },
+    describe: 'Two-column grid that collapses on narrow containers',
+    render: ({ attrs, theme }) => {
+      const ratio = String(attrs.ratio) as ColumnRatio
+      const columns = COLUMN_RATIOS[ratio] ?? COLUMN_RATIOS['1:1']
+      // The tracks arrive as a custom property so the single-column fallback
+      // and its breakpoint can live in CSS, where a container query is usable.
+      return {
+        open: `<div class="${cx('md-two-col', theme.twoCol)}" style="--md-grid-cols: ${columns}">`,
+        close: '</div>',
+      }
+    },
+  },
+  {
+    name: 'Col',
+    directive: 'col',
+    body: 'block',
+    attrs: {},
+    parents: ['Cols'],
+    describe: 'One column inside Cols',
+    render: ({ theme }) => ({
+      open: `<div class="${cx('md-col', theme.col)}">`,
+      close: '</div>',
+    }),
+  },
+  ...CALLOUT_NAMES.map(calloutSpec),
+]
+
+// ---------------------------------------------------------------------------
+// Lookup
+// ---------------------------------------------------------------------------
+
+const BY_NAME = new Map<string, ComponentSpec>()
+const BY_DIRECTIVE = new Map<string, ComponentSpec>()
+
+for (const spec of COMPONENTS) {
+  BY_NAME.set(spec.name.toLowerCase(), spec)
+  BY_DIRECTIVE.set(spec.directive, spec)
+  for (const alias of spec.aliases ?? []) BY_DIRECTIVE.set(alias, spec)
+}
+
+/** Resolve a `:::name` directive, including back-compat aliases. */
+export function findByDirective(name: string): ComponentSpec | undefined {
+  return BY_DIRECTIVE.get(name.toLowerCase())
+}
+
+/** Resolve a `<Name>` tag. Case-insensitive, so `<cols>` also works. */
+export function findByTag(name: string): ComponentSpec | undefined {
+  return BY_NAME.get(name.toLowerCase()) ?? BY_DIRECTIVE.get(name.toLowerCase())
+}
+
+/** Every spelling the parsers accept, for error messages. */
+export const DIRECTIVE_NAMES: readonly string[] = COMPONENTS.flatMap((spec) => [
+  spec.directive,
+  ...(spec.aliases ?? []),
+])
+
+export const COMPONENT_NAMES: readonly string[] = COMPONENTS.map(
+  (spec) => spec.name,
+)
+
+export function isCalloutName(name: string): boolean {
+  return (CALLOUT_NAMES as readonly string[]).includes(name)
+}
+
+// ---------------------------------------------------------------------------
+// Attribute coercion
+// ---------------------------------------------------------------------------
+
+/**
+ * Coerce raw string attributes against a spec and apply defaults.
+ *
+ * Rendering is forgiving on purpose: a bad enum value falls back to its default
+ * rather than throwing, because a post that reaches a reader with one wrong
+ * attribute should still render. `validate.ts` is what turns the same mistake
+ * into a publish blocker, where it can still be fixed.
+ */
+export function resolveAttrs(
+  spec: ComponentSpec,
+  raw: Record<string, string>,
+): AttrValues {
+  const out: AttrValues = {}
+
+  for (const [key, attr] of Object.entries(spec.attrs)) {
+    const value = raw[key]
+
+    if (value === undefined) {
+      if (attr.default !== undefined) out[key] = attr.default
+      else if (attr.type === 'boolean') out[key] = false
+      continue
+    }
+
+    switch (attr.type) {
+      case 'number': {
+        const parsed = Number(value)
+        out[key] = Number.isFinite(parsed) ? parsed : attr.default
+        break
+      }
+      case 'boolean':
+        // A bare `<Panel tilt>` parses to the empty string, which reads as on.
+        out[key] = value === '' || value === 'true' || value === 'yes'
+        break
+      case 'enum':
+        out[key] = attr.values?.includes(value) ? value : attr.default
+        break
+      default:
+        out[key] = value
+    }
+  }
+
+  return out
+}

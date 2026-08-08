@@ -3,30 +3,54 @@ import { describe, expect, it } from 'vitest'
 import { parseDirectiveInfo } from './directives'
 import { renderMarkdown } from './render'
 
+/** The parsed shape, minus the spec object, which is compared by name. */
+function parsed(info: string) {
+  const result = parseDirectiveInfo(info)
+  if (!result) return null
+  return { name: result.name, raw: result.raw, attrs: result.attrs }
+}
+
 describe('parseDirectiveInfo', () => {
   it('accepts a bare directive', () => {
-    expect(parseDirectiveInfo('col')).toEqual({ name: 'col', attrs: {} })
+    expect(parsed('col')).toEqual({ name: 'Col', raw: 'col', attrs: {} })
+  })
+
+  it('resolves a directive to its component spec', () => {
+    expect(parseDirectiveInfo('col')?.spec.name).toBe('Col')
+    expect(parseDirectiveInfo('note')?.spec.directive).toBe('note')
   })
 
   it('reads braced attributes with either quoting style', () => {
-    expect(parseDirectiveInfo('two-col{ratio="2:1"}')).toEqual({
-      name: 'two-col',
+    expect(parsed('cols{ratio="2:1"}')).toEqual({
+      name: 'Cols',
+      raw: 'cols',
       attrs: { ratio: '2:1' },
     })
-    expect(parseDirectiveInfo("note{title='Heads up'}")).toEqual({
-      name: 'note',
+    expect(parsed("note{title='Heads up'}")).toEqual({
+      name: 'Note',
+      raw: 'note',
       attrs: { title: 'Heads up' },
     })
   })
 
   it('maps a bare value onto the directive’s primary attribute', () => {
-    expect(parseDirectiveInfo('two-col 2:1')).toEqual({
-      name: 'two-col',
+    expect(parsed('cols 2:1')).toEqual({
+      name: 'Cols',
+      raw: 'cols',
       attrs: { ratio: '2:1' },
     })
-    expect(parseDirectiveInfo('tip Performance note')).toEqual({
-      name: 'tip',
+    expect(parsed('tip Performance note')).toEqual({
+      name: 'Tip',
+      raw: 'tip',
       attrs: { title: 'Performance note' },
+    })
+  })
+
+  it('keeps the published `two-col` spelling working as an alias', () => {
+    expect(parsed('two-col 2:1')).toEqual({
+      name: 'Cols',
+      raw: 'two-col',
+      attrs: { ratio: '2:1' },
     })
   })
 
