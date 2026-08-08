@@ -11,6 +11,7 @@ export {
 } from './directives'
 export {
   extractHeadings,
+  parseExplicitHeadingId,
   renderMarkdown,
   slugifyHeading,
   type RenderOptions,
