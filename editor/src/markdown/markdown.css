@@ -27,6 +27,30 @@
   --md-callout-danger: #dc2626;
 
   /*
+   * Component tones. Named for meaning rather than hue so a site can map them
+   * onto its own palette without every component having to know about it.
+   */
+  --md-tone-accent: var(--md-accent);
+  --md-tone-alt: var(--md-accent-2, var(--md-accent));
+  --md-tone-ok: var(--md-callout-tip);
+  --md-tone-warn: var(--md-callout-warning);
+  --md-tone-danger: var(--md-callout-caution);
+  --md-tone-muted: var(--md-fg-muted);
+
+  --md-highlight: color-mix(in oklab, var(--md-callout-warning) 45%, transparent);
+  --md-hand-font: inherit;
+  --md-display-font: inherit;
+  --md-panel-shadow: none;
+
+  /*
+   * Tilt multiplier for the decorative components. `0` by default, so a
+   * `tilt={-3}` in a post is inert until a site opts in by setting this to `1`.
+   * That is what lets one document read as a zine on one site and as a clean
+   * article on another without the Markdown changing.
+   */
+  --md-rotate: 0;
+
+  /*
    * The blog renders posts inside resizable desktop windows and a mobile
    * reader, so every breakpoint below measures the container rather than the
    * viewport. A viewport media query would hand a 400px-wide window the
@@ -595,4 +619,798 @@
 
 .markdown-body details > :last-child {
   margin-bottom: 1.5rem;
+}
+
+/* =========================================================================
+ * Document components
+ *
+ * Everything below is structure and spacing only. Colour, type and the tilt
+ * multiplier come from the `--md-*` tokens above, which each site maps to its
+ * own design system — so one post reads as an OS-window document on the blog,
+ * an orange-accented article on the portfolio, and a zine wherever
+ * `--md-rotate` and `--md-hand-font` are turned on.
+ * ========================================================================= */
+
+/* Shared tone hook. A component sets `--md-tone`; its modifier classes below
+ * are the only place that mapping has to be written. */
+.md-panel--accent, .md-phase--accent, .md-stat--accent, .md-bar--accent,
+.md-sticker--accent, .md-mark--accent { --md-tone: var(--md-tone-accent); }
+.md-panel--alt, .md-phase--alt, .md-stat--alt, .md-bar--alt,
+.md-sticker--alt, .md-mark--alt { --md-tone: var(--md-tone-alt); }
+.md-panel--ok, .md-phase--ok, .md-stat--ok, .md-bar--ok,
+.md-sticker--ok, .md-mark--ok { --md-tone: var(--md-tone-ok); }
+.md-panel--warn, .md-phase--warn, .md-stat--warn, .md-bar--warn,
+.md-sticker--warn, .md-mark--warn { --md-tone: var(--md-tone-warn); }
+.md-panel--danger, .md-phase--danger, .md-stat--danger, .md-bar--danger,
+.md-sticker--danger, .md-mark--danger { --md-tone: var(--md-tone-danger); }
+.md-panel--muted, .md-phase--muted, .md-stat--muted, .md-bar--muted,
+.md-sticker--muted, .md-mark--muted { --md-tone: var(--md-tone-muted); }
+
+/* ---------- Panel ---------- */
+
+.md-panel {
+  position: relative;
+  margin: 2rem 0;
+  padding: 1.25rem 1.25rem 0.25rem;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+  box-shadow: var(--md-panel-shadow);
+  transform: rotate(calc(var(--md-rotate-local, 0deg) * var(--md-rotate)));
+}
+
+.md-panel--accent, .md-panel--alt, .md-panel--ok,
+.md-panel--warn, .md-panel--danger, .md-panel--muted {
+  border-color: color-mix(in oklab, var(--md-tone) 40%, transparent);
+  background: color-mix(in oklab, var(--md-tone) 5%, var(--md-surface));
+}
+
+.md-panel-title {
+  margin: 0 0 0.75rem;
+  font-family: var(--md-display-font);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--md-tone, var(--md-fg));
+}
+
+.md-panel-body > :first-child { margin-top: 0; }
+
+/* ---------- Tape ---------- */
+
+/*
+ * Decorative only, and `aria-hidden` in the markup. Positioned relative to a
+ * `.md-panel` when it is the panel's own tape, and inline otherwise.
+ */
+.md-tape {
+  display: block;
+  width: 5.5rem;
+  height: 1.5rem;
+  background: color-mix(in oklab, var(--md-fg) 12%, transparent);
+  transform: rotate(calc(var(--md-rotate-local, -4deg) * var(--md-rotate)));
+}
+
+.md-panel > .md-tape {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  margin-left: -2.75rem;
+}
+
+/* ---------- InkBand ---------- */
+
+.md-ink-band {
+  margin: 2.5rem 0;
+  padding: 1.75rem 1.5rem;
+  border-radius: var(--md-radius);
+  background: var(--md-fg);
+  color: var(--md-surface, canvas);
+}
+
+/* The band inverts, so every descendant has to follow it rather than the page. */
+.md-ink-band :is(a, code, strong, em, p, li, h2, h3, h4) { color: inherit; }
+.md-ink-band a { text-decoration-color: currentColor; }
+
+.md-ink-band-title {
+  margin: 0 0 1rem;
+  font-family: var(--md-display-font);
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.md-ink-band-body > :first-child { margin-top: 0; }
+.md-ink-band-body > :last-child { margin-bottom: 0; }
+
+/* ---------- Strips ---------- */
+
+.md-strips { margin: 1.75rem 0; }
+
+.md-strips .md-ul,
+.md-strips .md-ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.md-strips .md-li {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--md-border);
+  border-radius: calc(var(--md-radius) * 0.6);
+  background: var(--md-surface-muted);
+}
+
+/* The decorative bullet is redundant once each item is its own card. */
+.md-strips .md-li-bullet { display: none; }
+
+/* Alternating nudge, so the stack reads as pinned-up scraps rather than rows.
+ * Inert until a site opts into `--md-rotate`. */
+.md-strips .md-li:nth-child(odd) {
+  transform: rotate(calc(-0.4deg * var(--md-rotate)));
+}
+.md-strips .md-li:nth-child(even) {
+  transform: rotate(calc(0.4deg * var(--md-rotate)));
+}
+
+/* ---------- Toc ---------- */
+
+.md-toc {
+  margin: 1.75rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface-muted);
+}
+
+.md-toc-title {
+  margin: 0 0 0.6rem;
+  font-family: var(--md-display-font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-fg-muted);
+}
+
+.md-toc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* Two columns once there is room; a long contents list is mostly whitespace
+   * in one narrow column. */
+  columns: 1;
+}
+
+@container (min-width: 34rem) {
+  .md-toc-list { columns: 2; column-gap: 2rem; }
+}
+
+.md-toc-item {
+  break-inside: avoid;
+  line-height: 1.5;
+  margin: 0.15rem 0;
+}
+
+.md-toc-item--h3 { padding-left: 1rem; }
+.md-toc-item--h4 { padding-left: 2rem; }
+.md-toc-item--h5 { padding-left: 3rem; }
+.md-toc-item--h6 { padding-left: 4rem; }
+
+.md-toc-item--h3 .md-toc-link,
+.md-toc-item--h4 .md-toc-link,
+.md-toc-item--h5 .md-toc-link,
+.md-toc-item--h6 .md-toc-link {
+  font-size: 0.92em;
+  color: var(--md-fg-muted);
+}
+
+.md-toc-link {
+  color: var(--md-fg);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.md-toc-link:hover {
+  color: var(--md-accent);
+  border-bottom-color: currentColor;
+}
+
+/* ---------- Steps ---------- */
+
+.md-steps {
+  counter-reset: md-step;
+  margin: 1.75rem 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+
+.md-step {
+  counter-increment: md-step;
+  position: relative;
+  padding: 0.15rem 0 0.15rem 3rem;
+  min-height: 2rem;
+}
+
+/*
+ * The number is a counter rather than an attribute the author writes, so
+ * inserting a step in the middle does not mean renumbering the rest by hand.
+ */
+.md-step::before {
+  content: counter(md-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--md-accent) 15%, var(--md-surface));
+  border: 1px solid color-mix(in oklab, var(--md-accent) 40%, transparent);
+  color: var(--md-accent);
+  font-family: var(--md-display-font);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A vertical rule joining consecutive steps, stopping short of the last. */
+.md-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  top: 2.25rem;
+  bottom: -1rem;
+  width: 1px;
+  background: var(--md-border);
+}
+
+.md-step-title {
+  margin: 0 0 0.35rem;
+  font-weight: 650;
+  color: var(--md-fg);
+}
+
+.md-step-body > :first-child { margin-top: 0; }
+.md-step-body > :last-child { margin-bottom: 0; }
+
+/* ---------- Phases ---------- */
+
+.md-phases {
+  display: grid;
+  gap: 1rem;
+  margin: 1.75rem 0;
+}
+
+.md-phase {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--md-border);
+  border-left: 3px solid var(--md-tone, var(--md-accent));
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.md-phase-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.md-phase-tag {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--md-tone, var(--md-accent)) 16%, transparent);
+  color: var(--md-tone, var(--md-accent));
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.md-phase-name {
+  font-family: var(--md-display-font);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.md-phase-body > :first-child { margin-top: 0; }
+.md-phase-body > :last-child { margin-bottom: 0; }
+
+/* ---------- Checklist ---------- */
+
+.md-checklist {
+  margin: 1.75rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface-muted);
+}
+
+.md-checklist-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-fg-muted);
+}
+
+.md-checklist > :last-child { margin-bottom: 0; }
+
+/* ---------- Lede ---------- */
+
+.md-lede {
+  margin: 1.5rem 0 2rem;
+  font-size: 1.18em;
+  line-height: 1.6;
+  color: var(--md-fg);
+  border-left: 3px solid var(--md-accent);
+  padding-left: 1.1rem;
+}
+
+.md-lede > :first-child { margin-top: 0; }
+.md-lede > :last-child { margin-bottom: 0; }
+
+/* ---------- Meters ---------- */
+
+.md-meters {
+  display: grid;
+  gap: 1rem;
+  margin: 1.75rem 0;
+}
+
+.md-meter {
+  --md-meter-color: var(--md-tone-warn);
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.md-meter--high { --md-meter-color: var(--md-tone-danger); }
+.md-meter--mid { --md-meter-color: var(--md-tone-warn); }
+.md-meter--low { --md-meter-color: var(--md-tone-ok); }
+
+.md-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.md-meter-label { font-weight: 650; }
+
+.md-meter-score {
+  font-family: var(--md-display-font);
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-meter-color);
+  white-space: nowrap;
+}
+
+.md-meter-score-max {
+  font-size: 0.7em;
+  color: var(--md-fg-muted);
+}
+
+.md-meter-track {
+  display: block;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--md-fg) 10%, transparent);
+  overflow: hidden;
+}
+
+.md-meter-fill {
+  display: block;
+  height: 100%;
+  /* The score arrives 0-10 as a bare number, so the unit is applied here. */
+  width: calc(var(--md-meter-score, 0) * 10%);
+  border-radius: inherit;
+  background: var(--md-meter-color);
+}
+
+.md-meter-blurb {
+  margin-top: 0.6rem;
+  font-size: 0.94em;
+  color: var(--md-fg-muted);
+}
+
+.md-meter-blurb > :first-child { margin-top: 0; }
+.md-meter-blurb > :last-child { margin-bottom: 0; }
+
+/* ---------- Kpi / Stat ---------- */
+
+.md-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.75rem;
+  margin: 1.75rem 0;
+}
+
+@container (min-width: 34rem) {
+  .md-kpi {
+    grid-template-columns: repeat(var(--md-kpi-cols, 3), minmax(0, 1fr));
+  }
+}
+
+.md-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface-muted);
+  text-align: center;
+}
+
+.md-stat-value {
+  font-family: var(--md-display-font);
+  font-size: clamp(1.5rem, 5cqi, 2.1rem);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-tone, var(--md-fg));
+}
+
+.md-stat-label {
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-fg-muted);
+}
+
+/* ---------- Bars ---------- */
+
+.md-bars {
+  margin: 1.75rem 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.md-bars-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-fg-muted);
+}
+
+.md-bar {
+  display: grid;
+  grid-template-columns: minmax(4rem, 8rem) 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  font-size: 0.92em;
+}
+
+.md-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.md-bar-track {
+  display: block;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--md-fg) 8%, transparent);
+  overflow: hidden;
+}
+
+.md-bar-fill {
+  display: block;
+  height: 100%;
+  width: var(--md-bar-fill, 0%);
+  border-radius: inherit;
+  background: var(--md-tone, var(--md-accent));
+}
+
+.md-bar-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--md-fg-muted);
+  white-space: nowrap;
+}
+
+/* ---------- Legend ---------- */
+
+.md-legend { margin: 1rem 0; }
+
+.md-legend .md-ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.md-legend .md-li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85em;
+  color: var(--md-fg-muted);
+}
+
+.md-legend .md-li-bullet {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 2px;
+  background: var(--md-accent);
+}
+
+/* ---------- Sticker ---------- */
+
+.md-sticker {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  background: color-mix(in oklab, var(--md-tone, var(--md-accent)) 18%, var(--md-surface));
+  border: 1px solid color-mix(in oklab, var(--md-tone, var(--md-accent)) 45%, transparent);
+  color: var(--md-tone, var(--md-accent));
+  font-family: var(--md-display-font);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  transform: rotate(calc(var(--md-rotate-local, 0deg) * var(--md-rotate)));
+}
+
+.md-sticker--rect { border-radius: 3px; }
+.md-sticker--round { border-radius: 999px; }
+
+/* ---------- Hand ---------- */
+
+.md-hand {
+  font-family: var(--md-hand-font);
+  color: var(--md-fg-muted);
+  /* Handwriting faces run small at the same nominal size as the body face. */
+  font-size: 1.05em;
+}
+
+div.md-hand {
+  display: block;
+  margin: 1.25rem 0;
+  padding-left: 1rem;
+  border-left: 2px dashed var(--md-border);
+}
+
+/* ---------- Mark ---------- */
+
+.md-mark {
+  background: var(--md-highlight);
+  color: inherit;
+  padding: 0.05em 0.15em;
+  border-radius: 2px;
+  /* Keeps the highlight intact when the phrase wraps across two lines. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.md-mark--accent { background: color-mix(in oklab, var(--md-tone) 30%, transparent); }
+.md-mark--alt, .md-mark--ok, .md-mark--warn,
+.md-mark--danger, .md-mark--muted {
+  background: color-mix(in oklab, var(--md-tone) 30%, transparent);
+}
+
+/* ---------- Figure ---------- */
+
+.md-figure--explicit {
+  margin: 2rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface-muted);
+}
+
+.md-figure--explicit > :first-child { margin-top: 0; }
+
+.md-figure-caption {
+  margin-top: 0.6rem;
+  font-size: 0.85em;
+  line-height: 1.5;
+  color: var(--md-fg-muted);
+  text-align: center;
+}
+
+.md-figure-credit {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.92em;
+  opacity: 0.8;
+}
+
+/* ---------- Ascii ---------- */
+
+.md-ascii {
+  margin: 1.75rem 0;
+  padding: 1rem;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface-muted);
+  overflow-x: auto;
+}
+
+.md-ascii-pre {
+  margin: 0;
+  /* Box-drawing only lines up in a monospaced face at a normal line height. */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre;
+  color: var(--md-fg);
+}
+
+.md-ascii-pre code {
+  font: inherit;
+  background: none;
+  padding: 0;
+  border: 0;
+}
+
+/* ---------- Embed ---------- */
+
+.md-embed {
+  position: relative;
+  margin: 2rem 0;
+  border-radius: var(--md-radius);
+  overflow: hidden;
+  background: color-mix(in oklab, var(--md-fg) 8%, transparent);
+  /* Reserves the space before the frame loads, so nothing shifts under the
+   * reader — the same reason images carry width and height. */
+  aspect-ratio: 16 / 9;
+}
+
+.md-embed--gist { aspect-ratio: 4 / 3; }
+
+.md-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.md-embed-invalid {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border: 1px dashed var(--md-tone-danger);
+  border-radius: 4px;
+  color: var(--md-tone-danger);
+  font-size: 0.85em;
+}
+
+/* ---------- Tabs ---------- */
+
+.md-tabs {
+  margin: 1.75rem 0;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  overflow: hidden;
+}
+
+/*
+ * The strip is built by `client.ts` from the panels, which is why it is not in
+ * the rendered HTML. Until that runs — or if it never does — every panel stays
+ * visible under its own heading, which is a readable document rather than a
+ * broken widget.
+ */
+.md-tab-strip {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.35rem 0.35rem 0;
+  background: var(--md-surface-muted);
+  border-bottom: 1px solid var(--md-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.md-tab-strip::-webkit-scrollbar { display: none; }
+
+.md-tab-button {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--md-fg-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.md-tab-button:hover { color: var(--md-fg); }
+
+.md-tab-button[aria-selected="true"] {
+  color: var(--md-accent);
+  border-bottom-color: var(--md-accent);
+  font-weight: 600;
+}
+
+.md-tab { padding: 1rem 1.1rem; }
+
+.md-tab-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-fg-muted);
+}
+
+/* Once the strip exists it carries the labels, so the in-panel ones are
+ * redundant and the inactive panels are hidden. */
+.md-tabs[data-md-tabs-ready] .md-tab-title { display: none; }
+.md-tabs[data-md-tabs-ready] .md-tab[hidden] { display: none; }
+.md-tabs:not([data-md-tabs-ready]) .md-tab + .md-tab {
+  border-top: 1px solid var(--md-border);
+}
+
+.md-tab-body > :first-child { margin-top: 0; }
+.md-tab-body > :last-child { margin-bottom: 0; }
+
+/* ---------- Details ---------- */
+
+.md-details {
+  margin: 1.25rem 0;
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius);
+  background: var(--md-surface);
+}
+
+.md-details-summary {
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.md-details-summary::-webkit-details-marker { display: none; }
+
+/* A rotating caret, drawn rather than an icon so it inherits the text colour. */
+.md-details-summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 0.35rem solid currentColor;
+  border-top: 0.28rem solid transparent;
+  border-bottom: 0.28rem solid transparent;
+  transition: transform 120ms ease;
+  flex: none;
+}
+
+.md-details[open] > .md-details-summary::before { transform: rotate(90deg); }
+
+.md-details-body {
+  padding: 0 1rem 0.85rem;
+}
+
+.md-details-body > :first-child { margin-top: 0; }
+.md-details-body > :last-child { margin-bottom: 0; }
+
+/* ---------- Motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .md-details-summary::before { transition: none; }
 }

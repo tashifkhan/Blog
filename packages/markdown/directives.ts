@@ -149,6 +149,19 @@ function findClosingFence(
 }
 
 /**
+ * The source between an opening line and its closing line, verbatim.
+ *
+ * Read straight out of `state.src` rather than assembled from the tokenizer's
+ * per-line slices, because those apply `tShift` and so arrive with their
+ * indentation already stripped — which is most of what an ASCII diagram is.
+ */
+export function rawBody(state: any, openLine: number, closeLine: number): string {
+  const first = openLine + 1
+  if (first >= closeLine) return ''
+  return state.src.slice(state.bMarks[first], state.eMarks[closeLine - 1])
+}
+
+/**
  * markdown-it block rule. Emits `directive_open` / `directive_close` tokens
  * carrying the parsed info on `meta`, and tokenizes the body as normal
  * Markdown in between.
@@ -213,7 +226,16 @@ function directiveRule(
   open.map = [startLine, bodyEnd]
 
   state.line = startLine + 1
-  state.md.block.tokenize(state, state.line, bodyEnd)
+  if (directive.spec.body === 'raw') {
+    // An ASCII diagram is not Markdown: its alignment, pipes and underscores
+    // would all be reinterpreted. Capture the body verbatim instead.
+    const raw = state.push('component_raw', '', 0)
+    raw.content = rawBody(state, startLine, bodyEnd)
+    raw.block = true
+    state.line = bodyEnd
+  } else {
+    state.md.block.tokenize(state, state.line, bodyEnd)
+  }
 
   const close = state.push('directive_close', 'div', -1)
   close.markup = markup

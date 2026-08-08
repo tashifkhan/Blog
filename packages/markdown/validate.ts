@@ -17,6 +17,7 @@
 import {
   type ComponentSpec,
   DIRECTIVE_NAMES,
+  embedUrl,
   findByTag,
 } from './components'
 import {
@@ -107,6 +108,17 @@ function checkAttrs(
       })
     }
   }
+
+  // An id the allowlist rejects renders as an error span rather than a frame,
+  // which is precisely the kind of silent breakage this gate exists to catch.
+  if (spec.name === 'Embed' && attrs.type && attrs.id) {
+    if (!embedUrl(attrs.type, attrs.id)) {
+      issues.push({
+        line,
+        message: `"${attrs.id}" is not a valid ${attrs.type} id.`,
+      })
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -170,6 +182,46 @@ function checkChildCount(
 // Tag scanning
 // ---------------------------------------------------------------------------
 
+/**
+ * Blank out inline code spans, preserving length.
+ *
+ * A post that documents the components — the gallery post is the obvious one —
+ * writes `` `<Steps>` `` in prose, and the renderer correctly treats that as
+ * code. Without this the linter would read it as a real unclosed tag and block
+ * the publish. Spaces rather than removal so column positions still line up
+ * with the original text.
+ */
+function maskInlineCode(line: string): string {
+  let out = ''
+  let index = 0
+
+  while (index < line.length) {
+    if (line[index] !== '`') {
+      out += line[index]
+      index++
+      continue
+    }
+
+    let ticks = 0
+    while (index + ticks < line.length && line[index + ticks] === '`') ticks++
+
+    const fence = '`'.repeat(ticks)
+    const close = line.indexOf(fence, index + ticks)
+    if (close === -1) {
+      // Unterminated: not a code span, so leave it to be scanned.
+      out += fence
+      index += ticks
+      continue
+    }
+
+    const end = close + ticks
+    out += ' '.repeat(end - index)
+    index = end
+  }
+
+  return out
+}
+
 const CLOSE_TAG = /^<\/([A-Za-z][A-Za-z0-9]*)\s*>/
 
 type TagEvent =
@@ -228,10 +280,14 @@ export function validateDocument(source: string): DirectiveIssue[] {
     }
     if (codeMarker !== null) continue
 
+    // Everything below reads the masked copy, so a component named inside an
+    // inline code span is documentation rather than markup.
+    const scan = maskInlineCode(line)
+
     // ---- `:::` directives -------------------------------------------------
-    const markers = leadingMarkers(line)
+    const markers = leadingMarkers(scan)
     if (markers >= MIN_MARKERS) {
-      const rest = line.trimStart().slice(markers).trim()
+      const rest = scan.trimStart().slice(markers).trim()
 
       // A run of colons on its own closes the innermost component.
       if (rest === '') {
@@ -292,12 +348,12 @@ export function validateDocument(source: string): DirectiveIssue[] {
     }
 
     // ---- `<Tag>` components ----------------------------------------------
-    if (!line.includes('<')) continue
+    if (!scan.includes('<')) continue
 
-    const trimmed = line.trim()
-    const indent = line.length - line.trimStart().length
+    const trimmed = scan.trim()
+    const indent = scan.length - scan.trimStart().length
 
-    for (const event of scanTags(line)) {
+    for (const event of scanTags(scan)) {
       const inlineAllowed = event.spec.placement === 'inline' || event.spec.placement === 'both'
 
       if (event.kind === 'close') {

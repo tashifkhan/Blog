@@ -57,6 +57,12 @@ export type RenderCtx = {
    * pay for a second parse.
    */
   headings: readonly HeadingEntry[]
+  /**
+   * True when this occurrence sits inside a paragraph. Components allowed in
+   * both positions use it to pick an inline or a block element, since a `span`
+   * cannot hold paragraphs and a `div` inside a `<p>` is invalid.
+   */
+  inline: boolean
 }
 
 export type ComponentSpec = {
@@ -67,11 +73,11 @@ export type ComponentSpec = {
   /** Additional directive spellings kept working for already-published posts. */
   aliases?: readonly string[]
   /**
-   * `block`  — body is re-tokenized as Markdown (the default)
-   * `items`  — body is a Markdown list whose items the component restyles
-   * `none`   — no body; the tag must be self-closing
+   * `block` — body is re-tokenized as Markdown
+   * `raw`   — body is captured verbatim, for content Markdown would mangle
+   * `none`  — no body; the tag is self-closing
    */
-  body: 'block' | 'items' | 'none'
+  body: 'block' | 'raw' | 'none'
   /**
    * Where the tag may appear. `block` components are claimed only on a line of
    * their own; `inline` ones only inside a paragraph. Defaults to `block`.
@@ -125,6 +131,52 @@ const CALLOUT_LABELS: Record<string, string> = {
 
 const TITLE_ATTR: Record<string, AttrSpec> = {
   title: { type: 'string', describe: 'Heading shown in the callout bar' },
+}
+
+/** Accent names components may tint themselves with, from the site's tokens. */
+export const TONES = ['accent', 'alt', 'ok', 'warn', 'danger', 'muted'] as const
+
+/** Degrees of rotation a decorative component may ask for. */
+const MAX_ROTATE = 15
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+/**
+ * Read a numeric attribute.
+ *
+ * `resolveAttrs` has already coerced and defaulted it, so the only job left is
+ * to survive a non-number. Written as an explicit check rather than `Number(x)
+ * || fallback`, which would quietly discard a deliberate `0` — `max={0}` is a
+ * typo worth rendering as an empty bar, not silently as `max={100}`.
+ */
+function num(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+/** A `style="--name: value"` fragment, or nothing when the value is absent. */
+function styleVars(vars: Record<string, string | number | undefined>): string {
+  const parts = Object.entries(vars)
+    .filter(([, value]) => value !== undefined && value !== '')
+    .map(([name, value]) => `${name}: ${value}`)
+  return parts.length ? ` style="${escapeHtml(parts.join('; '))}"` : ''
+}
+
+function attrText(value: unknown): string {
+  return value === undefined ? '' : escapeHtml(String(value))
+}
+
+/**
+ * Rotation, as a custom property.
+ *
+ * Kept opt-in per site: `markdown.css` multiplies it by `--md-rotate`, which
+ * defaults to `0`, so the zine tilt is available without being imposed on a
+ * design system that does not want it.
+ */
+function rotateVar(value: unknown): Record<string, string | undefined> {
+  const degrees = typeof value === 'number' ? clamp(value, -MAX_ROTATE, MAX_ROTATE) : 0
+  return degrees ? { '--md-rotate-local': `${degrees}deg` } : {}
 }
 
 /** A callout entry, built the same way six times. */
@@ -197,7 +249,627 @@ export const COMPONENTS: readonly ComponentSpec[] = [
     }),
   },
   ...CALLOUT_NAMES.map(calloutSpec),
+
+  // ---- layout -------------------------------------------------------------
+  {
+    name: 'Panel',
+    directive: 'panel',
+    body: 'block',
+    attrs: {
+      title: { type: 'string', describe: 'Optional heading above the body' },
+      tape: { type: 'boolean', describe: 'Draw a strip of masking tape on top' },
+      tilt: { type: 'number', describe: 'Rotation in degrees, -15 to 15' },
+      tone: { type: 'enum', values: TONES, describe: 'Accent colour' },
+    },
+    positional: 'title',
+    describe: 'Bordered card, optionally taped and tilted',
+    render: ({ attrs, theme }) => {
+      const tone = attrs.tone ? ` md-panel--${attrs.tone}` : ''
+      const tape = attrs.tape
+        ? `<span class="md-tape" aria-hidden="true"></span>`
+        : ''
+      const title = attrs.title
+        ? `<div class="md-panel-title">${attrText(attrs.title)}</div>`
+        : ''
+      return {
+        open:
+          `<div class="${cx(`md-panel${tone}`, theme.panel)}"${styleVars(rotateVar(attrs.tilt))}>` +
+          tape +
+          title +
+          `<div class="md-panel-body">`,
+        close: '</div></div>',
+      }
+    },
+  },
+  {
+    name: 'InkBand',
+    directive: 'ink-band',
+    body: 'block',
+    attrs: {
+      title: { type: 'string', describe: 'Optional heading' },
+    },
+    positional: 'title',
+    describe: 'Inverted full-width section, for a break in the page',
+    render: ({ attrs, theme }) => ({
+      open:
+        `<section class="${cx('md-ink-band', theme.inkBand)}">` +
+        (attrs.title
+          ? `<p class="md-ink-band-title">${attrText(attrs.title)}</p>`
+          : '') +
+        `<div class="md-ink-band-body">`,
+      close: '</div></section>',
+    }),
+  },
+  {
+    name: 'Strips',
+    directive: 'strips',
+    body: 'block',
+    attrs: {},
+    describe: 'Turns a list into offset cards',
+    render: ({ theme }) => ({
+      open: `<div class="${cx('md-strips', theme.strips)}">`,
+      close: '</div>',
+    }),
+  },
+
+  // ---- document structure -------------------------------------------------
+  {
+    name: 'Toc',
+    directive: 'toc',
+    body: 'none',
+    needsHeadings: true,
+    attrs: {
+      title: { type: 'string', default: 'Contents', describe: 'Heading above the list' },
+      depth: {
+        type: 'number',
+        default: 3,
+        describe: 'Deepest heading level to include, 2 to 6',
+      },
+      from: {
+        type: 'number',
+        default: 2,
+        describe: 'Shallowest heading level to include',
+      },
+    },
+    describe: 'Table of contents, built from the document’s own headings',
+    render: ({ attrs, headings, theme }) => {
+      const from = clamp(num(attrs.from, 2), 1, 6)
+      const depth = clamp(num(attrs.depth, 3), from, 6)
+      const items = headings.filter((h) => h.depth >= from && h.depth <= depth)
+
+      // An empty nav is worse than none: it reads as a broken component.
+      if (!items.length) return { open: '', close: '' }
+
+      const list = items
+        .map(
+          (heading) =>
+            `<li class="md-toc-item md-toc-item--h${heading.depth}">` +
+            `<a class="md-toc-link" href="#${escapeHtml(heading.slug)}">${escapeHtml(heading.text)}</a>` +
+            `</li>`,
+        )
+        .join('')
+
+      return {
+        open:
+          `<nav class="${cx('md-toc', theme.toc)}" aria-label="${attrText(attrs.title)}">` +
+          `<p class="md-toc-title">${attrText(attrs.title)}</p>` +
+          `<ol class="md-toc-list">${list}</ol>` +
+          `</nav>`,
+        close: '',
+      }
+    },
+  },
+  {
+    name: 'Steps',
+    directive: 'steps',
+    body: 'block',
+    attrs: {},
+    children: { name: 'Step', min: 1 },
+    describe: 'Numbered sequence of instructions',
+    render: ({ theme }) => ({
+      open: `<ol class="${cx('md-steps', theme.steps)}">`,
+      close: '</ol>',
+    }),
+  },
+  {
+    name: 'Step',
+    directive: 'step',
+    body: 'block',
+    parents: ['Steps'],
+    attrs: {
+      title: { type: 'string', describe: 'Short label for the step' },
+    },
+    positional: 'title',
+    describe: 'One step; numbering is automatic',
+    render: ({ attrs, theme }) => ({
+      // The number comes from a CSS counter, so inserting a step in the middle
+      // does not mean renumbering the ones after it by hand.
+      open:
+        `<li class="${cx('md-step', theme.step)}">` +
+        (attrs.title
+          ? `<p class="md-step-title">${attrText(attrs.title)}</p>`
+          : '') +
+        `<div class="md-step-body">`,
+      close: '</div></li>',
+    }),
+  },
+  {
+    name: 'Phases',
+    directive: 'phases',
+    body: 'block',
+    attrs: {},
+    children: { name: 'Phase', min: 1 },
+    describe: 'Rollout phases or a timeline',
+    render: ({ theme }) => ({
+      open: `<div class="${cx('md-phases', theme.phases)}">`,
+      close: '</div>',
+    }),
+  },
+  {
+    name: 'Phase',
+    directive: 'phase',
+    body: 'block',
+    parents: ['Phases'],
+    attrs: {
+      title: { type: 'string', required: true, describe: 'Phase name' },
+      tag: { type: 'string', describe: 'Short chip, e.g. a date or "now"' },
+      tone: { type: 'enum', values: TONES, describe: 'Accent colour' },
+    },
+    positional: 'title',
+    describe: 'One phase, with an optional chip',
+    render: ({ attrs, theme }) => {
+      const tone = attrs.tone ? ` md-phase--${attrs.tone}` : ''
+      const tag = attrs.tag
+        ? `<span class="md-phase-tag">${attrText(attrs.tag)}</span>`
+        : ''
+      return {
+        open:
+          `<section class="${cx(`md-phase${tone}`, theme.phase)}">` +
+          `<div class="md-phase-head">${tag}<span class="md-phase-name">${attrText(attrs.title)}</span></div>` +
+          `<div class="md-phase-body">`,
+        close: '</div></section>',
+      }
+    },
+  },
+  {
+    name: 'Checklist',
+    directive: 'checklist',
+    body: 'block',
+    attrs: {
+      title: { type: 'string', describe: 'Optional heading' },
+    },
+    positional: 'title',
+    describe: 'Framed task list',
+    render: ({ attrs, theme }) => ({
+      open:
+        `<div class="${cx('md-checklist', theme.checklist)}">` +
+        (attrs.title
+          ? `<p class="md-checklist-title">${attrText(attrs.title)}</p>`
+          : ''),
+      close: '</div>',
+    }),
+  },
+  {
+    name: 'Lede',
+    directive: 'lede',
+    body: 'block',
+    attrs: {},
+    describe: 'Opening paragraph, set larger than body text',
+    render: ({ theme }) => ({
+      open: `<div class="${cx('md-lede', theme.lede)}">`,
+      close: '</div>',
+    }),
+  },
+
+  // ---- data ---------------------------------------------------------------
+  {
+    name: 'Meters',
+    directive: 'meters',
+    body: 'block',
+    attrs: {},
+    children: { name: 'Meter', min: 1 },
+    describe: 'Scored rubric, e.g. a risk register',
+    render: ({ theme }) => ({
+      open: `<div class="${cx('md-meters', theme.meters)}">`,
+      close: '</div>',
+    }),
+  },
+  {
+    name: 'Meter',
+    directive: 'meter',
+    body: 'block',
+    parents: ['Meters'],
+    attrs: {
+      label: { type: 'string', required: true, describe: 'What is being scored' },
+      level: {
+        type: 'enum',
+        values: ['high', 'mid', 'low'],
+        default: 'mid',
+        describe: 'Severity band, which sets the colour',
+      },
+      score: { type: 'number', default: 5, describe: 'Score out of 10' },
+    },
+    positional: 'label',
+    describe: 'One scored row; the body is the explanation',
+    render: ({ attrs, theme }) => {
+      const score = clamp(num(attrs.score, 0), 0, 10)
+      return {
+        open:
+          `<div class="${cx(`md-meter md-meter--${attrs.level}`, theme.meter)}"${styleVars({ '--md-meter-score': score })}>` +
+          `<div class="md-meter-head">` +
+          `<span class="md-meter-label">${attrText(attrs.label)}</span>` +
+          `<span class="md-meter-score">${score}<span class="md-meter-score-max">/10</span></span>` +
+          `</div>` +
+          `<div class="md-meter-track" role="img" aria-label="${attrText(attrs.label)}: ${score} out of 10">` +
+          `<span class="md-meter-fill"></span>` +
+          `</div>` +
+          `<div class="md-meter-blurb">`,
+        close: '</div></div>',
+      }
+    },
+  },
+  {
+    name: 'Kpi',
+    directive: 'kpi',
+    body: 'block',
+    attrs: {
+      cols: { type: 'number', default: 3, describe: 'Columns, 2 to 4' },
+    },
+    positional: 'cols',
+    children: { name: 'Stat', min: 1 },
+    describe: 'Row of headline numbers',
+    render: ({ attrs, theme }) => {
+      const cols = clamp(num(attrs.cols, 3), 1, 4)
+      return {
+        open: `<div class="${cx('md-kpi', theme.kpi)}"${styleVars({ '--md-kpi-cols': cols })}>`,
+        close: '</div>',
+      }
+    },
+  },
+  {
+    name: 'Stat',
+    directive: 'stat',
+    body: 'none',
+    parents: ['Kpi'],
+    attrs: {
+      value: { type: 'string', required: true, describe: 'The number itself' },
+      label: { type: 'string', required: true, describe: 'What it measures' },
+      tone: { type: 'enum', values: TONES, describe: 'Accent colour' },
+    },
+    describe: 'One headline number inside Kpi',
+    render: ({ attrs, theme }) => {
+      const tone = attrs.tone ? ` md-stat--${attrs.tone}` : ''
+      return {
+        open:
+          `<div class="${cx(`md-stat${tone}`, theme.stat)}">` +
+          `<span class="md-stat-value">${attrText(attrs.value)}</span>` +
+          `<span class="md-stat-label">${attrText(attrs.label)}</span>` +
+          `</div>`,
+        close: '',
+      }
+    },
+  },
+  {
+    name: 'Bars',
+    directive: 'bars',
+    body: 'block',
+    attrs: {
+      title: { type: 'string', describe: 'Optional heading' },
+    },
+    positional: 'title',
+    describe: 'Horizontal bar chart',
+    render: ({ attrs, theme }) => ({
+      open:
+        `<div class="${cx('md-bars', theme.bars)}">` +
+        (attrs.title ? `<p class="md-bars-title">${attrText(attrs.title)}</p>` : ''),
+      close: '</div>',
+    }),
+  },
+  {
+    name: 'Bar',
+    directive: 'bar',
+    body: 'none',
+    parents: ['Bars'],
+    attrs: {
+      label: { type: 'string', required: true, describe: 'Row label' },
+      value: { type: 'number', required: true, describe: 'Bar length' },
+      max: { type: 'number', default: 100, describe: 'Value at full width' },
+      display: { type: 'string', describe: 'Text to show instead of the raw value' },
+      tone: { type: 'enum', values: TONES, describe: 'Bar colour' },
+    },
+    describe: 'One bar inside Bars',
+    render: ({ attrs, theme }) => {
+      const max = num(attrs.max, 100)
+      const value = num(attrs.value, 0)
+      // Guard the divide: `max={0}` is a typo, not a request for infinity.
+      const percent = max > 0 ? clamp((value / max) * 100, 0, 100) : 0
+      const tone = attrs.tone ? ` md-bar--${attrs.tone}` : ''
+      const shown = attrs.display ?? attrs.value
+      return {
+        open:
+          `<div class="${cx(`md-bar${tone}`, theme.bar)}"${styleVars({ '--md-bar-fill': `${percent.toFixed(2)}%` })}>` +
+          `<span class="md-bar-label">${attrText(attrs.label)}</span>` +
+          `<span class="md-bar-track" role="img" aria-label="${attrText(attrs.label)}: ${attrText(shown)}">` +
+          `<span class="md-bar-fill"></span>` +
+          `</span>` +
+          `<span class="md-bar-value">${attrText(shown)}</span>` +
+          `</div>`,
+        close: '',
+      }
+    },
+  },
+  {
+    name: 'Legend',
+    directive: 'legend',
+    body: 'block',
+    attrs: {},
+    describe: 'Turns a list into inline legend chips',
+    render: ({ theme }) => ({
+      open: `<div class="${cx('md-legend', theme.legend)}">`,
+      close: '</div>',
+    }),
+  },
+
+  // ---- marginalia ---------------------------------------------------------
+  {
+    name: 'Sticker',
+    directive: 'sticker',
+    body: 'block',
+    placement: 'both',
+    attrs: {
+      shape: {
+        type: 'enum',
+        values: ['round', 'rect'],
+        default: 'rect',
+        describe: 'Sticker outline',
+      },
+      tone: { type: 'enum', values: TONES, describe: 'Fill colour' },
+      rotate: { type: 'number', describe: 'Rotation in degrees, -15 to 15' },
+    },
+    positional: 'shape',
+    describe: 'Small stamped label',
+    render: ({ attrs, theme }) => {
+      const tone = attrs.tone ? ` md-sticker--${attrs.tone}` : ''
+      return {
+        open: `<span class="${cx(`md-sticker md-sticker--${attrs.shape}${tone}`, theme.sticker)}"${styleVars(rotateVar(attrs.rotate))}>`,
+        close: '</span>',
+      }
+    },
+  },
+  {
+    name: 'Hand',
+    directive: 'hand',
+    body: 'block',
+    placement: 'both',
+    attrs: {},
+    describe: 'Handwritten aside',
+    render: ({ inline, theme }) => {
+      // A `span` cannot hold the paragraphs a block body produces, and a `div`
+      // inside a `<p>` is invalid, so the element follows the position.
+      const tag = inline ? 'span' : 'div'
+      return {
+        open: `<${tag} class="${cx('md-hand', theme.hand)}">`,
+        close: `</${tag}>`,
+      }
+    },
+  },
+  {
+    name: 'Tape',
+    directive: 'tape',
+    body: 'none',
+    placement: 'both',
+    attrs: {
+      rotate: { type: 'number', describe: 'Rotation in degrees, -15 to 15' },
+    },
+    describe: 'Decorative strip of masking tape',
+    render: ({ attrs, theme }) => ({
+      open: `<span class="${cx('md-tape', theme.tape)}" aria-hidden="true"${styleVars(rotateVar(attrs.rotate))}></span>`,
+      close: '',
+    }),
+  },
+  {
+    name: 'Mark',
+    directive: 'mark',
+    body: 'block',
+    placement: 'inline',
+    attrs: {
+      tone: { type: 'enum', values: TONES, describe: 'Highlighter colour' },
+    },
+    positional: 'tone',
+    describe: 'Highlighter pen',
+    render: ({ attrs, theme }) => {
+      const tone = attrs.tone ? ` md-mark--${attrs.tone}` : ''
+      return {
+        open: `<mark class="${cx(`md-mark${tone}`, theme.mark)}">`,
+        close: '</mark>',
+      }
+    },
+  },
+
+  // ---- media --------------------------------------------------------------
+  {
+    name: 'Figure',
+    directive: 'figure',
+    body: 'block',
+    attrs: {
+      caption: { type: 'string', describe: 'Caption below the content' },
+      credit: { type: 'string', describe: 'Attribution, shown after the caption' },
+      full: { type: 'boolean', describe: 'Break out to the full content width' },
+    },
+    positional: 'caption',
+    describe: 'Captioned figure around an image, table or diagram',
+    render: ({ attrs, theme }) => {
+      const full = attrs.full ? ' md-figure--full' : ''
+      const credit = attrs.credit
+        ? `<span class="md-figure-credit">${attrText(attrs.credit)}</span>`
+        : ''
+      const caption =
+        attrs.caption || attrs.credit
+          ? `<figcaption class="md-figure-caption">${attrText(attrs.caption)}${credit}</figcaption>`
+          : ''
+      return {
+        open: `<figure class="${cx(`md-figure md-figure--explicit${full}`, theme.imageWrap)}">`,
+        close: `${caption}</figure>`,
+      }
+    },
+  },
+  {
+    name: 'Ascii',
+    directive: 'ascii',
+    body: 'raw',
+    attrs: {
+      label: {
+        type: 'string',
+        required: true,
+        describe: 'Description of the diagram, for screen readers',
+      },
+    },
+    positional: 'label',
+    describe: 'Monospaced diagram, kept exactly as written',
+    render: ({ attrs, theme }) => ({
+      // `role="img"` plus the label: the box-drawing characters are noise read
+      // aloud, so the description stands in for them.
+      open:
+        `<figure class="${cx('md-ascii', theme.ascii)}" role="img" aria-label="${attrText(attrs.label)}">` +
+        `<pre class="md-ascii-pre"><code>`,
+      close: '</code></pre></figure>',
+    }),
+  },
+  {
+    name: 'Embed',
+    directive: 'embed',
+    body: 'none',
+    attrs: {
+      type: {
+        type: 'enum',
+        values: ['youtube', 'vimeo', 'gist', 'codepen'],
+        required: true,
+        describe: 'Which provider',
+      },
+      id: { type: 'string', required: true, describe: 'Provider id or user/hash' },
+      title: { type: 'string', describe: 'Accessible title for the frame' },
+    },
+    describe: 'Embedded video or snippet from an allowed provider',
+    render: ({ attrs, theme }) => {
+      const provider = String(attrs.type ?? '')
+      const id = String(attrs.id ?? '')
+      const src = embedUrl(provider, id)
+
+      // Only an allowlisted provider and a pattern-checked id ever become a
+      // frame. This content crosses an API boundary and is rendered by two
+      // other sites, so an arbitrary author-supplied URL is not on offer.
+      if (!src) {
+        return {
+          open: `<span class="md-embed-invalid">Unsupported embed: ${attrText(provider)} ${attrText(id)}</span>`,
+          close: '',
+        }
+      }
+
+      const title = attrs.title ? String(attrs.title) : `${provider} embed`
+      return {
+        open:
+          `<div class="${cx(`md-embed md-embed--${provider}`, theme.embed)}">` +
+          `<iframe src="${escapeHtml(src)}" title="${escapeHtml(title)}" loading="lazy" ` +
+          `referrerpolicy="strict-origin-when-cross-origin" ` +
+          `allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture" ` +
+          `allowfullscreen></iframe>` +
+          `</div>`,
+        close: '',
+      }
+    },
+  },
+
+  // ---- interaction --------------------------------------------------------
+  {
+    name: 'Tabs',
+    directive: 'tabs',
+    body: 'block',
+    attrs: {},
+    children: { name: 'Tab', min: 1 },
+    describe: 'Tabbed panels; falls back to stacked sections without JS',
+    render: ({ theme }) => ({
+      // The tab strip is built by `client.ts` from the panels below it. Without
+      // JavaScript every panel stays visible under its own heading, which is a
+      // readable document rather than a broken widget.
+      open: `<div class="${cx('md-tabs', theme.tabs)}" data-md-tabs>`,
+      close: '</div>',
+    }),
+  },
+  {
+    name: 'Tab',
+    directive: 'tab',
+    body: 'block',
+    parents: ['Tabs'],
+    attrs: {
+      title: { type: 'string', required: true, describe: 'Tab label' },
+    },
+    positional: 'title',
+    describe: 'One panel inside Tabs',
+    render: ({ attrs, theme }) => ({
+      open:
+        `<section class="${cx('md-tab', theme.tab)}" data-md-tab-title="${attrText(attrs.title)}">` +
+        `<p class="md-tab-title">${attrText(attrs.title)}</p>` +
+        `<div class="md-tab-body">`,
+      close: '</div></section>',
+    }),
+  },
+  {
+    name: 'Details',
+    directive: 'details',
+    body: 'block',
+    attrs: {
+      summary: {
+        type: 'string',
+        required: true,
+        describe: 'The always-visible line',
+      },
+      open: { type: 'boolean', describe: 'Start expanded' },
+    },
+    positional: 'summary',
+    describe: 'Collapsible section',
+    render: ({ attrs, theme }) => ({
+      // Native `<details>`, so this needs no JavaScript at all and still works
+      // with in-page search on browsers that expand matches automatically.
+      open:
+        `<details class="${cx('md-details', theme.details)}"${attrs.open ? ' open' : ''}>` +
+        `<summary class="md-details-summary">${attrText(attrs.summary)}</summary>` +
+        `<div class="md-details-body">`,
+      close: '</div></details>',
+    }),
+  },
 ]
+
+/** Provider id patterns, kept next to the URLs they build. */
+const EMBED_PROVIDERS: Record<
+  string,
+  { pattern: RegExp; url: (id: string) => string }
+> = {
+  youtube: {
+    pattern: /^[A-Za-z0-9_-]{6,20}$/,
+    // The -nocookie host so an embedded video does not set a tracking cookie
+    // on a reader who never pressed play.
+    url: (id) => `https://www.youtube-nocookie.com/embed/${id}`,
+  },
+  vimeo: {
+    pattern: /^\d{6,12}$/,
+    url: (id) => `https://player.vimeo.com/video/${id}`,
+  },
+  gist: {
+    pattern: /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\/[0-9a-f]{20,40}$/,
+    url: (id) => `https://gist.github.com/${id}.pibb`,
+  },
+  codepen: {
+    pattern: /^[A-Za-z0-9_-]{1,40}\/[A-Za-z0-9]{5,12}$/,
+    url: (id) => `https://codepen.io/${id.replace('/', '/embed/')}`,
+  },
+}
+
+/** The embed URL for a provider and id, or `null` if either is not allowed. */
+export function embedUrl(provider: string, id: string): string | null {
+  const entry = EMBED_PROVIDERS[provider]
+  if (!entry || !entry.pattern.test(id)) return null
+  return entry.url(id)
+}
 
 // ---------------------------------------------------------------------------
 // Lookup
