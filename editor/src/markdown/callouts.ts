@@ -10,7 +10,8 @@
  * would show as literal colons.
  */
 
-import { CALLOUT_NAMES, type CalloutName } from './directives'
+import { CALLOUT_NAMES, findByDirective } from './components'
+import { type DirectiveInfo } from './directives'
 
 const ALERT_PATTERN = new RegExp(
   `^\\[!(${CALLOUT_NAMES.join('|')})\\]\\s*`,
@@ -53,8 +54,18 @@ export function calloutsPlugin(md: any): void {
       const closeIndex = findBlockquoteClose(tokens, index)
       if (closeIndex === -1) continue
 
-      const name = match[1].toLowerCase() as CalloutName
-      const meta = { name, attrs: {} as Record<string, string> }
+      const name = match[1].toLowerCase()
+      const spec = findByDirective(name)
+      if (!spec) continue
+
+      // The same shape the `:::` rule produces, so both spellings reach the
+      // renderer as one kind of token.
+      const meta: DirectiveInfo = {
+        name: spec.name,
+        raw: name,
+        spec,
+        attrs: {},
+      }
 
       // Strip the marker from both the inline token and its first child; the
       // renderer reads children, but `inline.content` is what other core rules

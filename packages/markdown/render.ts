@@ -15,18 +15,15 @@ import MarkdownIt from 'markdown-it'
 
 import { calloutsPlugin } from './callouts'
 import {
-  COLUMN_RATIOS,
-  type ColumnRatio,
-  type DirectiveInfo,
-  directivesPlugin,
-  isCalloutName,
-} from './directives'
-import {
-  CALLOUT_ICONS,
-  CHECK_ICON,
-  COPY_ICON,
-  TERMINAL_ICON,
-} from './icons'
+  COMPONENTS,
+  escapeHtml,
+  type HeadingEntry,
+  type RenderCtx,
+  resolveAttrs,
+} from './components'
+import { type DirectiveInfo, directivesPlugin } from './directives'
+import { CHECK_ICON, COPY_ICON, TERMINAL_ICON } from './icons'
+import { jsxPlugin } from './jsx'
 import { parseImageAlt, sizeAttributes } from './images'
 import { taskListsPlugin } from './tasklists'
 import { cx, type MarkdownTheme } from './theme'
@@ -59,15 +56,11 @@ type RenderEnv = {
   slugs: Map<string, number>
   listStack: Array<'ul' | 'ol'>
   itemStack: Array<{ task: boolean }>
-}
-
-const CALLOUT_LABELS: Record<string, string> = {
-  note: 'Note',
-  tip: 'Tip',
-  important: 'Important',
-  warning: 'Warning',
-  caution: 'Caution',
-  danger: 'Danger',
+  /**
+   * Populated only when the document uses a component that reads it, so an
+   * ordinary post does not pay for the extra parse a table of contents needs.
+   */
+  headings: readonly HeadingEntry[]
 }
 
 /**
@@ -238,41 +231,20 @@ function isMermaid(lang: string, code: string): boolean {
   return MERMAID_STARTERS.some((starter) => lowered.startsWith(starter))
 }
 
-function renderDirectiveOpen(info: DirectiveInfo, theme: MarkdownTheme): string {
-  if (info.name === 'two-col') {
-    const requested = info.attrs.ratio as ColumnRatio | undefined
-    const columns =
-      requested && requested in COLUMN_RATIOS
-        ? COLUMN_RATIOS[requested]
-        : COLUMN_RATIOS['1:1']
-    // The grid tracks arrive as a custom property so the single-column fallback
-    // and the breakpoint can live in CSS, where a container query can be used.
-    return `<div class="${cx('md-two-col', theme.twoCol)}" style="--md-grid-cols: ${columns}">`
+/**
+ * Build the render context for a component occurrence.
+ *
+ * Called from both the open and the close rule. `spec.render` is a pure
+ * function of this context, so the close rule recomputes rather than reading
+ * back state stashed on a token — one less piece of mutable parse state, at the
+ * cost of building two short strings instead of one.
+ */
+function directiveCtx(info: DirectiveInfo, renderEnv: RenderEnv): RenderCtx {
+  return {
+    attrs: resolveAttrs(info.spec, info.attrs),
+    theme: renderEnv.theme,
+    headings: renderEnv.headings,
   }
-
-  if (info.name === 'col') {
-    return `<div class="${cx('md-col', theme.col)}">`
-  }
-
-  const label = info.attrs.title || CALLOUT_LABELS[info.name] || 'Note'
-  const icon = CALLOUT_ICONS[info.name] ?? CALLOUT_ICONS.note
-  const escapedLabel = escapeHtml(label)
-  return (
-    `<div class="${cx(`md-callout md-callout--${info.name}`, theme.callout)}">` +
-    `<div class="${cx('md-callout-title', theme.calloutTitle)}">${icon}<span>${escapedLabel}</span></div>` +
-    `<div class="md-callout-body">`
-  )
-}
-
-const HTML_ESCAPES: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"]/g, (char) => HTML_ESCAPES[char])
 }
 
 function createParser(): MarkdownIt {
@@ -283,20 +255,21 @@ function createParser(): MarkdownIt {
   })
 
   md.use(directivesPlugin)
+  md.use(jsxPlugin)
   md.use(calloutsPlugin)
   md.use(taskListsPlugin)
 
   const rules = md.renderer.rules as Record<string, any>
 
-  // ---- directives (two-col / col / callouts) ----
-  rules.directive_open = (tokens: any[], idx: number, _opts: any, rawEnv: any) =>
-    renderDirectiveOpen(tokens[idx].meta as DirectiveInfo, env(rawEnv).theme)
-
-  rules.directive_close = (tokens: any[], idx: number) => {
+  // ---- components, from either `:::name` or `<Name>` ----
+  rules.directive_open = (tokens: any[], idx: number, _opts: any, rawEnv: any) => {
     const info = tokens[idx].meta as DirectiveInfo
-    // Callouts open an extra body wrapper so the title is not subject to the
-    // body's typography.
-    return isCalloutName(info.name) ? '</div></div>' : '</div>'
+    return info.spec.render(directiveCtx(info, env(rawEnv))).open
+  }
+
+  rules.directive_close = (tokens: any[], idx: number, _opts: any, rawEnv: any) => {
+    const info = tokens[idx].meta as DirectiveInfo
+    return info.spec.render(directiveCtx(info, env(rawEnv))).close
   }
 
   // ---- code fences and diagrams ----
@@ -563,11 +536,33 @@ export function renderMarkdown(
     slugs: new Map(),
     listStack: [],
     itemStack: [],
+    headings: needsHeadings(content) ? extractHeadings(content) : [],
   }
 
   const source = preProcessFileLinks(content, urls.githubBaseUrl)
   const html = getParser().render(source, renderEnv)
   return postProcessHtml(html, urls, theme)
+}
+
+/**
+ * Do any of the components in this source read `ctx.headings`?
+ *
+ * Cheap string test rather than a parse: getting a false positive costs one
+ * extra parse of a document that was about to be parsed anyway, and there is no
+ * false negative as long as a heading-reading component names itself in its own
+ * tag, which every spelling of it does.
+ */
+function needsHeadings(source: string): boolean {
+  for (const spec of COMPONENTS) {
+    if (!spec.needsHeadings) continue
+    if (
+      source.includes(`<${spec.name}`) ||
+      source.includes(`:::${spec.directive}`)
+    ) {
+      return true
+    }
+  }
+  return false
 }
 
 /** Heading anchors for a table of contents, in document order. */
@@ -582,6 +577,7 @@ export function extractHeadings(
     slugs: new Map(),
     listStack: [],
     itemStack: [],
+    headings: [],
   } satisfies RenderEnv)
 
   const slugs = new Map<string, number>()

@@ -1,14 +1,34 @@
 export {
   CALLOUT_NAMES,
   COLUMN_RATIOS,
-  DIRECTIVE_NAMES,
+  COMPONENT_NAMES,
+  COMPONENTS,
+  type AttrSpec,
+  type AttrValues,
   type CalloutName,
   type ColumnRatio,
-  type DirectiveInfo,
-  type DirectiveName,
+  type ComponentSpec,
+  escapeHtml,
+  findByDirective,
+  findByTag,
+  type HeadingEntry,
   isCalloutName,
+  type RenderCtx,
+  resolveAttrs,
+} from './components'
+export {
+  DIRECTIVE_NAMES,
+  type DirectiveInfo,
   parseDirectiveInfo,
 } from './directives'
+export { parseOpenTag, type ParsedTag } from './jsx'
+export {
+  countWords,
+  type DocumentOutline,
+  extractOutline,
+  RENDERER_VERSION,
+  usedComponents,
+} from './outline'
 export {
   extractHeadings,
   parseExplicitHeadingId,
@@ -26,5 +46,6 @@ export {
 export {
   formatDirectiveIssues,
   validateDirectives,
+  validateDocument,
   type DirectiveIssue,
 } from './validate'
