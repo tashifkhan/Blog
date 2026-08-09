@@ -72,6 +72,10 @@ Toned panels tint their border and background from the site's own palette
 rather than a hardcoded hue.
 </Panel>
 
+A strip of tape can also stand on its own, as pure decoration:
+
+<Tape rotate={-6} />
+
 ### Ink band
 
 <InkBand title="House rules">
@@ -300,6 +304,19 @@ The six callouts predate the registry and are unchanged.
 :::warning Careful
 A callout takes a title as a bare value or as `{title="..."}`.
 :::
+
+<Important>
+All six exist: note, tip, important, warning, caution and danger.
+</Important>
+
+<Caution>
+Each maps to its own colour token, so a site can tune the palette without the
+renderer knowing about it.
+</Caution>
+
+<Danger>
+The tag spelling and the directive spelling produce identical markup.
+</Danger>
 
 > [!DANGER]
 > The GitHub alert spelling still rewrites into the same markup, so a post reads

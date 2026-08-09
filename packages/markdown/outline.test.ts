@@ -56,6 +56,16 @@ describe('usedComponents', () => {
     expect(usedComponents(':::note\na\n:::\n:::note\nb\n:::')).toEqual(['Note'])
   })
 
+  it('finds the GitHub alert spelling of a callout', () => {
+    // `callouts.ts` rewrites this into the same tokens, so a post using only
+    // this form still uses the component.
+    expect(usedComponents('> [!WARNING]\n> careful')).toEqual(['Warning'])
+  })
+
+  it('does not invent a callout from an unrelated blockquote', () => {
+    expect(usedComponents('> just a quote')).toEqual([])
+  })
+
   it('does not match a component name appearing as prose', () => {
     expect(usedComponents('I wrote some Notes about Cols today.')).toEqual([])
   })

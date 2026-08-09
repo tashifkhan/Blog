@@ -15,7 +15,7 @@
  * version bump cannot ship to only one half of the pipeline.
  */
 
-import { COMPONENTS, type HeadingEntry } from './components'
+import { CALLOUT_NAMES, COMPONENTS, type HeadingEntry } from './components'
 import { extractHeadings } from './render'
 
 export const RENDERER_VERSION = 'md-2'
@@ -75,7 +75,16 @@ export function usedComponents(source: string): string[] {
     const directives = [spec.directive, ...(spec.aliases ?? [])]
     const directive = new RegExp(`^\\s*:{3,}(?:${directives.join('|')})\\b`, 'mi')
 
-    if (tag.test(body) || directive.test(body)) found.push(spec.name)
+    // A callout also has the GitHub alert spelling, which `callouts.ts` rewrites
+    // into the same tokens. A post using only that form still uses the
+    // component, so it has to count here too.
+    const alert = (CALLOUT_NAMES as readonly string[]).includes(spec.directive)
+      ? new RegExp(`^\\s*>\\s*\\[!${spec.directive}\\]`, 'mi')
+      : null
+
+    if (tag.test(body) || directive.test(body) || alert?.test(body)) {
+      found.push(spec.name)
+    }
   }
 
   return found
