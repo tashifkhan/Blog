@@ -12,9 +12,13 @@ tags: ["Python", "Low Level"]
 excerpt: "Python doesn't have 'call by reference' in the traditional sense. Let's explore what really happens when you pass variables to functions and how to work with it effectively."
 ---
 
+<Lede>
 If you're coming to Python from languages like C++ or Java, you might be searching for Python's "call by reference" mechanism. Maybe you want to increment a counter in a function and have that change reflected outside. Here's the thing: **Python doesn't have call by reference** in the traditional sense.
+</Lede>
 
 But don't worry! Once you understand what Python actually does, you'll see it's both elegant and practical. Let's dive in.
+
+<Toc />
 
 ## The Truth About Python Variables
 
@@ -37,9 +41,11 @@ This distinction is crucial for understanding how function arguments work in Pyt
 
 Python uses something called "**pass by assignment**" or "**call by object reference**." Here's what happens when you pass an argument to a function:
 
-1. The function parameter becomes a **new name** (label) in the function's local scope
-2. This new name points to the **same object** as the original argument
-3. Both names now refer to the same object in memory
+<Steps>
+<Step>The function parameter becomes a **new name** (label) in the function's local scope.</Step>
+<Step>This new name points to the **same object** as the original argument.</Step>
+<Step>Both names now refer to the same object in memory.</Step>
+</Steps>
 
 Think of it like this: you're giving the object a second name tag, not making a copy of the object.
 
@@ -79,7 +85,9 @@ Notice the `id` values (memory addresses). Here's what happened:
    - Made the local `count` name point to this new object
 3. The original `my_count` still points to the original `5` object
 
-**Why a new object?** Because integers in Python are **immutable** - they can't be changed after creation. You can't modify a 5 to become a 6; you can only create a new 6.
+<Note title="Why a new object?">
+Because integers in Python are **immutable** - they can't be changed after creation. You can't modify a 5 to become a 6; you can only create a new 6.
+</Note>
 
 ## Solution 1: Return the New Value (Most Pythonic)
 
@@ -110,7 +118,8 @@ This makes the data flow explicit and clear. It's the preferred approach for sim
 
 Since Python passes object references, if you pass a **mutable** object (one that can be modified in place), changes made inside the function will be visible outside. This is because both names point to the same mutable object.
 
-### Using a List
+<Tabs>
+<Tab title="List">
 
 ```python
 def increment_count_list(count_wrapper: list):
@@ -133,7 +142,8 @@ print(f"After decrement: {my_count_list[0]}")  # Output: After decrement: 10
 
 **Why this works:** Lists are mutable. Both `my_count_list` and `count_wrapper` point to the same list object. When we modify `count_wrapper[0]`, we're modifying the contents of that shared list, so the change is visible outside.
 
-### Using a Dictionary
+</Tab>
+<Tab title="Dictionary">
 
 ```python
 def increment_count_dict(counter: dict):
@@ -154,7 +164,8 @@ decrement_count_dict(my_counter)
 print(f"After decrement: {my_counter['value']}")  # Output: After decrement: 10
 ```
 
-### Using a Custom Class
+</Tab>
+<Tab title="Custom class">
 
 For more complex scenarios, a custom class often makes the most sense:
 
@@ -186,6 +197,9 @@ print(f"After decrement: {my_counter}")  # Output: After decrement: Counter(valu
 
 This approach is clean, readable, and makes your intent clear.
 
+</Tab>
+</Tabs>
+
 ## Solution 3: Global Variables (Use Sparingly!)
 
 You can use the `global` keyword to modify a global variable from within a function:
@@ -210,11 +224,16 @@ decrement_count_global()
 print(f"After decrement: {count}")  # Output: After decrement: 5
 ```
 
-**Warning:** Global variables can make code harder to understand, test, and debug. They create hidden dependencies between different parts of your code. Use this approach only when absolutely necessary.
+<Warning>
+Global variables can make code harder to understand, test, and debug. They create hidden dependencies between different parts of your code. Use this approach only when absolutely necessary.
+</Warning>
 
 ## When to Use Which Approach?
 
 Here's my guide for choosing the right pattern:
+
+<Cols>
+<Col>
 
 **Use return values when:**
 
@@ -222,11 +241,20 @@ Here's my guide for choosing the right pattern:
 - The function's purpose is clearly to compute a new value
 - You want explicit, easy-to-follow data flow
 
+</Col>
+<Col>
+
 **Use mutable containers when:**
 
 - You need to modify multiple values simultaneously
 - The function is meant to update an existing state
 - You're working with larger data structures that would be expensive to copy
+
+</Col>
+</Cols>
+
+<Cols>
+<Col>
 
 **Use custom classes when:**
 
@@ -234,11 +262,17 @@ Here's my guide for choosing the right pattern:
 - You want clear, self-documenting code
 - You need to encapsulate complex state
 
+</Col>
+<Col>
+
 **Avoid global variables except when:**
 
 - You truly need application-wide state (rare!)
 - You're working with configuration that never changes
 - You have no other choice (and document it heavily!)
+
+</Col>
+</Cols>
 
 ## The Bigger Picture: Python's Philosophy
 
@@ -252,6 +286,9 @@ Once you internalize that everything in Python is an object reference and unders
 
 ## Quick Reference: Mutable vs. Immutable
 
+<Cols>
+<Col>
+
 **Immutable types** (can't be modified in place):
 
 - int, float, complex
@@ -260,6 +297,9 @@ Once you internalize that everything in Python is an object reference and unders
 - frozenset
 - bytes
 
+</Col>
+<Col>
+
 **Mutable types** (can be modified in place):
 
 - list
@@ -267,6 +307,9 @@ Once you internalize that everything in Python is an object reference and unders
 - set
 - bytearray
 - Custom classes (by default)
+
+</Col>
+</Cols>
 
 ## Wrapping Up
 

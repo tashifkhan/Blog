@@ -12,25 +12,31 @@ tags: ["Python", "Low Level"]
 excerpt: "Master Python's import system and learn how to structure your projects for maximum maintainability and scalability."
 ---
 
+<Lede>
 One of the most confusing aspects of Python for newcomers - and even experienced developers - is the import system. You've probably seen those cryptic `ImportError: attempted relative import with no known parent package` messages and wondered what you did wrong.
+</Lede>
 
 The truth is, Python's import system is elegant once you understand it. Let's demystify absolute imports, relative imports, and project structure best practices.
+
+<Toc />
 
 ## Why Project Structure Matters
 
 Before diving into imports, let's talk about why a good project structure is crucial:
 
-1. **Readability** - Others (including future you) can navigate your code easily
-2. **Scalability** - Adding features doesn't turn your project into spaghetti
-3. **Reusability** - Modules can be imported and reused across projects
-4. **Collaboration** - Team members know where things belong
-5. **Import clarity** - Python's import system relies on logical structure
+<Strips>
+- **Readability** - Others (including future you) can navigate your code easily
+- **Scalability** - Adding features doesn't turn your project into spaghetti
+- **Reusability** - Modules can be imported and reused across projects
+- **Collaboration** - Team members know where things belong
+- **Import clarity** - Python's import system relies on logical structure
+</Strips>
 
 ## A Typical Python Project Structure
 
 Here's a well-organized project structure we'll use as reference:
 
-```
+<Ascii label="Project tree: my_project containing main.py, package_a with two modules, and package_b with a module and a nested subpackage_c">
 my_project/
 ├── __init__.py          # Makes my_project a package
 ├── main.py              # Entry point
@@ -47,7 +53,7 @@ my_project/
     └── subpackage_c/
         ├── __init__.py
         └── module_c1.py
-```
+</Ascii>
 
 ### The Magic of `__init__.py`
 
@@ -144,24 +150,31 @@ if __name__ == "__main__":
 
 ### Running the Code
 
-From the directory **above** `my_project`:
+<Tabs>
+<Tab title="From above my_project">
 
 ```bash
 python my_project/main.py
 ```
 
-Or from **inside** `my_project`:
+</Tab>
+<Tab title="From inside my_project">
 
 ```bash
 python main.py
 ```
 
+</Tab>
+</Tabs>
+
 ### Why Absolute Imports Rock
 
-✅ **Crystal clear** - No ambiguity about where modules come from  
-✅ **Safe refactoring** - Renaming parent packages won't break imports  
-✅ **IDE friendly** - Better autocomplete and navigation  
-✅ **Explicit is better than implicit** - The Zen of Python
+<Tip title="Why absolute imports rock">
+- **Crystal clear** - No ambiguity about where modules come from
+- **Safe refactoring** - Renaming parent packages won't break imports
+- **IDE friendly** - Better autocomplete and navigation
+- **Explicit is better than implicit** - The Zen of Python
+</Tip>
 
 ## Relative Imports: For Intra-Package Use
 
@@ -216,8 +229,7 @@ def perform_subtask():
 
 ## The Relative Import Gotcha
 
-Here's the trap that catches everyone: **You cannot run a module with relative imports directly as a script.**
-
+<Danger title="You cannot run a module with relative imports directly as a script">
 This will fail:
 
 ```bash
@@ -226,6 +238,7 @@ python my_project/package_a/module_a2.py
 ```
 
 Why? When you run a Python file directly, it becomes `__main__`, not part of a package. It has no "parent package" to reference with `.` or `..`.
+</Danger>
 
 ### The Solution
 
@@ -252,6 +265,9 @@ This tells Python to run the module as part of its package, so relative imports 
 
 ## Best Practices Cheatsheet
 
+<Cols>
+<Col>
+
 ### ✅ DO
 
 1. **Use absolute imports in entry points** (`main.py`, test files)
@@ -261,6 +277,9 @@ This tells Python to run the module as part of its package, so relative imports 
 5. **Structure logically** - group related functionality
 6. **Make one clear entry point** for your application
 
+</Col>
+<Col>
+
 ### ❌ DON'T
 
 1. **Don't run modules with relative imports directly**
@@ -268,6 +287,9 @@ This tells Python to run the module as part of its package, so relative imports 
 3. **Don't go up too many levels** (`...` and beyond gets confusing)
 4. **Don't manipulate `sys.path`** unless absolutely necessary
 5. **Don't use `from module import *`** in production code
+
+</Col>
+</Cols>
 
 ## Advanced: Making Your Package Installable
 
