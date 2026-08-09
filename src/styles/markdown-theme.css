@@ -24,6 +24,20 @@
   );
   --md-radius: 0.5rem;
 
+  /*
+   * Component tokens.
+   *
+   * The desktop metaphor is the whole design here: chunky borders, hard offset
+   * shadows, no soft elevation. So panels get the same 2px offset shadow the
+   * callouts and windows use, and `--md-rotate` stays off — a tilted card would
+   * read as a rendering bug next to a pixel-aligned title bar, not as charm.
+   */
+  --md-accent-2: var(--theme-accent-secondary, var(--theme-accent));
+  --md-panel-shadow: 2px 2px 0
+    color-mix(in oklab, var(--theme-border) 40%, transparent);
+  --md-highlight: color-mix(in oklab, var(--theme-accent) 30%, transparent);
+  --md-rotate: 0;
+
   width: 100%;
   color: var(--theme-text);
   font-size: calc(var(--reader-font-scale, 1) * 0.95rem);
@@ -277,5 +291,182 @@
 
   .markdown-body .md-li {
     margin-bottom: 0.5rem;
+  }
+}
+
+/* ---------- components ---------- */
+
+/*
+ * The shared defaults already lay these out; what follows is only what the
+ * desktop metaphor changes. Chrome-like surfaces, square-ish corners, hard
+ * offset shadows, and the reader's font scale threaded through anything that
+ * sets its own size.
+ */
+
+.markdown-body .md-panel,
+.markdown-body .md-bars,
+.markdown-body .md-meter,
+.markdown-body .md-phase,
+.markdown-body .md-tabs,
+.markdown-body .md-details {
+  background: var(--theme-window-bg);
+  border-color: var(--theme-border);
+}
+
+/* Panels are little windows: a title bar spanning the full width, like the
+ * callouts above and the post window itself. */
+.markdown-body .md-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.markdown-body .md-panel-title {
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--theme-border);
+  background: var(--theme-muted);
+  color: var(--theme-text);
+  font-size: calc(var(--reader-font-scale, 1) * 0.75rem);
+}
+
+.markdown-body .md-panel-body {
+  padding: 0.875rem;
+}
+
+.markdown-body .md-panel-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Tape reads as a sticker on a CRT — keep it, but square and flat. */
+.markdown-body .md-tape {
+  border-radius: 0;
+}
+
+.markdown-body .md-toc,
+.markdown-body .md-checklist,
+.markdown-body .md-stat,
+.markdown-body .md-ascii,
+.markdown-body .md-figure--explicit {
+  background: color-mix(in oklab, var(--theme-secondary) 45%, transparent);
+  border-color: var(--theme-border);
+}
+
+.markdown-body .md-toc-link,
+.markdown-body .md-stat-value {
+  color: var(--theme-text);
+}
+
+.markdown-body .md-toc-link:hover {
+  color: var(--theme-accent);
+}
+
+.markdown-body .md-toc-title,
+.markdown-body .md-bars-title,
+.markdown-body .md-checklist-title,
+.markdown-body .md-tab-title,
+.markdown-body .md-stat-label {
+  font-size: calc(var(--reader-font-scale, 1) * 0.7rem);
+}
+
+.markdown-body .md-step-body,
+.markdown-body .md-phase-body,
+.markdown-body .md-meter-blurb,
+.markdown-body .md-tab-body,
+.markdown-body .md-details-body,
+.markdown-body .md-lede {
+  font-size: calc(var(--reader-font-scale, 1) * 1rem);
+}
+
+/* Same cascade problem the callout body has: markdown.css sets the zeroing
+ * rule first, so `.markdown-body .md-p`'s margin wins the tie without this. */
+.markdown-body .md-step-body > :last-child,
+.markdown-body .md-phase-body > :last-child,
+.markdown-body .md-meter-blurb > :last-child,
+.markdown-body .md-tab-body > :last-child,
+.markdown-body .md-details-body > :last-child,
+.markdown-body .md-panel-body > :last-child,
+.markdown-body .md-ink-band-body > :last-child,
+.markdown-body .md-lede > :last-child {
+  margin-bottom: 0;
+}
+
+/* The step chip is a square badge rather than a circle, to match the window
+ * controls and the square-cornered code bar. */
+.markdown-body .md-step::before {
+  border-radius: 3px;
+  background: var(--theme-muted);
+  border-color: var(--theme-border);
+  color: var(--theme-accent);
+}
+
+.markdown-body .md-sticker {
+  border-radius: 3px;
+}
+
+.markdown-body .md-sticker--round {
+  border-radius: 999px;
+}
+
+.markdown-body .md-tab-strip {
+  background: var(--theme-muted);
+  border-color: var(--theme-border);
+}
+
+.markdown-body .md-tab-button {
+  font-size: calc(var(--reader-font-scale, 1) * 0.82rem);
+  color: color-mix(in oklab, var(--theme-text) 70%, transparent);
+}
+
+.markdown-body .md-tab-button:hover {
+  color: var(--theme-text);
+}
+
+.markdown-body .md-tab-button[aria-selected="true"] {
+  color: var(--theme-accent);
+  border-bottom-color: var(--theme-accent);
+}
+
+.markdown-body .md-ink-band {
+  background: var(--theme-text);
+  color: var(--theme-window-bg);
+  border-radius: var(--md-radius);
+}
+
+/*
+ * MobilePostReader forces white text inside `pre`, the same override the code
+ * blocks work around above, so the ASCII surface has to stay dark on small
+ * screens or a diagram becomes invisible.
+ */
+@media (max-width: 768px) {
+  .markdown-body .md-ascii {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(17, 24, 39, 0.85);
+  }
+
+  .markdown-body .md-ascii-pre {
+    color: #e5e7eb;
+  }
+}
+
+/* Narrow windows: the bar chart's fixed label track squeezes the bars to
+ * nothing, so the label moves onto its own line. */
+@container (max-width: 26rem) {
+  .markdown-body .md-bar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .markdown-body .md-bar-label {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .markdown-body .md-step {
+    padding-left: 2.5rem;
+  }
+
+  .markdown-body .md-panel-body,
+  .markdown-body .md-tab {
+    padding: 0.75rem;
   }
 }
