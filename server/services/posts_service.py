@@ -9,6 +9,7 @@ from fastapi import HTTPException
 
 from ..models.posts import PostFull, PostMetrics, PostSummary
 from ..services.engagement_service import EngagementService
+from ..services.outline import RENDERER_VERSION, extract_outline
 
 
 class PostsService:
@@ -62,15 +63,6 @@ class PostsService:
                 serialized[key] = value
         return serialized
 
-    @staticmethod
-    def _word_count(content: str) -> int:
-        return len([word for word in content.split() if word])
-
-    @staticmethod
-    def _reading_time_minutes(word_count: int, wpm: int = 200) -> int:
-        if word_count <= 0:
-            return 1
-        return max(1, round(word_count / wpm))
 
     @staticmethod
     def _extract_summary(
@@ -105,8 +97,10 @@ class PostsService:
         if isinstance(tags, list):
             normalized_tags = [str(tag) for tag in tags]
 
-        word_count = PostsService._word_count(content or "")
-        reading_time_minutes = PostsService._reading_time_minutes(word_count)
+        # Via the outline rules rather than a bare `split()`, so a listing and a
+        # detail response cannot disagree about how long a post is. Fenced code
+        # and component tags are excluded from the count.
+        outline = extract_outline(content or "")
 
         return PostSummary(
             slug=slug,
@@ -118,8 +112,10 @@ class PostsService:
             cover_image=str(cover_image) if cover_image else None,
             category=str(category) if category is not None else None,
             socials=socials,
-            word_count=word_count,
-            reading_time_minutes=reading_time_minutes,
+            word_count=outline["wordCount"],
+            reading_time_minutes=outline["readingTimeMinutes"],
+            renderer=RENDERER_VERSION,
+            components=outline["components"],
             metadata=PostsService._serialize_metadata(data),
         )
 
@@ -186,6 +182,8 @@ class PostsService:
                 "metadata": metadata,
                 "metrics": metrics.model_dump(by_alias=True),
                 "comments": comments_data,
+                "renderer": RENDERER_VERSION,
+                "outline": extract_outline(loaded.content or ""),
             }
         )
 
@@ -225,6 +223,8 @@ class PostsService:
                         ),
                         "metrics": metrics_by_slug.get(summary.slug, empty_metrics),
                         "comments": comments_by_slug.get(summary.slug, []),
+                        "renderer": RENDERER_VERSION,
+                        "outline": extract_outline(loaded.content or ""),
                     }
                 )
             )
