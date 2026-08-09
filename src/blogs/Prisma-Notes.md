@@ -12,9 +12,13 @@ tags: ["DBMS"]
 excerpt: "Practical, guide to Prisma for Node.js/TypeScript — covers setup, schema design and relationships, migrations, type-safe Prisma Client usage, advanced querying and pagination, plus performance tuning and production best practices for building reliable, maintainable data layers."
 ---
 
+<Lede>
 Prisma is heralded as a next-generation **Object-Relational Mapper (ORM)** that revolutionizes how developers interact with databases. Its core strength lies in its ability to simplify complex database operations by providing a robust, type-safe, and intuitive API. Instead of writing raw SQL, you define your database schema in a human-readable, declarative language – Prisma Schema Language (PSL) – and Prisma then generates a powerful, type-safe client tailored specifically for your application. This client acts as an intermediary, translating your application's data operations into efficient database queries.
+</Lede>
 
 This guide aims to provide a comprehensive understanding of Prisma, from the initial setup of a project to advanced querying techniques, highlighting its features for managing database schemas and executing data operations effectively.
+
+<Toc depth={2} />
 
 ---
 
@@ -378,7 +382,9 @@ Defining your schema in `schema.prisma` is merely the blueprint. To transform th
 - **What happens during a migration?**
   - Prisma generates SQL files: Inside your `prisma` folder, a new `migrations` directory will be created (e.g., `prisma/migrations/20220705123456_init_schema/migration.sql`). These files contain the raw SQL statements necessary to apply your schema changes to the database. This allows for transparent, reviewable, and reversible schema changes.
   - Prisma updates the Prisma Client: After applying schema changes, Prisma automatically regenerates the Prisma Client. This ensures that the client's type definitions and query methods are up-to-date with your latest database schema, maintaining type safety throughout your application.
-- **Validation and Error Handling**: Prisma includes robust validation during migrations. If a proposed schema change could lead to data loss (e.g., altering a column's type in a way that truncates data, or adding a required field to a table with existing data without a default value), Prisma will often prompt you for confirmation or throw an error. This protective mechanism prevents accidental data corruption, though it might require careful planning for production deployments.
+<Warning title="Validation and error handling">
+Prisma includes robust validation during migrations. If a proposed schema change could lead to data loss (e.g., altering a column's type in a way that truncates data, or adding a required field to a table with existing data without a default value), Prisma will often prompt you for confirmation or throw an error. This protective mechanism prevents accidental data corruption, though it might require careful planning for production deployments.
+</Warning>
 
 ---
 
@@ -906,9 +912,22 @@ Pagination is the process of breaking down a large dataset into smaller, more ma
 
 Prisma makes pagination straightforward using two main arguments in `findMany` queries: `take` and `skip`.
 
-    - **take**: This argument specifies how many records to retrieve. It's equivalent to the "page size" or a `LIMIT` clause in SQL.
+<Cols>
+<Col>
 
-    - **skip**: This argument specifies how many records to bypass from the beginning of the result list before starting to count the records to `take`. It's equivalent to an `OFFSET` clause in SQL.
+**`take`**
+
+Specifies how many records to retrieve. Equivalent to the "page size", or a `LIMIT` clause in SQL.
+
+</Col>
+<Col>
+
+**`skip`**
+
+Specifies how many records to bypass from the beginning of the result list before starting to count the records to `take`. Equivalent to an `OFFSET` clause in SQL.
+
+</Col>
+</Cols>
 
 You can combine `take` and `skip` to fetch any page of data you need. The general formula to calculate the `skip` value is:
 
@@ -981,13 +1000,12 @@ Understanding what Prisma is doing under the hood, particularly the SQL queries 
   // ... (rest of your application code, using the 'prisma' client)
   ```
 
-```
-
 When `log: ['query']` is enabled, every database operation initiated by the Prisma Client will print the corresponding SQL query to your console. This is incredibly useful for:
 
+<Strips>
 - **Debugging**: Identifying if your queries are structured as expected.
 - **Performance Tuning**: Pinpointing inefficient queries that might need optimization (e.g., adding indexes).
 - **Learning**: Understanding how your high-level Prisma queries translate into low-level SQL.
+</Strips>
 
 ---
-```

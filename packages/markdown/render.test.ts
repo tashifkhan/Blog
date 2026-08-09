@@ -32,6 +32,14 @@ describe('headings', () => {
     }
   })
 
+  it('resolves backslash escapes in the extracted heading text', () => {
+    // The inline token carries source, so `\\*` would otherwise reach a table
+    // of contents as a backslash the rendered heading does not show.
+    const [heading] = extractHeadings('## When \\* Becomes Dangerous')
+    expect(heading.text).toBe('When * Becomes Dangerous')
+    expect(heading.slug).toBe('when-becomes-dangerous')
+  })
+
   it('honours Pandoc-style explicit heading ids and hides the marker', () => {
     const source =
       '## The Foundation: Understanding Basic Web Architecture {#foundation}\n\n' +

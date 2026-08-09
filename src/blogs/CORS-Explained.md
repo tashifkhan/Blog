@@ -12,24 +12,13 @@ tags: ["CORS", "API"]
 excerpt: "Understanding CORS - the browser security feature that every web developer needs to master."
 ---
 
+<Lede>
 Hey everyone! Welcome back to another deep dive into web development concepts. Today we're tackling one of the most misunderstood and frustrating topics for web developers: **CORS (Cross-Origin Resource Sharing)**. If you've ever worked with APIs and encountered that dreaded CORS error, this comprehensive guide will not only help you understand what's happening but also why it's absolutely crucial for web security.
+</Lede>
 
 By the end of this article, you'll have a complete understanding of CORS from a security perspective, how to configure it correctly, and most importantly, why this concept even exists in the first place. Let's dive in!
 
-## Table of Contents
-
-1. [The Foundation: Understanding Basic Web Architecture](#foundation)
-2. [The Nightmare Scenario: Web Without CORS](#nightmare)
-3. [Origins Explained: The Building Blocks of Web Security](#origins)
-4. [Same-Origin Policy: The Default Security Mechanism](#same-origin)
-5. [CORS in Action: How Cross-Origin Requests Work](#cors-action)
-6. [Practical Implementation: Building a CORS-Enabled Server](#implementation)
-7. [The Wildcard Dilemma: When \* Becomes Dangerous](#wildcard)
-8. [Credentials and CORS: The Extra Security Layer](#credentials)
-9. [Preflight Requests: Complex HTTP Methods](#preflight)
-10. [Browser vs Server-to-Server: Why Postman Always Works](#browser-vs-server)
-11. [Common CORS Issues and Solutions](#common-issues)
-12. [Best Practices and Security Considerations](#best-practices)
+<Toc title="Table of Contents" depth={2} />
 
 ## The Foundation: Understanding Basic Web Architecture {#foundation}
 
@@ -544,7 +533,9 @@ app.get("/widget.js", (req, res) => {
 
 ### The Danger of Wildcards
 
-Using wildcards becomes extremely dangerous when dealing with authenticated users:
+<Danger title="Never combine a wildcard with authenticated data">
+Using wildcards becomes extremely dangerous when dealing with authenticated users.
+</Danger>
 
 ```javascript
 // ❌ DANGEROUS - Don't do this!
@@ -562,9 +553,11 @@ app.get("/user/profile", (req, res) => {
 
 With this configuration:
 
+<Strips>
 - **Any malicious website** can request user data
 - **Your users' private information** is exposed to anyone
 - **No control** over who can access sensitive endpoints
+</Strips>
 
 ## Credentials and CORS: The Extra Security Layer {#credentials}
 
@@ -710,17 +703,26 @@ Not all HTTP requests are treated equally by CORS. Simple requests are sent dire
 
 ### Simple vs Complex Requests
 
-**Simple Requests** (sent directly):
+<Cols>
+<Col>
+
+**Simple Requests** (sent directly)
 
 - Methods: `GET`, `HEAD`, `POST`
 - Headers: Only simple headers like `Accept`, `Content-Type` (with restrictions)
 - Content-Type: Only `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain`
 
-**Complex Requests** (require preflight):
+</Col>
+<Col>
+
+**Complex Requests** (require preflight)
 
 - Methods: `PUT`, `PATCH`, `DELETE`, `OPTIONS`, etc.
 - Custom headers: `Authorization`, `X-Custom-Header`, etc.
 - Content-Type: `application/json`, `application/xml`, etc.
+
+</Col>
+</Cols>
 
 ### The Preflight Process
 
@@ -882,11 +884,16 @@ fetch("/api/data", {
 
 ## Browser vs Server-to-Server: Why Postman Always Works {#browser-vs-server}
 
-One of the most common questions developers ask is: "Why does my API work in Postman but fail in the browser?" The answer lies in understanding that CORS is exclusively a browser security feature.
+<Important title="Why does my API work in Postman but fail in the browser?">
+The answer lies in understanding that CORS is exclusively a browser security feature.
+</Important>
 
 ### CORS is Browser-Only
 
 CORS restrictions are **only enforced by browsers**. Here's why:
+
+<Cols>
+<Col>
 
 ### Browser Environment
 
@@ -895,12 +902,18 @@ CORS restrictions are **only enforced by browsers**. Here's why:
 - **User's personal data**: Banking, social media, email accounts
 - **Security risk**: Malicious sites could access other sites' data
 
+</Col>
+<Col>
+
 ### Server-to-Server Environment
 
 - **Isolated environment**: Each request is independent
 - **No shared state**: No cookies or stored credentials from other sources
 - **Controlled environment**: Server administrators control what requests are made
 - **No cross-contamination**: One API call can't accidentally access another service's data
+
+</Col>
+</Cols>
 
 ### Practical Examples
 
