@@ -1,0 +1,45 @@
+---
+/**
+ * Client-side behaviour for rendered Markdown: copy buttons, tabs, diagrams.
+ *
+ * This lives apart from MarkdownRenderer.astro, which is what renders the
+ * markup, because of where that component is used. A post body is passed as
+ * slot content into `BlogPostWrapper`, a `client:only="react"` island, and
+ * Astro serialises a slot into the island's `<astro-slot>` as HTML. A `<script>`
+ * inside that slot is therefore inserted by React rather than parsed by the
+ * browser, and a script node inserted that way never executes — so the copy
+ * buttons and mermaid diagrams silently did nothing on every post page.
+ *
+ * Rendering this outside the island puts the script back in the page head where
+ * Astro's hoisting expects it. It attaches to `document`, so it does not care
+ * that the content it drives mounts later.
+ */
+---
+
+<script>
+	import {
+		initCopyButtons,
+		initTabs,
+		isDarkTheme,
+		renderMermaidBlocks,
+		watchForContent,
+		watchThemeChanges,
+	} from "../../packages/markdown/client";
+
+	// Only fetched when a post actually contains a diagram, so the mermaid
+	// bundle stays out of the critical path for ordinary prose posts.
+	async function drawDiagrams(force = false) {
+		if (!document.querySelector(".md-mermaid")) return;
+		const { default: mermaid } = await import("mermaid");
+		await renderMermaidBlocks(mermaid, { dark: isDarkTheme(), force });
+	}
+
+	initCopyButtons();
+	// Both run through `watchForContent` because the post body mounts inside a
+	// React island, so nothing exists in the DOM on the first pass.
+	watchForContent(() => {
+		initTabs();
+		void drawDiagrams();
+	});
+	watchThemeChanges(() => void drawDiagrams(true));
+</script>

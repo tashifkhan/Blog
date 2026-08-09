@@ -7,6 +7,10 @@
  * component ran its own remark pipeline plus a series of regex passes over the
  * generated HTML, so the same post looked different on each site and callouts
  * only worked on one of them. Visual styling lives in markdown-theme.css.
+ *
+ * Markup only. The behaviour that drives it — copy buttons, tabs, diagrams —
+ * is in MarkdownBehaviour.astro, which has to be rendered outside the React
+ * island this component is slotted into; see the note there.
  */
 import { renderMarkdown } from "../../packages/markdown";
 import "../styles/markdown-theme.css";
@@ -37,25 +41,3 @@ const html = content
 	class:list={["markdown-body", "markdown-content", className]}
 	set:html={html}
 />
-
-<script>
-	import {
-		initCopyButtons,
-		isDarkTheme,
-		renderMermaidBlocks,
-		watchForContent,
-		watchThemeChanges,
-	} from "../../packages/markdown/client";
-
-	// Only fetched when a post actually contains a diagram, so the mermaid
-	// bundle stays out of the critical path for ordinary prose posts.
-	async function drawDiagrams(force = false) {
-		if (!document.querySelector(".md-mermaid")) return;
-		const { default: mermaid } = await import("mermaid");
-		await renderMermaidBlocks(mermaid, { dark: isDarkTheme(), force });
-	}
-
-	initCopyButtons();
-	watchForContent(() => void drawDiagrams());
-	watchThemeChanges(() => void drawDiagrams(true));
-</script>
