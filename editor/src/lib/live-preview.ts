@@ -15,7 +15,10 @@ import {
   WidgetType,
 } from '@codemirror/view'
 
+import type { ComponentSpec } from '../markdown/components'
+import { parseDirectiveInfo } from '../markdown/directives'
 import { parseImageAlt } from '../markdown/images'
+import { parseOpenTag } from '../markdown/jsx'
 import { publicImageUrl } from './publishing-rules'
 
 /**
@@ -83,6 +86,8 @@ const BLOCK_NODES = new Set([
   'FencedCode',
   'HorizontalRule',
   'ListItem',
+  'DirectiveBlock',
+  'ComponentBlock',
 ])
 
 /** Callout directives get their accent from the directive name. */
@@ -196,6 +201,41 @@ class DirectiveWidget extends WidgetType {
   }
 }
 
+/**
+ * The chip label and styling kind for a component occurrence.
+ *
+ * Driven by the registry rather than a hand-written switch, so a component
+ * added to `components.ts` gets a live-preview chip without this file changing.
+ * The label prefers whatever the author actually wrote — a callout's title, a
+ * step's name, a meter's label — because that is what identifies the block when
+ * the tag itself is hidden.
+ */
+function describeComponent(
+  spec: ComponentSpec,
+  attrs: Record<string, string>,
+): { label: string; kind: string } {
+  if (spec.name === 'Cols') {
+    return { label: `columns ${attrs.ratio ?? '1:1'}`, kind: 'grid' }
+  }
+  if (spec.name === 'Col') return { label: 'column', kind: 'col' }
+
+  // The attribute that most identifies this particular block, since the tag
+  // itself is hidden behind the chip.
+  const named =
+    attrs.title ?? attrs.label ?? attrs.summary ?? attrs.caption ?? attrs.value
+
+  // A callout's chip is already colour-coded by kind, so repeating the name
+  // beside the title is noise. Everything else needs the name to be legible.
+  if (CALLOUT_DIRECTIVES.has(spec.directive)) {
+    return { label: named || spec.directive, kind: spec.directive }
+  }
+
+  return {
+    label: named ? `${spec.directive} · ${named}` : spec.directive,
+    kind: spec.directive,
+  }
+}
+
 /** Turn a fence's raw text into the chip label and its styling kind. */
 export function describeDirectiveFence(raw: string): {
   label: string
@@ -204,19 +244,31 @@ export function describeDirectiveFence(raw: string): {
   const info = raw.trim().replace(/^:+/, '').trim()
   if (!info) return { label: 'end', kind: 'end' }
 
-  const name = /^([a-z][a-z0-9-]*)/i.exec(info)?.[1]?.toLowerCase() ?? ''
-  const attributes = info.slice(name.length).trim().replace(/^\{|\}$/g, '')
+  const directive = parseDirectiveInfo(info)
+  if (!directive) return { label: info, kind: 'end' }
 
-  if (name === 'two-col') {
-    const ratio = /(\d+:\d+)/.exec(attributes)?.[1] ?? '1:1'
-    return { label: `columns ${ratio}`, kind: 'grid' }
-  }
-  if (name === 'col') return { label: 'column', kind: 'col' }
-  if (CALLOUT_DIRECTIVES.has(name)) {
-    const title = /title\s*=\s*["']?([^"'}]+)/.exec(attributes)?.[1]?.trim()
-    return { label: title || attributes || name, kind: name }
-  }
-  return { label: info, kind: 'end' }
+  return describeComponent(directive.spec, directive.attrs)
+}
+
+/** The same, for a `<Component>` tag line. */
+export function describeComponentTag(raw: string): {
+  label: string
+  kind: string
+} {
+  const text = raw.trim()
+
+  const closing = /^<\/([A-Za-z][A-Za-z0-9]*)\s*>$/.exec(text)
+  if (closing) return { label: 'end', kind: 'end' }
+
+  const tag = parseOpenTag(text, 0)
+  if (!tag) return { label: text, kind: 'end' }
+
+  const { label, kind } = describeComponent(tag.spec, tag.attrs)
+  // A self-closing tag has no body, so there is no "end" chip to pair with it;
+  // the marker says so rather than looking like an unclosed block.
+  return tag.selfClosing || tag.spec.body === 'none'
+    ? { label: `${label} ⁄`, kind }
+    : { label, kind }
 }
 
 class BulletWidget extends WidgetType {
@@ -326,7 +378,8 @@ export function computeDecorations(
             )
             return
 
-          case 'DirectiveBlock': {
+          case 'DirectiveBlock':
+          case 'ComponentBlock': {
             decorations.push(
               Decoration.mark({ class: 'cm-md-directive' }).range(
                 node.from,
@@ -336,11 +389,14 @@ export function computeDecorations(
             return
           }
 
-          case 'DirectiveMark': {
+          case 'DirectiveMark':
+          case 'ComponentMark': {
             if (editing(node)) return
-            const { label, kind } = describeDirectiveFence(
-              state.doc.sliceString(node.from, node.to),
-            )
+            const raw = state.doc.sliceString(node.from, node.to)
+            const { label, kind } =
+              node.name === 'ComponentMark'
+                ? describeComponentTag(raw)
+                : describeDirectiveFence(raw)
             decorations.push(
               Decoration.replace({
                 widget: new DirectiveWidget(label, kind),

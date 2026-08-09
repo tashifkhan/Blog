@@ -2,6 +2,7 @@ import { markdown } from '@codemirror/lang-markdown'
 import { EditorState } from '@codemirror/state'
 import { describe, expect, it } from 'vitest'
 
+import { componentSyntax } from './component-syntax'
 import { directiveSyntax } from './directive-syntax'
 import {
   computeDecorations,
@@ -15,7 +16,10 @@ function stateFor(doc: string, cursor?: number) {
     doc,
     // Matches MarkdownEditor: the directive extension has to be present or
     // `:::` blocks parse as paragraphs and their contents never decorate.
-    extensions: [markdown({ extensions: [directiveSyntax] }), livePreview()],
+    extensions: [
+      markdown({ extensions: [directiveSyntax, componentSyntax] }),
+      livePreview(),
+    ],
     selection: cursor === undefined ? undefined : { anchor: cursor },
   })
   return state

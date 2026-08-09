@@ -2373,3 +2373,109 @@ html[data-theme='dark'] .login-aside {
 .article-preview .md-col .md-code-pre {
   font-size: 0.74rem;
 }
+
+/* ---------- component palette ---------- */
+
+/*
+ * An insert menu rather than a button per component: there are thirty-odd of
+ * them, and the toolbar keeps only the two an author reaches for constantly.
+ */
+.component-palette {
+  position: relative;
+  display: inline-flex;
+}
+
+.component-palette > button {
+  display: inline-flex;
+  width: 31px;
+  height: 31px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.component-palette > button:hover,
+.component-palette > button[aria-expanded='true'] {
+  color: var(--red);
+  background: var(--paper);
+}
+
+.component-palette-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 300px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.14);
+}
+
+.component-palette-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-soft);
+}
+
+.component-palette-search input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  /* 1rem stops iOS zooming the whole pane when the field takes focus. */
+  font-size: 1rem;
+  outline: none;
+}
+
+.component-palette-list {
+  max-height: 320px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.component-palette-list button {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.component-palette-list button:hover,
+.component-palette-list button:focus-visible {
+  background: var(--paper);
+  outline: none;
+}
+
+.component-palette-list strong {
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.component-palette-list span {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.component-palette-empty {
+  padding: 12px 11px;
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+}
