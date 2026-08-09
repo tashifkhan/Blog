@@ -12,11 +12,15 @@ tags: ["Python", "DSA"]
 excerpt: "How do you create an arbitrary number of nested loops when you don't know the depth at compile time? Let's explore elegant solutions to this classic programming challenge."
 ---
 
+<Lede>
 Ever faced a problem where you need to generate all possible combinations of something, but the number of "levels" isn't known until runtime? Maybe you're building a product configurator, generating test cases, or exploring a search space. You need nested loops, but how many? That's determined by a variable `n`.
+</Lede>
 
 You can't write `for i in range(x): for j in range(x): for k in range(x):` because you don't know how many loops you'll need. This is where programmatic loop generation comes in - a classic computer science challenge with some elegant solutions.
 
 Let's explore the best approaches, from the most intuitive to the most Pythonic.
+
+<Toc />
 
 ## The Challenge
 
@@ -92,16 +96,25 @@ Combination: [1, 1, 0]
 Combination: [1, 1, 1]
 ```
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **Intuitive and elegant** - the code structure mirrors the concept
 - **Flexible** - easy to add conditions or modify behavior
 - **Works for any depth** (within recursion limits)
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **Stack overflow risk** - Python's default recursion limit is around 1000-3000
 - **Slight overhead** from function calls (usually negligible)
+
+</Col>
+</Cols>
 
 ## Solution 2: itertools.product (The Pythonic Way)
 
@@ -143,19 +156,30 @@ Combination: [1, 1, 0]
 Combination: [1, 1, 1]
 ```
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **Concise and Pythonic** - just a few lines
 - **Highly optimized** - implemented in C for speed
 - **No recursion limits** - uses iteration internally
 - **Memory efficient** - returns an iterator, not a list
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **Python-specific** - other languages have equivalents but different APIs
 - **Less direct control** - harder to add complex logic between levels
 
+</Col>
+</Cols>
+
+<Tip title="Recommended">
 **This is my recommended approach for most use cases.** It's clean, fast, and idiomatic Python.
+</Tip>
 
 ## Solution 3: Iterative with Manual State (The Low-Level Approach)
 
@@ -217,17 +241,26 @@ Combination: [1, 1, 0]
 Combination: [1, 1, 1]
 ```
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **No recursion limits** - purely iterative
 - **Full control** over state management
 - **Language agnostic** - similar logic works in any language
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **More complex** - harder to write correctly
 - **Less readable** - the logic isn't immediately obvious
 - **More error-prone** - easy to make off-by-one mistakes
+
+</Col>
+</Cols>
 
 ## Real-World Example: Password Cracking Simulation
 
@@ -309,30 +342,38 @@ benchmark(4, 8)
 benchmark(5, 6)
 ```
 
+<Note>
 Typical results show `itertools.product` is 2-3x faster than recursion, thanks to its C implementation.
+</Note>
 
 ## When to Use Each Approach
 
-**Use `itertools.product` when:**
+<Panel title="Use itertools.product when" tone="ok">
 
 - You're working in Python
 - You want the fastest, most memory-efficient solution
 - You need clean, maintainable code
 - You're generating simple combinations
 
-**Use recursion when:**
+</Panel>
+
+<Panel title="Use recursion when" tone="accent">
 
 - You need complex logic between levels
 - You want the most readable, self-explanatory code
 - The depth is reasonably small (< 1000)
 - You're building something educational
 
-**Use iterative when:**
+</Panel>
+
+<Panel title="Use iterative when" tone="muted">
 
 - You're in a language without good iterator libraries
 - You need absolute control over the iteration
 - You're hitting recursion limits
 - Memory is extremely constrained
+
+</Panel>
 
 ## Advanced: Varying Ranges Per Level
 
@@ -366,12 +407,14 @@ This is incredibly useful for e-commerce product variants, test case generation,
 
 ## Warning: Don't Use Dynamic Code Generation!
 
-You might be tempted to use `exec()` to build loop code as a string. **Don't do it.** It's:
+<Danger title="Don't do it">
+You might be tempted to use `exec()` to build loop code as a string. **Don't.** It's:
 
 - Dangerous (security risk)
 - Slow (interpreted at runtime)
 - Unmaintainable (debugging nightmare)
 - Completely unnecessary (we have better solutions!)
+</Danger>
 
 ```python
 # DON'T DO THIS!

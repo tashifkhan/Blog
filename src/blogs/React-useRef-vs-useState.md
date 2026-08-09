@@ -12,9 +12,15 @@ tags: ["React", "React Native", "Low Level"]
 excerpt: "Confused about when to use useRef versus useState? Let's break down these two fundamental React hooks and when to use each one."
 ---
 
+<Lede>
 If you're working with React or React Native, you've probably encountered both `useState` and `useRef`. At first glance, they might seem similar - both let you store values in your components. But use them interchangeably, and you'll quickly run into confusing bugs or performance issues.
+</Lede>
 
-The key difference? **`useState` triggers re-renders, `useRef` doesn't.** But there's much more to the story. Let's dive deep into both hooks and understand when to use each one.
+<Important title="The key difference">
+**`useState` triggers re-renders, `useRef` doesn't.** But there's much more to the story. Let's dive deep into both hooks and understand when to use each one.
+</Important>
+
+<Toc />
 
 ## useState: The Reactive State Manager
 
@@ -64,12 +70,14 @@ This reactive behavior is what makes React... well, React!
 
 ### Common useState Use Cases
 
+<Strips>
 - **Form inputs**: Text fields, checkboxes, radio buttons
 - **Toggle states**: Modal open/closed, menu expanded/collapsed
 - **API data**: Results from fetch requests
 - **Counters and timers**: Any number that updates visually
 - **Lists**: Dynamic arrays of items to display
 - **Visibility flags**: Showing/hiding components
+</Strips>
 
 ## useRef: The Silent Value Keeper
 
@@ -173,7 +181,8 @@ Let's put them side-by-side:
 
 The good news? Everything works the same way in React Native!
 
-### useState in React Native
+<Tabs>
+<Tab title="useState">
 
 ```javascript
 import React, { useState } from "react";
@@ -198,7 +207,8 @@ function LoginForm() {
 }
 ```
 
-### useRef in React Native
+</Tab>
+<Tab title="useRef">
 
 In React Native, you use refs to access native component methods:
 
@@ -222,7 +232,8 @@ function FocusableInput() {
 }
 ```
 
-Or with a ScrollView:
+</Tab>
+<Tab title="ScrollView ref">
 
 ```javascript
 import React, { useRef } from "react";
@@ -247,9 +258,15 @@ function ScrollableContent() {
 }
 ```
 
+</Tab>
+</Tabs>
+
 ## When to Use Each
 
-### Choose useState when:
+<Cols>
+<Col>
+
+**Choose `useState` when:**
 
 - The value affects what users see
 - You want automatic UI updates when data changes
@@ -257,7 +274,10 @@ function ScrollableContent() {
 - You're storing data from API calls
 - You need toggle states (open/closed, visible/hidden)
 
-### Choose useRef when:
+</Col>
+<Col>
+
+**Choose `useRef` when:**
 
 - You need to access a DOM element or native component directly
 - You're storing values that shouldn't trigger re-renders (like timer IDs)
@@ -265,12 +285,19 @@ function ScrollableContent() {
 - You need a mutable value that persists across renders
 - You're implementing imperative animations or measurements
 
+</Col>
+</Cols>
+
 ## Common Pitfall: Using useRef When You Need useState
 
 A mistake I see often:
 
+<Cols>
+<Col>
+
+❌ **Bad** — this won't update the UI
+
 ```javascript
-// ❌ Bad - This won't update the UI!
 function BrokenCounter() {
 	const countRef = useRef(0);
 
@@ -287,8 +314,14 @@ function BrokenCounter() {
 		</div>
 	);
 }
+```
 
-// ✅ Good - This updates the UI
+</Col>
+<Col>
+
+✅ **Good** — this updates the UI
+
+```javascript
 function WorkingCounter() {
 	const [count, setCount] = useState(0);
 
@@ -300,6 +333,9 @@ function WorkingCounter() {
 	);
 }
 ```
+
+</Col>
+</Cols>
 
 ## Advanced Pattern: Combining Both
 
@@ -363,9 +399,9 @@ const [state, setState] = useState(() => {
 });
 ```
 
-### useRef Doesn't Need Optimization
-
+<Note title="useRef doesn't need optimization">
 Since `useRef` doesn't trigger re-renders, there's no performance concern with updating it frequently. That's actually one of its key benefits!
+</Note>
 
 ## Wrapping Up
 

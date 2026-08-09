@@ -12,7 +12,11 @@ tags: ["React Native", "Low Level"]
 excerpt: "Understanding the fundamental shift from React Native's old bridge architecture to the new JSI-based system and why it matters."
 ---
 
+<Lede>
 If you've been working with React Native or following its evolution, you've probably heard about the "New Architecture." But what exactly changed, and why does it matter? Let's break down the fundamental differences between React Native's old bridge system and the new architecture that's revolutionizing mobile development.
+</Lede>
+
+<Toc />
 
 ## The Old Bridge Architecture: How It All Began
 
@@ -44,7 +48,13 @@ const updateButtonColor = (color) => {
 };
 ```
 
-The data would travel: **JavaScript → JSON serialization → Bridge → JSON deserialization → Native code**
+The data would travel:
+
+<Ascii label="Old bridge data path: JavaScript, JSON serialization, the bridge, JSON deserialization, then native code">
+  JavaScript ──▶ JSON serialize ──▶ ┌────────┐
+                                    │ BRIDGE │  (async, queued)
+  Native code ◀── JSON deserialize ─└────────┘
+</Ascii>
 
 ### The Problems That Emerged
 
@@ -101,7 +111,12 @@ Key improvements:
 - **Concurrent Rendering**: Supports React's Concurrent Mode, allowing the renderer to prioritize and interrupt rendering tasks
 - **Unified Native Views**: Creates a more consistent native view hierarchy that feels more like a true native app
 
-When you update your UI now, the path is: **JavaScript → JSI → Fabric (C++) → Native UI** - all synchronously!
+When you update your UI now, the path is:
+
+<Ascii label="New architecture data path: JavaScript through JSI to Fabric in C++ and straight to native UI, synchronously">
+  JavaScript ──▶ JSI ──▶ Fabric (C++) ──▶ Native UI
+                 └──────── synchronous ────────┘
+</Ascii>
 
 ### 3. TurboModules: Smarter Native Modules
 
@@ -109,16 +124,29 @@ TurboModules are the new generation of Native Modules, built on top of JSI. They
 
 **Direct Synchronous Calls**: No more asynchronous bridge crossing. If you need the battery level, you get it immediately.
 
+<Cols>
+<Col>
+
+Old way — asynchronous
+
 ```javascript
-// Old way - asynchronous
 NativeModules.BatteryModule.getBatteryLevel().then((level) =>
 	console.log(level)
 );
+```
 
-// New way - synchronous with TurboModules
+</Col>
+<Col>
+
+New way — synchronous with TurboModules
+
+```javascript
 const level = TurboModuleRegistry.get("BatteryModule").getBatteryLevel();
 console.log(level);
 ```
+
+</Col>
+</Cols>
 
 **Lazy Loading**: Modules are only loaded when you actually use them. This dramatically improves app startup time and reduces memory usage.
 
@@ -180,7 +208,9 @@ Fabric (the rendering engine) works hand-in-hand with React Fiber to translate R
 
 ## Should You Migrate?
 
+<Tip title="Short answer: yes">
 If you're working on a new React Native project, the New Architecture is the way to go. For existing apps, the migration might require some work, especially if you have custom native modules, but the performance and developer experience improvements make it worthwhile.
+</Tip>
 
 The React Native team has put significant effort into making the migration path as smooth as possible, with extensive documentation and tools to help you through the process.
 

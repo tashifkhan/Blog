@@ -12,7 +12,11 @@ tags: ["Web", "Next.js", "Astro", "React"]
 excerpt: "A comprehensive guide to understanding and optimizing Core Web Vitals from a full-stack perspective, with practical examples using modern frameworks."
 ---
 
+<Lede>
 We've all been there. You build a beautiful application, test it locally, everything feels snappy and responsive. Then you deploy it to production, check it on your phone over a 4G connection, and... it crawls. Users bounce. Your client isn't happy. Google penalizes your rankings.
+</Lede>
+
+<Toc />
 
 After years of building with everything from Flask and FastAPI backends to Next.js, React, and Astro frontends, I've learned that understanding Core Web Vitals isn't just about appeasing Google's algorithms - it's about delivering genuinely exceptional user experiences. And honestly? It's become one of the most important skills in modern web development.
 
@@ -22,11 +26,17 @@ Core Web Vitals are Google's attempt to quantify user experience through measura
 
 The three main Core Web Vitals are:
 
-**Largest Contentful Paint (LCP)** - Measures loading performance. Specifically, when the largest visible content element renders on the screen.
-
-**Interaction to Next Paint (INP)** - Measures responsiveness. How quickly your site responds to user interactions throughout the entire page lifecycle. (This recently replaced First Input Delay)
-
-**Cumulative Layout Shift (CLS)** - Measures visual stability. How much your content unexpectedly moves around while loading.
+<Phases>
+<Phase title="Largest Contentful Paint" tag="LCP" tone="accent">
+Measures loading performance. Specifically, when the largest visible content element renders on the screen.
+</Phase>
+<Phase title="Interaction to Next Paint" tag="INP" tone="warn">
+Measures responsiveness. How quickly your site responds to user interactions throughout the entire page lifecycle. (This recently replaced First Input Delay)
+</Phase>
+<Phase title="Cumulative Layout Shift" tag="CLS" tone="ok">
+Measures visual stability. How much your content unexpectedly moves around while loading.
+</Phase>
+</Phases>
 
 But the story doesn't end there. To truly understand performance, we also need to look at:
 
@@ -78,13 +88,16 @@ async def home():
     return html_shell
 ```
 
-The key? **Prioritize above-the-fold content and inline critical CSS**. Everything else can wait.
+<Tip title="The key">
+**Prioritize above-the-fold content and inline critical CSS**. Everything else can wait.
+</Tip>
 
 ## Largest Contentful Paint: The Heavy Hitter
 
 LCP is usually the hero image, a large text block, or a video thumbnail. On `tashif.codes`, if your portfolio hero image takes 4 seconds to load, that's your LCP - and you're failing Google's 2.5-second threshold.
 
-### Next.js Image Optimization
+<Tabs>
+<Tab title="Next.js">
 
 Next.js makes LCP optimization almost trivial with its Image component:
 
@@ -112,7 +125,8 @@ export default function Hero() {
 
 The `priority` prop tells Next.js to preload this image. The blur placeholder gives users something to see immediately.
 
-### Astro's Approach
+</Tab>
+<Tab title="Astro">
 
 Astro takes a different angle with its image optimization:
 
@@ -144,6 +158,9 @@ import heroImage from '../assets/hero.webp';
 ```
 
 Astro automatically optimizes images at build time, converting them to modern formats and generating multiple sizes.
+
+</Tab>
+</Tabs>
 
 ## Interaction to Next Paint: The Responsiveness Reality Check
 
@@ -261,7 +278,7 @@ video {
 }
 ```
 
-The golden rules for preventing CLS:
+<Panel title="The golden rules for preventing CLS" tone="ok">
 
 1. **Always specify dimensions** for images and videos
 2. **Reserve space** for dynamically loaded content
@@ -269,9 +286,14 @@ The golden rules for preventing CLS:
 4. **Be careful with fonts** - use `font-display: swap` wisely
 5. **Don't insert content** above existing content (unless user-initiated)
 
+</Panel>
+
 ## Framework-Specific Strategies
 
-### Next.js: Leveraging Built-in Optimization
+<Tabs>
+<Tab title="Next.js">
+
+**Leveraging built-in optimization.**
 
 ```javascript
 // next.config.js
@@ -298,9 +320,10 @@ Next.js gives you:
 - Font optimization with `next/font`
 - Automatic static optimization
 
-### Astro: Island Architecture FTW
+</Tab>
+<Tab title="Astro">
 
-Astro's "island architecture" is brilliant for Core Web Vitals:
+**Island architecture FTW.** Astro's "island architecture" is brilliant for Core Web Vitals:
 
 ```astro
 ---
@@ -328,7 +351,10 @@ import ContactForm from '../components/ContactForm';
 
 You get **zero JavaScript by default**, only hydrating interactive components when needed. It's a Core Web Vitals dream.
 
-### Flask/FastAPI: Server-Side Performance
+</Tab>
+<Tab title="Flask / FastAPI">
+
+**Server-side performance.**
 
 ```python
 from fastapi import FastAPI, BackgroundTasks
@@ -358,6 +384,9 @@ from functools import lru_cache
 async def get_cached_projects(category: str):
     return await db.fetch_projects(category)
 ```
+
+</Tab>
+</Tabs>
 
 ## Measuring Core Web Vitals
 
@@ -405,9 +434,11 @@ Tools I use:
 
 Let's talk numbers. Google's research shows:
 
-- **1-3 second load time**: 32% increase in bounce probability
-- **1-5 seconds**: 90% increase
-- **1-10 seconds**: 123% increase
+<Bars title="Increase in bounce probability, by load time">
+<Bar label="1–3 seconds" value={32} max={123} display="+32%" tone="ok" />
+<Bar label="1–5 seconds" value={90} max={123} display="+90%" tone="warn" />
+<Bar label="1–10 seconds" value={123} max={123} display="+123%" tone="danger" />
+</Bars>
 
 For `tashif.codes` or any portfolio/business site, poor Core Web Vitals mean:
 
@@ -420,13 +451,15 @@ Performance isn't just technical - it's a business imperative.
 
 ## Your Action Plan
 
-1. **Audit Now**: Run Lighthouse on your site today
-2. **Prioritize**: Focus on the worst-performing pages first
-3. **Optimize Images**: Use modern formats, appropriate sizing, lazy loading
-4. **Reduce JavaScript**: Code split, tree shake, defer non-critical scripts
-5. **Fix Layout Shifts**: Reserve space for dynamic content
-6. **Monitor Continuously**: Set up real user monitoring
-7. **Iterate**: Performance is a journey, not a destination
+<Steps>
+<Step title="Audit now">Run Lighthouse on your site today.</Step>
+<Step title="Prioritize">Focus on the worst-performing pages first.</Step>
+<Step title="Optimize images">Use modern formats, appropriate sizing, lazy loading.</Step>
+<Step title="Reduce JavaScript">Code split, tree shake, defer non-critical scripts.</Step>
+<Step title="Fix layout shifts">Reserve space for dynamic content.</Step>
+<Step title="Monitor continuously">Set up real user monitoring.</Step>
+<Step title="Iterate">Performance is a journey, not a destination.</Step>
+</Steps>
 
 ## Wrapping Up
 

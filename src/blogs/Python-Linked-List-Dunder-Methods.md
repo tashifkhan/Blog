@@ -12,9 +12,13 @@ tags: ["Python", "DSA", "Low Level", "OPPs"]
 excerpt: "Learn how to build a fully functional linked list in Python using dunder methods. Make your custom data structure behave just like built-in Python sequences!"
 ---
 
+<Lede>
 Python's "dunder methods" (double underscore methods) are one of the language's most powerful features. They let your custom classes seamlessly integrate with Python's built-in operations - using `+` for concatenation, `len()` for size, `in` for membership testing, and much more.
+</Lede>
 
 Today, we're going to build a complete linked list implementation that feels as natural to use as Python's built-in list. By the end, you'll understand how to make your custom data structures truly Pythonic.
+
+<Toc depth={2} />
 
 ## What Are Dunder Methods?
 
@@ -22,17 +26,30 @@ Dunder methods (also called "magic methods" or "special methods") are methods wi
 
 Their superpower? They allow your objects to interact naturally with Python's built-in syntax:
 
+<Cols>
+<Col>
+
+Instead of this:
+
 ```python
-# Instead of this:
 my_list.get_length()
 my_list.add_to_front(item)
 my_list.contains(item)
+```
 
-# You can write this:
+</Col>
+<Col>
+
+You can write this:
+
+```python
 len(my_list)
 my_list.append(item)
 item in my_list
 ```
+
+</Col>
+</Cols>
 
 ## Why Build a Linked List?
 
@@ -561,7 +578,10 @@ def __getitem__(self, index):
 
 ### 5. Don't Rely on `__del__`
 
-Use context managers for predictable resource cleanup:
+<Caution>
+`__del__` runs when the garbage collector gets round to it, which is not a
+moment you control. Use context managers for predictable resource cleanup:
+</Caution>
 
 ```python
 class ResourceHolder:
@@ -579,6 +599,8 @@ with ResourceHolder() as holder:
 ```
 
 ## Testing Your Implementation
+
+<Details summary="The full test suite">
 
 ```python
 def test_linked_list():
@@ -628,17 +650,21 @@ def test_linked_list():
 test_linked_list()
 ```
 
+</Details>
+
 ## What You've Learned
 
 By building this linked list, you've mastered:
 
-1. **Object initialization** with `__init__`
-2. **String representation** with `__str__` and `__repr__`
-3. **Container operations** with `__len__`, `__getitem__`, `__setitem__`, `__delitem__`
-4. **Membership testing** with `__contains__`
-5. **Operator overloading** with `__add__`
-6. **Iterator protocol** with `__iter__` and `__next__`
-7. **Destructor behavior** with `__del__`
+<Strips>
+- **Object initialization** with `__init__`
+- **String representation** with `__str__` and `__repr__`
+- **Container operations** with `__len__`, `__getitem__`, `__setitem__`, `__delitem__`
+- **Membership testing** with `__contains__`
+- **Operator overloading** with `__add__`
+- **Iterator protocol** with `__iter__` and `__next__`
+- **Destructor behavior** with `__del__`
+</Strips>
 
 ## Wrapping Up
 

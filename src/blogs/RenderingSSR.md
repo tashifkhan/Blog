@@ -12,9 +12,13 @@ tags: ["Web", "Low Level"]
 excerpt: "A deep dive into the various rendering strategies of web frameworks."
 ---
 
+<Lede>
 The world of web development is a constantly evolving landscape, and one of its most dynamic areas is how web applications are rendered. Gone are the days when the choice was simply "send HTML" or "send JavaScript." Today, we live in an era where techniques are blended, offering a spectrum of benefits and trade-offs. Understanding these different approaches is crucial for any modern web developer.
+</Lede>
 
 Let's dive into the core strategies and how various popular frameworks implement them.
+
+<Toc />
 
 ## 1. Classic Multi-Page Apps (MPA): The HTML Foundation
 
@@ -39,16 +43,25 @@ At its heart, the web was built on the Multi-Page Application (MPA) model. When 
 - Vanilla HTML pages
 - Server-side templating engines like **Flask (Jinja2)**, PHP, Ruby on Rails, Django.
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **Excellent for SEO:** Search engine crawlers get full, pre-rendered HTML immediately.
 - **Fast initial load (for static content):** No JavaScript execution required to display content.
 - **Simple architecture:** Less complexity in the client-side.
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **"Janky" navigation:** Every click results in a full page reload, leading to a blank screen or a visible loading bar.
 - **No persistent UI elements:** Elements like a media player or a chat window cannot persist across navigations without complex server-side state management.
+
+</Col>
+</Cols>
 
 ### HTMX: Modernizing the MPA
 
@@ -77,18 +90,27 @@ The rise of powerful client-side JavaScript introduced the Single-Page Applicati
 
 - **React** (without server-side rendering setup), Vue, Angular.
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **Fluid user experience:** Instantaneous navigations and smooth transitions after the initial load.
 - **Persistent UI elements:** Easy to maintain elements like video players or global chat widgets across navigations.
 - **Rich interactivity:** Ideal for complex, highly interactive applications.
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **Slow initial load:** A "waterfall" of requests (HTML -> JS -> Data) means the user sees a blank or incomplete page until all assets and data are fetched and processed.
 - **Poor SEO (historically):** Search engine crawlers struggled to index content that required JavaScript execution.
 - **Large JavaScript bundles:** The entire application's logic and often a lot of its data fetching logic must be sent to the client. This increases initial download size.
 - **Client-side burden:** Heavy reliance on the client's CPU and memory to parse and render the application.
+
+</Col>
+</Cols>
 
 ## 3. Server-Side Rendered (SSR) SPAs: Bridging the Gap
 
@@ -110,18 +132,27 @@ To address the SEO and initial load performance issues of classic SPAs, Server-S
 
 - **Next.js (using the "Pages" directory router)**, Gatsby (for static SSR), Nuxt.js, SvelteKit.
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **Better SEO:** Crawlers get full HTML upfront.
 - **Improved initial performance:** Users see content immediately; time-to-first-byte (TTFB) is good.
 - **Interactive content:** Pages become interactive after hydration.
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **"Double data" problem:** The content is sent twice: once as HTML, and again embedded in JavaScript (or fetched by JS) so the client can hydrate. This increases bundle sizes.
 - **Time to interactivity:** While the user sees content quickly, they might not be able to interact with it until the JavaScript has loaded and hydrated.
 - **Server-side dependency:** Requires a Node.js server to run the application code, which adds operational complexity compared to serving pure static files.
 - **Next.js Bundles:** SSR applications, especially using frameworks like Next.js, still ship substantial JavaScript bundles to the client. While better than a pure SPA, the _total_ amount of data (HTML + JS) can be significant, particularly due to the "hydration" step that requires re-running the same UI logic on the client.
+
+</Col>
+</Cols>
 
 ## 4. Isomorphic Rendering & Server Components: The Modern Hybrid (Next.js App Directory)
 
@@ -146,7 +177,10 @@ Isomorphic (or Universal) applications are those where the _same codebase_ can r
 
 - **Next.js (with "App" directory router and Server Components)**, Remix.
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **Optimal initial load:** Static HTML is delivered fast, and dynamic parts can stream with loading states.
 - **Reduced client-side JavaScript:** Server Components mean that logic and data fetching for parts of your UI _never_ leave the server, significantly cutting down JS bundle sizes sent to the client.
@@ -154,10 +188,16 @@ Isomorphic (or Universal) applications are those where the _same codebase_ can r
 - **Improved SEO:** Full content is available in the initial HTML.
 - **Enhanced developer experience:** Write components that decide where they run.
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **Complex infrastructure:** Requires a sophisticated server-side runtime, often requiring platforms like Vercel or Netlify that provide an "Edge Worker" to handle initial static content caching and dynamic content streaming. This can be a barrier for teams managing their own backend infrastructure.
 - **Debugging complexity:** Debugging can be more challenging due to code running in different environments.
+
+</Col>
+</Cols>
 
 ## 5. MPA-Influenced Split Execution: The "Islands" Architecture
 
@@ -178,24 +218,39 @@ The "Islands" architecture aims to blend the best of both worlds without the ful
 
 - **Astro**, Marko, Eleventy (with islands).
 
-**Pros:**
+<Cols>
+<Col>
+
+**Pros**
 
 - **Extremely fast initial page load:** Pure HTML from a CDN is nearly instantaneous.
 - **Minimal JavaScript by default:** Only the JS needed for specific interactive islands is sent, not the entire application's JS. This significantly reduces overall bundle size.
 - **Simplified deployment:** The core application can be hosted on a static CDN, with dynamic islands hitting separate API endpoints.
 - **Targeted hydration:** Only interactive islands are hydrated, avoiding the "over-hydration" problem of full SSR.
 
-**Cons:**
+</Col>
+<Col>
+
+**Cons**
 
 - **Slight delay for island content:** While the static page loads instantly, the dynamic content within an island won't appear until its specific API request and rendering process is complete.
 - **Mental model shift:** Requires thinking about components as distinct, independent units (static vs. dynamic).
 
+</Col>
+</Cols>
+
 ## Conclusion: The Blended Future
 
-The journey through web rendering strategies reveals a clear trend: the industry is striving for a harmonious blend of server-side power and client-side fluidity. There is no single "best" strategy; the optimal choice depends on your application's specific needs, budget, and development team's expertise.
+The journey through web rendering strategies reveals a clear trend: the industry is striving for a harmonious blend of server-side power and client-side fluidity.
 
+<Important>
+There is no single "best" strategy; the optimal choice depends on your application's specific needs, budget, and development team's expertise.
+</Important>
+
+<Strips>
 - For content-heavy sites needing top-tier SEO and minimal interactivity, **MPA (Flask, Vanilla HTML, HTMX)** still offers compelling simplicity and performance.
 - For highly interactive, internal dashboards or complex UIs where initial load isn't paramount, a pure **SPA (React)** can offer a fantastic developer and user experience.
 - For most modern web applications, the hybrid approaches of **SSR SPAs (Next.js Pages directory)**, **Isomorphic Rendering with Server Components (Next.js App directory)**, and **Island Architectures (Astro)** offer powerful ways to deliver fast, SEO-friendly, and interactive experiences by intelligently offloading work to the server and minimizing client-side burdens.
+</Strips>
 
 The future of web development lies in leveraging these advanced techniques to deliver user experiences that feel instantaneous and responsive, without compromising on efficiency or scalability.

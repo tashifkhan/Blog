@@ -12,7 +12,11 @@ tags: ["Python", "OOPs", "Low Level"]
 excerpt: "Everything in Python is an object - even classes themselves. Let's explore how Python creates classes internally and the fascinating role of metaclasses."
 ---
 
+<Lede>
 You've probably heard the phrase "everything in Python is an object." It's not just a catchy slogan - it's a fundamental truth about how Python works. Numbers are objects. Strings are objects. Functions are objects. But here's where it gets really interesting: **classes themselves are objects too**.
+</Lede>
+
+<Toc />
 
 If classes are objects, then something must create them, right? Just like a class creates its instances, something creates the class itself. That "something" is called a **metaclass**, and understanding this concept opens up a whole new level of Python mastery.
 
@@ -81,7 +85,8 @@ class MyClass:
 
 When Python reads this, here's what actually happens:
 
-### Step 1: Determine the Metaclass
+<Steps>
+<Step title="Determine the metaclass">
 
 Python first figures out which metaclass will be responsible for creating this class. Unless you explicitly specify otherwise, it defaults to `type`.
 
@@ -95,7 +100,8 @@ class MyClass(metaclass=CustomMetaclass):
     pass
 ```
 
-### Step 2: Prepare the Class Namespace
+</Step>
+<Step title="Prepare the class namespace">
 
 The metaclass's `__prepare__` method is called to create a dictionary that will hold the class's attributes. For `type`, this just returns an empty dictionary, but custom metaclasses can return specialized containers.
 
@@ -105,7 +111,8 @@ namespace = type.__prepare__('MyClass', (), {})
 # Returns: {}
 ```
 
-### Step 3: Execute the Class Body
+</Step>
+<Step title="Execute the class body">
 
 Python executes all the code inside the `class` block. Each method definition, class variable, and nested class gets added to the namespace dictionary.
 
@@ -118,7 +125,8 @@ namespace['display'] = <function display at 0x...>
 
 At this point, the class doesn't exist yet - we just have a dictionary full of its would-be attributes.
 
-### Step 4: Create the Class Object
+</Step>
+<Step title="Create the class object">
 
 Now comes the magic! The metaclass's `__new__` method is called with:
 
@@ -138,7 +146,8 @@ MyClass = type.__new__(
 
 This creates the actual class object and allocates memory for it.
 
-### Step 5: Initialize the Class Object
+</Step>
+<Step title="Initialize the class object">
 
 Finally, the metaclass's `__init__` method is called to perform any additional initialization:
 
@@ -147,6 +156,9 @@ type.__init__(MyClass, 'MyClass', (), namespace)
 ```
 
 After this, `MyClass` is ready to use! It's a fully-formed class object that can create instances.
+
+</Step>
+</Steps>
 
 ## Creating Classes Dynamically with `type()`
 
@@ -258,33 +270,43 @@ print(db1 is db2)  # True - same object!
 
 Let's visualize the complete picture:
 
-```
-         type (the root metaclass)
-           ↑
-           | is an instance of
-           |
-      MyClass (a class)
-           ↑
-           | is an instance of
-           |
-    my_instance (an object)
-```
+<Cols>
+<Col>
 
-And here's the inheritance hierarchy:
+<Ascii label="Instantiation chain: type creates MyClass, which creates my_instance">
+     type (the root metaclass)
+       ↑
+       | is an instance of
+       |
+  MyClass (a class)
+       ↑
+       | is an instance of
+       |
+my_instance (an object)
+</Ascii>
 
-```
-       object (the root base class)
-           ↑
-           | inherits from
-           |
-      MyClass
-           ↑
-           | inherits from
-           |
-    (instances don't inherit, they instantiate)
-```
+</Col>
+<Col>
 
-Fun fact: `type` itself inherits from `object`, and `object` is an instance of `type`. It's a beautiful circular relationship that forms the foundation of Python's object model!
+<Ascii label="Inheritance chain: MyClass inherits from object; instances instantiate rather than inherit">
+   object (the root base class)
+       ↑
+       | inherits from
+       |
+  MyClass
+       ↑
+       | inherits from
+       |
+(instances don't inherit,
+ they instantiate)
+</Ascii>
+
+</Col>
+</Cols>
+
+<Note title="Fun fact">
+`type` itself inherits from `object`, and `object` is an instance of `type`. It's a beautiful circular relationship that forms the foundation of Python's object model!
+</Note>
 
 ```python
 >>> isinstance(type, object)
@@ -297,7 +319,9 @@ True
 
 ## When Should You Use Metaclasses?
 
-Here's the honest truth: **most of the time, you shouldn't**. As Python core developer Tim Peters famously said:
+<Caution title="Honest truth">
+**Most of the time, you shouldn't.** As Python core developer Tim Peters famously said:
+</Caution>
 
 > "Metaclasses are deeper magic than 99% of users should ever worry about. If you wonder whether you need them, you don't."
 
@@ -316,12 +340,16 @@ For everyday programming, simpler alternatives usually suffice:
 
 ## Key Takeaways
 
+<Panel title="Key takeaways" tone="accent">
+
 1. **Everything in Python is an object** - including classes themselves
 2. **`type` is the default metaclass** that creates classes
 3. **Class creation is a multi-step process** involving `__prepare__`, `__new__`, and `__init__`
 4. **You can create classes dynamically** using `type()` directly
 5. **Custom metaclasses let you control class creation** for advanced use cases
 6. **Use metaclasses sparingly** - they're powerful but add complexity
+
+</Panel>
 
 Understanding how Python creates classes deepens your knowledge of the language's internals and opens up powerful metaprogramming capabilities. Even if you never write a custom metaclass, knowing how they work helps you understand Python's elegant object model.
 
