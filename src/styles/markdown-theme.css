@@ -412,9 +412,15 @@
   border-color: var(--theme-border);
 }
 
+/*
+ * An unselected tab label sits on the tinted strip, not the page, so the muted
+ * treatment used elsewhere measured 2.94:1 against it — under AA. Nearly opaque
+ * here; the selected tab is distinguished by its accent colour and underline
+ * rather than by the others being faded out.
+ */
 .markdown-body .md-tab-button {
   font-size: calc(var(--reader-font-scale, 1) * 0.82rem);
-  color: color-mix(in oklab, var(--theme-text) 70%, transparent);
+  color: color-mix(in oklab, var(--theme-text) 88%, transparent);
 }
 
 .markdown-body .md-tab-button:hover {
