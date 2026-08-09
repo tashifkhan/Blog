@@ -1,3 +1,5 @@
+import { COMPONENTS, type ComponentSpec } from '../markdown/components'
+
 /**
  * Pure text transforms behind the formatting toolbar and its shortcuts.
  *
@@ -184,3 +186,59 @@ export const TWO_COL_TEMPLATE = [
   ':::',
   '::::',
 ].join('\n')
+
+/**
+ * A ready-to-edit snippet for a component, derived from its registry entry.
+ *
+ * Generated rather than hand-written so a component added to `components.ts`
+ * appears in the insert palette with a correct skeleton and no edit here.
+ * Required attributes are emitted with empty values to fill in; optional ones
+ * are left out, since an author who wants a tilt can add `tilt={-2}` but should
+ * not have to delete six attributes they did not ask for.
+ */
+export function componentSnippet(spec: ComponentSpec): string {
+  const attrs = Object.entries(spec.attrs)
+    .filter(([, attr]) => attr.required)
+    .map(([name, attr]) => {
+      if (attr.type === 'number') return `${name}={0}`
+      // A required enum is more useful pre-filled with something valid than as
+      // an empty string the validator will immediately reject.
+      if (attr.type === 'enum' && attr.values?.length) {
+        return `${name}="${attr.values[0]}"`
+      }
+      return `${name}=""`
+    })
+
+  const open = `<${spec.name}${attrs.length ? ` ${attrs.join(' ')}` : ''}`
+
+  // No body: the tag closes itself, and the caret goes after it.
+  if (spec.body === 'none') return `${open} />${CARET}`
+
+  // A required child means the useful skeleton is the pair, not the shell.
+  if (spec.children) {
+    const child = COMPONENTS.find((entry) => entry.name === spec.children!.name)
+    const inner = child ? componentSnippet(child) : CARET
+    const count = Math.max(1, spec.children.min ?? 1)
+    // `insertTemplate` places the caret at the first marker and leaves any
+    // others as literal text, so only the first child keeps one.
+    const children = Array.from({ length: count }, (_, index) =>
+      index === 0 ? inner : inner.split(CARET).join(''),
+    )
+    return [`${open}>`, ...children, `</${spec.name}>`].join('\n')
+  }
+
+  return [`${open}>`, CARET, `</${spec.name}>`].join('\n')
+}
+
+/** Every component an author can insert, in registry order. */
+export function componentPalette(): Array<{
+  name: string
+  describe: string
+  snippet: string
+}> {
+  return COMPONENTS.map((spec) => ({
+    name: spec.name,
+    describe: spec.describe,
+    snippet: componentSnippet(spec),
+  }))
+}

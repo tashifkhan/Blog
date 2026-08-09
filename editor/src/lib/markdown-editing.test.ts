@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
+import { COMPONENTS } from '../markdown/components'
+import { validateDocument } from '../markdown/validate'
+
 import { validateDirectives } from '../markdown/validate'
 import {
   CALLOUT_TEMPLATE,
+  CARET,
   TWO_COL_TEMPLATE,
+  componentPalette,
+  componentSnippet,
   insertBlock,
   insertLink,
   insertTemplate,
@@ -110,6 +116,81 @@ describe('insertTemplate', () => {
     for (const template of [CALLOUT_TEMPLATE, TWO_COL_TEMPLATE]) {
       const { body } = insertTemplate(template)('', 0, 0)
       expect(validateDirectives(body)).toEqual([])
+    }
+  })
+})
+
+describe('componentSnippet', () => {
+  const spec = (name: string) =>
+    COMPONENTS.find((entry) => entry.name === name)!
+
+  it('emits exactly one caret marker per snippet', () => {
+    // `insertTemplate` replaces only the first, so a second would ship as the
+    // literal text `$0` into the author's document.
+    for (const entry of componentPalette()) {
+      expect(
+        (entry.snippet.match(/\$0/g) ?? []).length,
+        `${entry.name} snippet`,
+      ).toBe(1)
+    }
+  })
+
+  it('covers every registered component', () => {
+    expect(componentPalette()).toHaveLength(COMPONENTS.length)
+  })
+
+  it('self-closes a component with no body', () => {
+    expect(componentSnippet(spec('Tape'))).toBe(`<Tape />${CARET}`)
+  })
+
+  it('includes required attributes and omits optional ones', () => {
+    // `label` is required; `level` and `score` have defaults.
+    expect(componentSnippet(spec('Meter'))).toBe(
+      [`<Meter label="">`, CARET, '</Meter>'].join('\n'),
+    )
+  })
+
+  it('pre-fills a required enum with a valid value', () => {
+    expect(componentSnippet(spec('Embed'))).toContain('type="youtube"')
+  })
+
+  it('writes a required child rather than an empty shell', () => {
+    expect(componentSnippet(spec('Steps'))).toBe(
+      ['<Steps>', '<Step>', CARET, '</Step>', '</Steps>'].join('\n'),
+    )
+  })
+
+  it('emits the minimum number of required children', () => {
+    const snippet = componentSnippet(spec('Cols'))
+    expect(snippet.match(/<Col>/g)).toHaveLength(2)
+  })
+
+  it('produces a structurally valid snippet', () => {
+    for (const entry of componentPalette()) {
+      const spec = COMPONENTS.find((item) => item.name === entry.name)!
+      let body = entry.snippet.split(CARET).join('body')
+
+      // A component that declares a parent is meant to be inserted inside one —
+      // adding a third column, say — so it is checked in that context. On its
+      // own the validator correctly rejects it, which is the point of the rule.
+      if (spec.parents?.length) {
+        const parent = spec.parents[0]
+        body = [`<${parent}>`, body, `</${parent}>`].join('\n')
+      }
+
+      // Required string attributes are left empty for the author to fill, so a
+      // fresh snippet can legitimately fail an id or enum check. What must not
+      // happen is a structural error: an unclosed or misplaced tag.
+      const structural = validateDocument(body).filter(
+        (issue) =>
+          issue.message.includes('never closed') ||
+          issue.message.includes('must sit directly inside') ||
+          issue.message.includes('must start its own line') ||
+          issue.message.includes('may only contain'),
+      )
+      expect(structural, `${entry.name}: ${JSON.stringify(structural)}`).toEqual(
+        [],
+      )
     }
   })
 })

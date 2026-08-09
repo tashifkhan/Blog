@@ -9,6 +9,7 @@ import {
 } from '@codemirror/view'
 import { type Ref, useEffect, useImperativeHandle, useRef } from 'react'
 
+import { componentSyntax } from '../lib/component-syntax'
 import { directiveSyntax } from '../lib/directive-syntax'
 import {
   type AssetMap,
@@ -87,7 +88,7 @@ export function MarkdownEditor({
           history(),
           drawSelection(),
           keymap.of([...historyKeymap, indentWithTab]),
-          markdown({ extensions: [directiveSyntax] }),
+          markdown({ extensions: [directiveSyntax, componentSyntax] }),
           EditorView.lineWrapping,
           EditorView.contentAttributes.of({ 'aria-label': initial.ariaLabel }),
           initial.placeholder

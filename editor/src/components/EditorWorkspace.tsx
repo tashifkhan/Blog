@@ -66,6 +66,7 @@ import {
   prefixLines,
   wrapSelection,
 } from '../lib/markdown-editing'
+import { ComponentPalette } from './ComponentPalette'
 import {
   MarkdownEditor,
   type MarkdownEditorHandle,
@@ -1177,6 +1178,9 @@ export function EditorWorkspace({
               >
                 <Columns2 size={17} aria-hidden="true" />
               </ToolButton>
+              <ComponentPalette
+                onInsert={(snippet) => applyEdit(insertTemplate(snippet))}
+              />
             </div>
           </div>
 
