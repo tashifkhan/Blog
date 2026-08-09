@@ -970,13 +970,10 @@ fetchPaginatedUsers()
 
 In this example:
 
-    1. We define `pageNumber` and `pageSize`.
-
-    2. We calculate `skipAmount` to be `(2 - 1) * 10 = 10`.
-
-    3. The Prisma query then fetches 10 (`take`) users after skipping the first 10 (`skip`) users, effectively giving us records 11-20.
-
-    4. Using `orderBy` is crucial for stable and predictable pagination. Without it, the order of records isn't guaranteed, and pages could show duplicate or miss records between requests.
+1. We define `pageNumber` and `pageSize`.
+2. We calculate `skipAmount` to be `(2 - 1) * 10 = 10`.
+3. The Prisma query then fetches 10 (`take`) users after skipping the first 10 (`skip`) users, effectively giving us records 11-20.
+4. Using `orderBy` is crucial for stable and predictable pagination. Without it, the order of records isn't guaranteed, and pages could show duplicate or miss records between requests.
 
 ---
 
