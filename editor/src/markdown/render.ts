@@ -576,6 +576,11 @@ function needsHeadings(source: string): boolean {
   return false
 }
 
+/** Resolve Markdown backslash escapes, which only ever precede punctuation. */
+function unescapeMarkdown(text: string): string {
+  return text.replace(/\\([!-/:-@[-`{-~])/g, '$1')
+}
+
 /** Heading anchors for a table of contents, in document order. */
 export function extractHeadings(
   content: string,
@@ -598,12 +603,17 @@ export function extractHeadings(
     if (tokens[index].type !== 'heading_open') continue
     const raw = tokens[index + 1]?.content ?? ''
     const { text, id: explicit } = parseExplicitHeadingId(raw)
-    const base = explicit ?? (slugifyHeading(text) || 'section')
+    // The inline token carries the heading's *source*, so a backslash-escaped
+    // character is still escaped here while the rendered heading shows the
+    // character itself. Without this a `\*` in a title reaches a table of
+    // contents as a stray backslash.
+    const plain = unescapeMarkdown(text)
+    const base = explicit ?? (slugifyHeading(plain) || 'section')
     const seen = slugs.get(base) ?? 0
     slugs.set(base, seen + 1)
     headings.push({
       depth: Number(tokens[index].tag.slice(1)),
-      text,
+      text: plain,
       slug: seen === 0 ? base : `${base}-${seen}`,
     })
   }

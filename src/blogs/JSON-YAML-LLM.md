@@ -14,9 +14,19 @@ excerpt: "Want to cut your LLM API costs by 56%? Try this one formatting change.
 
 ## A Deep Dive into Token Efficiency and Cost Optimization
 
+<Lede>
 Large language models have revolutionized how we build applications, but the cost of API calls remains a significant concern for developers and organizations operating at scale. While most optimization discussions focus on prompt engineering or model selection, a frequently overlooked factor dramatically impacts both cost and reliability: the choice between JSON and YAML for structured data.
+</Lede>
 
 This comprehensive technical analysis examines why YAML consistently outperforms JSON for LLM applications, backed by tokenization theory, real-world benchmarks, and production case studies.
+
+<Kpi cols={3}>
+<Stat value="56.6%" label="fewer tokens" tone="ok" />
+<Stat value="106 → 46" label="tokens per call" tone="accent" />
+<Stat value="$64,800" label="saved / year on Opus" tone="alt" />
+</Kpi>
+
+<Toc depth={2} />
 
 ---
 
@@ -96,7 +106,9 @@ Token contributions:
 - **Colons**: Only after keys (12 tokens, same as JSON)
 - **Indentation and dashes**: Use whitespace tokens already counted
 
+<Important>
 The same data structure requires approximately 46 tokens in YAML versus 106 tokens in pretty-printed JSON—a 56.6% reduction.
+</Important>
 
 ---
 
@@ -108,27 +120,32 @@ Elya Livshitz conducted systematic measurements comparing identical data structu
 
 **Simple Example Results:**
 
-- JSON: 100 tokens
-- YAML: 50 tokens
-- **Savings: 50%**
+<Kpi cols={3}>
+<Stat value="100" label="JSON tokens" />
+<Stat value="50" label="YAML tokens" tone="ok" />
+<Stat value="50%" label="saved" tone="accent" />
+</Kpi>
 
 **Scaled Production Scenario:**
 
 - 1 million API calls per month
 - 190 token reduction per request
 - GPT-4 pricing ($0.03/1k input, $0.06/1k output)
-- **Monthly savings: $11,400**
-- **Annual savings: $136,800**
+
+<Kpi cols={2}>
+<Stat value="$11,400" label="monthly savings" tone="ok" />
+<Stat value="$136,800" label="annual savings" tone="ok" />
+</Kpi>
 
 ### Case Study 2: OpenAI Community Benchmark
 
 A comprehensive tiktoken analysis converted a large production file across formats:
 
-| Format   | Token Count | Reduction vs JSON |
-| -------- | ----------- | ----------------- |
-| JSON     | 13,869      | Baseline          |
-| YAML     | 12,333      | 11.1%             |
-| Markdown | 11,612      | 16.3%             |
+<Bars title="Tokens for the same production file">
+<Bar label="JSON" value={13869} max={13869} display="13,869" tone="danger" />
+<Bar label="YAML" value={12333} max={13869} display="12,333 (−11.1%)" tone="warn" />
+<Bar label="Markdown" value={11612} max={13869} display="11,612 (−16.3%)" tone="ok" />
+</Bars>
 
 This benchmark demonstrated that format selection compounds over repeated operations—each time the same payload transmits, the savings accumulate.
 
@@ -238,9 +255,9 @@ Consider a typical API workflow:
 | Google    | Gemini 2.5 Flash  | $306.00         | $132.80         | $173            | **$2,076**     |
 | Google    | Gemini 2.0 Flash  | $53.00          | $23.00          | $30             | **$360**       |
 
-**Token Reduction: 56.6% across all models**
-
+<Tip title="Token reduction: 56.6% across all models">
 The savings are especially dramatic for higher-tier models like Claude Opus 4.1, where the same workload costs $5,400 less per month with YAML.
+</Tip>
 
 ### Scaling Effects
 
@@ -263,7 +280,9 @@ Organizations processing 10M+ API calls monthly see proportionally larger saving
 | Anthropic | Claude Sonnet 4.5 | $1,296,000     |
 | Anthropic | Claude Opus 4.1   | $6,480,000     |
 
+<Panel title="At enterprise scale" tone="ok">
 For enterprise applications using premium models like Claude Opus 4.1 at scale, YAML adoption can save millions annually.
+</Panel>
 
 ---
 
