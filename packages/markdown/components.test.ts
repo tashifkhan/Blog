@@ -6,7 +6,7 @@ import { validateDocument } from './validate'
 
 /** Every component, with a minimal valid document that exercises it. */
 const SAMPLES: Record<string, string> = {
-  Cols: '<Cols>\n<Col>a</Col>\n<Col>b</Col>\n</Cols>',
+  Cols: '<Cols cols={3}>\n<Col>a</Col>\n<Col>b</Col>\n<Col>c</Col>\n</Cols>',
   Col: '<Cols>\n<Col>a</Col>\n<Col>b</Col>\n</Cols>',
   Note: '<Note>body</Note>',
   Tip: '<Tip>body</Tip>',
@@ -14,7 +14,8 @@ const SAMPLES: Record<string, string> = {
   Warning: '<Warning>body</Warning>',
   Caution: '<Caution>body</Caution>',
   Danger: '<Danger>body</Danger>',
-  Panel: '<Panel title="Setup" tape tilt={-3}>body</Panel>',
+  Panel: '<Panel title="Setup" icon="zap" tape tilt={-3}>body</Panel>',
+  Icon: '<Icon name="languages" size={20} />',
   InkBand: '<InkBand title="House rules">body</InkBand>',
   Strips: '<Strips>\n- one\n- two\n</Strips>',
   Toc: '## Alpha\n\n## Beta\n\n<Toc />',
@@ -93,7 +94,8 @@ describe('resolveAttrs', () => {
 
   it('applies defaults for absent attributes', () => {
     const cols = COMPONENTS.find((spec) => spec.name === 'Cols')!
-    expect(resolveAttrs(cols, {}).ratio).toBe('1:1')
+    expect(resolveAttrs(cols, {}).cols).toBe(2)
+    expect(resolveAttrs(cols, {}).ratio).toBeUndefined()
   })
 
   it('reads a bare attribute as boolean true', () => {
@@ -110,7 +112,59 @@ describe('resolveAttrs', () => {
 
   it('falls back to the default for an unknown enum value', () => {
     const cols = COMPONENTS.find((spec) => spec.name === 'Cols')!
-    expect(resolveAttrs(cols, { ratio: '9:1' }).ratio).toBe('1:1')
+    // ratio has no default — an unknown value is discarded so equal `cols` take over
+    expect(resolveAttrs(cols, { ratio: '9:1' }).ratio).toBeUndefined()
+  })
+})
+
+describe('Cols multi-column', () => {
+  it('renders three equal columns from cols={3}', () => {
+    const html = renderMarkdown(
+      '<Cols cols={3}>\n<Col>a</Col>\n<Col>b</Col>\n<Col>c</Col>\n</Cols>',
+    )
+    expect(html).toContain('md-cols')
+    expect(html).toContain('--md-grid-cols: 1fr 1fr 1fr')
+    expect(html.match(/class="md-col"/g)).toHaveLength(3)
+  })
+
+  it('honours a three-track ratio', () => {
+    const html = renderMarkdown(
+      '<Cols ratio="2:1:1">\n<Col>a</Col>\n<Col>b</Col>\n<Col>c</Col>\n</Cols>',
+    )
+    expect(html).toContain('--md-grid-cols: 2fr 1fr 1fr')
+  })
+
+  it('keeps the two-column default when neither cols nor ratio is set', () => {
+    const html = renderMarkdown('<Cols>\n<Col>a</Col>\n<Col>b</Col>\n</Cols>')
+    expect(html).toContain('--md-grid-cols: 1fr 1fr')
+  })
+})
+
+describe('icons', () => {
+  it('renders a Lucide-style icon on a Panel', () => {
+    const html = renderMarkdown('<Panel title="Input" icon="arrow-down-left">body</Panel>')
+    expect(html).toContain('md-panel-icon')
+    expect(html).toContain('<svg')
+    expect(html).toContain('md-panel--icon')
+  })
+
+  it('renders a standalone Icon', () => {
+    const html = renderMarkdown('<Icon name="languages" />')
+    expect(html).toContain('md-icon-wrap')
+    expect(html).toContain('<svg')
+  })
+
+  it('accepts common aliases', () => {
+    const html = renderMarkdown('<Icon name="translate" />')
+    expect(html).toContain('<svg')
+    expect(html).not.toContain('md-icon-missing')
+  })
+
+  it('flags an unknown icon at publish time', () => {
+    expect(
+      validateDocument('<Panel title="x" icon="not-a-real-icon">y</Panel>')[0]
+        .message,
+    ).toContain('not a known Lucide-style icon')
   })
 })
 

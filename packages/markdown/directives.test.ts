@@ -78,7 +78,8 @@ describe('two-col rendering', () => {
 
   it('emits a grid with the requested tracks', () => {
     const html = renderMarkdown(source)
-    expect(html).toContain('class="md-two-col"')
+    expect(html).toContain('md-two-col')
+    expect(html).toContain('md-cols')
     expect(html).toContain('--md-grid-cols: 2fr 1fr')
     expect(html.match(/class="md-col"/g)).toHaveLength(2)
   })
@@ -92,6 +93,7 @@ describe('two-col rendering', () => {
   })
 
   it('falls back to equal columns for an unsupported ratio', () => {
+    // Unknown ratio is discarded; equal columns from the default `cols={2}` apply.
     const html = renderMarkdown('::::two-col{ratio="9:1"}\n:::col\na\n:::\n::::')
     expect(html).toContain('--md-grid-cols: 1fr 1fr')
   })

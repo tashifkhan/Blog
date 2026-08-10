@@ -19,6 +19,7 @@ import {
   DIRECTIVE_NAMES,
   embedUrl,
   findByTag,
+  isIconName,
 } from './components'
 import {
   codeFenceMarker,
@@ -118,6 +119,23 @@ function checkAttrs(
         message: `"${attrs.id}" is not a valid ${attrs.type} id.`,
       })
     }
+  }
+
+  // Icon names are free strings in the attr schema (the enum would be huge),
+  // so unknown names are checked here against the Lucide-style registry.
+  const iconAttr =
+    attrs.icon !== undefined
+      ? attrs.icon
+      : spec.name === 'Icon' && attrs.name !== undefined
+        ? attrs.name
+        : undefined
+  if (iconAttr !== undefined && !isIconName(String(iconAttr))) {
+    issues.push({
+      line,
+      message:
+        `"${iconAttr}" is not a known Lucide-style icon. ` +
+        `Examples: arrow-up-right, arrow-down-left, languages, zap, file-text, download.`,
+    })
   }
 }
 

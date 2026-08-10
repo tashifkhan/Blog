@@ -53,11 +53,17 @@ def calculate_bounds(data: list[int]) -> tuple[int, int]:
 ::::
 ````
 
-Ratios: `1:1` (default), `2:1`, `1:2`. Callouts: `note`, `tip`, `important`,
-`warning`, `caution`, `danger`, each taking an optional title as either
-`:::tip Performance` or `:::tip{title="Performance"}`. GitHub's
-`> [!NOTE]` blockquote form renders identically, so posts still read correctly
-on GitHub.
+Equal columns: `<Cols cols={2|3|4}>` (default 2). Unequal tracks via `ratio`:
+`1:1`, `2:1`, `1:2`, `1:1:1`, `2:1:1`, `1:2:1`, `1:1:2`, `1:1:1:1`, and a few
+more. Callouts: `note`, `tip`, `important`, `warning`, `caution`, `danger`,
+each taking an optional title as either `:::tip Performance` or
+`:::tip{title="Performance"}`. GitHub's `> [!NOTE]` blockquote form renders
+identically, so posts still read correctly on GitHub.
+
+Panels (and steps, phases, stats) accept a Lucide-style `icon` attribute —
+`icon="arrow-up-right"`, `icon="languages"`, `icon="zap"` — rendered as inline
+SVG so no icon package is required at render time. A standalone `<Icon name="…">`
+tag is also available.
 
 Nesting works with equal-length fences, but writing the outer fence with one
 extra colon (`::::` around `:::`) keeps it unambiguous to a human reader.
@@ -177,7 +183,7 @@ lets `:::tip Performance` work without braces.
 | Layout | `Cols` / `Col`, `Panel`, `InkBand`, `Strips` |
 | Structure | `Toc`, `Steps` / `Step`, `Phases` / `Phase`, `Checklist`, `Lede`, `Details` |
 | Data | `Meters` / `Meter`, `Kpi` / `Stat`, `Bars` / `Bar`, `Legend` |
-| Marginalia | `Sticker`, `Hand`, `Tape`, `Mark` |
+| Marginalia | `Sticker`, `Hand`, `Tape`, `Mark`, `Icon` |
 | Media | `Figure`, `Ascii`, `Embed` |
 | Interaction | `Tabs` / `Tab` |
 | Callouts | `Note`, `Tip`, `Important`, `Warning`, `Caution`, `Danger` |

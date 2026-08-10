@@ -17,8 +17,10 @@
  * parser to do it.
  */
 
-import { CALLOUT_ICONS } from './icons'
+import { CALLOUT_ICONS, getIcon, ICON_NAMES, isIconName } from './icons'
 import { cx, type MarkdownTheme } from './theme'
+
+export { ICON_NAMES, isIconName, getIcon } from './icons'
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -99,13 +101,36 @@ export type ComponentSpec = {
 // Shared attribute shapes
 // ---------------------------------------------------------------------------
 
+/**
+ * Track templates for `Cols`.
+ *
+ * Equal-column layouts are also available via the `cols` number attribute
+ * (`cols={3}` → three equal tracks). Prefer `cols` when the tracks match; use
+ * `ratio` when they should not.
+ */
 export const COLUMN_RATIOS = {
   '1:1': '1fr 1fr',
   '2:1': '2fr 1fr',
   '1:2': '1fr 2fr',
+  '1:1:1': '1fr 1fr 1fr',
+  '2:1:1': '2fr 1fr 1fr',
+  '1:2:1': '1fr 2fr 1fr',
+  '1:1:2': '1fr 1fr 2fr',
+  '3:1:1': '3fr 1fr 1fr',
+  '1:1:1:1': '1fr 1fr 1fr 1fr',
+  '2:1:1:1': '2fr 1fr 1fr 1fr',
+  '1:1:1:2': '1fr 1fr 1fr 2fr',
 } as const
 
 export type ColumnRatio = keyof typeof COLUMN_RATIOS
+
+/** Shared optional Lucide-style icon attribute used by several components. */
+const ICON_ATTR: Record<string, AttrSpec> = {
+  icon: {
+    type: 'string',
+    describe: `Lucide-style icon name (e.g. arrow-up-right, languages, zap). Known: ${ICON_NAMES.slice(0, 8).join(', ')}, …`,
+  },
+}
 
 export const CALLOUT_NAMES = [
   'note',
@@ -213,23 +238,34 @@ export const COMPONENTS: readonly ComponentSpec[] = [
     aliases: ['two-col'],
     body: 'block',
     attrs: {
+      cols: {
+        type: 'number',
+        default: 2,
+        describe: 'Equal columns, 2 to 4 (ignored when ratio is set)',
+      },
       ratio: {
         type: 'enum',
         values: Object.keys(COLUMN_RATIOS),
-        default: '1:1',
-        describe: 'Relative track widths',
+        describe: 'Relative track widths; overrides equal cols when set. Positional: ::::cols 2:1',
       },
     },
+    // Positional stays `ratio` so published posts (`::::cols 2:1`) keep working.
+    // Equal multi-column layouts use the explicit attribute: `<Cols cols={3}>`.
     positional: 'ratio',
-    children: { name: 'Col', min: 2, max: 2 },
-    describe: 'Two-column grid that collapses on narrow containers',
+    children: { name: 'Col', min: 2, max: 4 },
+    describe: 'Responsive multi-column grid (2–4 cols) that stacks on narrow containers',
     render: ({ attrs, theme }) => {
-      const ratio = String(attrs.ratio) as ColumnRatio
-      const columns = COLUMN_RATIOS[ratio] ?? COLUMN_RATIOS['1:1']
+      // Prefer an explicit ratio; otherwise build equal tracks from `cols`.
+      const ratioKey = attrs.ratio !== undefined ? String(attrs.ratio) : ''
+      const fromRatio = (COLUMN_RATIOS as Record<string, string>)[ratioKey]
+      const equalCount = clamp(num(attrs.cols, 2), 2, 4)
+      const columns =
+        fromRatio ?? Array.from({ length: equalCount }, () => '1fr').join(' ')
       // The tracks arrive as a custom property so the single-column fallback
       // and its breakpoint can live in CSS, where a container query is usable.
+      // `md-two-col` is kept as a class alias so existing host themes still match.
       return {
-        open: `<div class="${cx('md-two-col', theme.twoCol)}" style="--md-grid-cols: ${columns}">`,
+        open: `<div class="${cx('md-cols md-two-col', theme.twoCol)}" style="--md-grid-cols: ${columns}">`,
         close: '</div>',
       }
     },
@@ -255,27 +291,75 @@ export const COMPONENTS: readonly ComponentSpec[] = [
     body: 'block',
     attrs: {
       title: { type: 'string', describe: 'Optional heading above the body' },
+      ...ICON_ATTR,
       tape: { type: 'boolean', describe: 'Draw a strip of masking tape on top' },
       tilt: { type: 'number', describe: 'Rotation in degrees, -15 to 15' },
       tone: { type: 'enum', values: TONES, describe: 'Accent colour' },
     },
     positional: 'title',
-    describe: 'Bordered card, optionally taped and tilted',
+    describe: 'Bordered card, optionally with a Lucide icon, taped and tilted',
     render: ({ attrs, theme }) => {
       const tone = attrs.tone ? ` md-panel--${attrs.tone}` : ''
       const tape = attrs.tape
         ? `<span class="md-tape" aria-hidden="true"></span>`
+        : ''
+      const icon = getIcon(attrs.icon ? String(attrs.icon) : '', {
+        size: 22,
+        className: 'md-icon md-panel-icon-svg',
+      })
+      const iconHtml = icon
+        ? `<div class="md-panel-icon" aria-hidden="true">${icon}</div>`
         : ''
       const title = attrs.title
         ? `<div class="md-panel-title">${attrText(attrs.title)}</div>`
         : ''
       return {
         open:
-          `<div class="${cx(`md-panel${tone}`, theme.panel)}"${styleVars(rotateVar(attrs.tilt))}>` +
+          `<div class="${cx(`md-panel${tone}${icon ? ' md-panel--icon' : ''}`, theme.panel)}"${styleVars(rotateVar(attrs.tilt))}>` +
           tape +
+          iconHtml +
           title +
           `<div class="md-panel-body">`,
         close: '</div></div>',
+      }
+    },
+  },
+  {
+    name: 'Icon',
+    directive: 'icon',
+    body: 'none',
+    placement: 'both',
+    attrs: {
+      name: {
+        type: 'string',
+        required: true,
+        describe: 'Lucide-style icon name (arrow-up-right, languages, zap, …)',
+      },
+      size: {
+        type: 'number',
+        default: 24,
+        describe: 'Pixel size, 12 to 64',
+      },
+    },
+    positional: 'name',
+    describe: 'Inline Lucide-style SVG icon',
+    render: ({ attrs, inline, theme }) => {
+      const size = clamp(num(attrs.size, 24), 12, 64)
+      const svg = getIcon(attrs.name ? String(attrs.name) : '', {
+        size,
+        className: 'md-icon md-icon-standalone',
+      })
+      // Unknown names fail open at render time; validate.ts blocks publish.
+      if (!svg) {
+        return {
+          open: `<span class="md-icon-missing" title="Unknown icon">${attrText(attrs.name)}</span>`,
+          close: '',
+        }
+      }
+      const tag = inline ? 'span' : 'div'
+      return {
+        open: `<${tag} class="${cx('md-icon-wrap', theme.icon)}">${svg}`,
+        close: `</${tag}>`,
       }
     },
   },
@@ -376,20 +460,30 @@ export const COMPONENTS: readonly ComponentSpec[] = [
     parents: ['Steps'],
     attrs: {
       title: { type: 'string', describe: 'Short label for the step' },
+      ...ICON_ATTR,
     },
     positional: 'title',
     describe: 'One step; numbering is automatic',
-    render: ({ attrs, theme }) => ({
+    render: ({ attrs, theme }) => {
       // The number comes from a CSS counter, so inserting a step in the middle
       // does not mean renumbering the ones after it by hand.
-      open:
-        `<li class="${cx('md-step', theme.step)}">` +
-        (attrs.title
-          ? `<p class="md-step-title">${attrText(attrs.title)}</p>`
-          : '') +
-        `<div class="md-step-body">`,
-      close: '</div></li>',
-    }),
+      const icon = getIcon(attrs.icon ? String(attrs.icon) : '', {
+        size: 16,
+        className: 'md-icon md-step-icon-svg',
+      })
+      const title = attrs.title
+        ? `<p class="md-step-title">${icon}${attrText(attrs.title)}</p>`
+        : icon
+          ? `<p class="md-step-title md-step-title--icon-only">${icon}</p>`
+          : ''
+      return {
+        open:
+          `<li class="${cx('md-step', theme.step)}">` +
+          title +
+          `<div class="md-step-body">`,
+        close: '</div></li>',
+      }
+    },
   },
   {
     name: 'Phases',
@@ -412,18 +506,23 @@ export const COMPONENTS: readonly ComponentSpec[] = [
       title: { type: 'string', required: true, describe: 'Phase name' },
       tag: { type: 'string', describe: 'Short chip, e.g. a date or "now"' },
       tone: { type: 'enum', values: TONES, describe: 'Accent colour' },
+      ...ICON_ATTR,
     },
     positional: 'title',
-    describe: 'One phase, with an optional chip',
+    describe: 'One phase, with an optional chip and Lucide icon',
     render: ({ attrs, theme }) => {
       const tone = attrs.tone ? ` md-phase--${attrs.tone}` : ''
       const tag = attrs.tag
         ? `<span class="md-phase-tag">${attrText(attrs.tag)}</span>`
         : ''
+      const icon = getIcon(attrs.icon ? String(attrs.icon) : '', {
+        size: 16,
+        className: 'md-icon md-phase-icon-svg',
+      })
       return {
         open:
           `<section class="${cx(`md-phase${tone}`, theme.phase)}">` +
-          `<div class="md-phase-head">${tag}<span class="md-phase-name">${attrText(attrs.title)}</span></div>` +
+          `<div class="md-phase-head">${icon}${tag}<span class="md-phase-name">${attrText(attrs.title)}</span></div>` +
           `<div class="md-phase-body">`,
         close: '</div></section>',
       }
@@ -533,13 +632,19 @@ export const COMPONENTS: readonly ComponentSpec[] = [
       value: { type: 'string', required: true, describe: 'The number itself' },
       label: { type: 'string', required: true, describe: 'What it measures' },
       tone: { type: 'enum', values: TONES, describe: 'Accent colour' },
+      ...ICON_ATTR,
     },
     describe: 'One headline number inside Kpi',
     render: ({ attrs, theme }) => {
       const tone = attrs.tone ? ` md-stat--${attrs.tone}` : ''
+      const icon = getIcon(attrs.icon ? String(attrs.icon) : '', {
+        size: 18,
+        className: 'md-icon md-stat-icon-svg',
+      })
       return {
         open:
           `<div class="${cx(`md-stat${tone}`, theme.stat)}">` +
+          (icon ? `<span class="md-stat-icon" aria-hidden="true">${icon}</span>` : '') +
           `<span class="md-stat-value">${attrText(attrs.value)}</span>` +
           `<span class="md-stat-label">${attrText(attrs.label)}</span>` +
           `</div>`,

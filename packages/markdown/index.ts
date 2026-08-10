@@ -11,8 +11,11 @@ export {
   escapeHtml,
   findByDirective,
   findByTag,
+  getIcon,
   type HeadingEntry,
+  ICON_NAMES,
   isCalloutName,
+  isIconName,
   type RenderCtx,
   resolveAttrs,
 } from './components'

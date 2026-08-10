@@ -57,8 +57,13 @@
   container-type: inline-size;
 }
 
-/* ---------- two-column grid ---------- */
+/* ---------- multi-column grid (Cols) ---------- */
 
+/*
+ * `.md-cols` is the canonical class; `.md-two-col` remains as an alias so host
+ * themes that still target the old name keep working after the 2–4 col expansion.
+ */
+.md-cols,
 .md-two-col {
   display: grid;
   grid-template-columns: 1fr;
@@ -68,10 +73,11 @@
 }
 
 /*
- * Stacked, the two columns run together as one block of prose and the split the
+ * Stacked, the columns run together as one block of prose and the split the
  * author wrote is invisible. A rule between them keeps the boundary legible;
  * side by side the gap already says it, so it comes back off.
  */
+.md-cols > .md-col:not(:last-child),
 .md-two-col > .md-col:not(:last-child) {
   padding-bottom: var(--md-gap);
   border-bottom: 1px solid var(--md-border);
@@ -82,14 +88,19 @@
  * sits in: the editor's reading pane measures 38.5rem (a 760px column less its
  * 72px gutters), and a blog post window is narrower still. A 40rem threshold
  * meant the grid fell back to one column everywhere it was actually used.
+ *
+ * Three- and four-column layouts still flip at 34rem — equal card columns
+ * (icon + title + short list) stay readable narrower than two prose columns.
  */
 @container (min-width: 34rem) {
+  .md-cols,
   .md-two-col {
     grid-template-columns: var(--md-grid-cols, 1fr 1fr);
-    /* Two text columns need more air between them than stacked blocks do. */
-    gap: 2.25rem;
+    /* Side-by-side columns need more air between them than stacked blocks do. */
+    gap: 1.5rem;
   }
 
+  .md-cols > .md-col:not(:last-child),
   .md-two-col > .md-col:not(:last-child) {
     padding-bottom: 0;
     border-bottom: 0;
@@ -673,7 +684,51 @@
   color: var(--md-tone, var(--md-fg));
 }
 
+/*
+ * Lucide-style icon above the panel title — matches the feature-card pattern
+ * (icon, heading, short body) without requiring a separate card component.
+ */
+.md-panel-icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 0 0.75rem;
+  color: var(--md-tone, var(--md-fg));
+}
+
+.md-panel-icon .md-icon,
+.md-panel-icon-svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.md-panel--icon .md-panel-title {
+  margin-top: 0;
+}
+
 .md-panel-body > :first-child { margin-top: 0; }
+
+/* ---------- Standalone Icon ---------- */
+
+.md-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 0;
+  color: var(--md-tone, currentColor);
+}
+
+.md-icon-wrap .md-icon,
+.md-icon-standalone {
+  display: block;
+  flex-shrink: 0;
+}
+
+.md-icon-missing {
+  font-family: var(--md-mono-font, ui-monospace, monospace);
+  font-size: 0.8em;
+  color: var(--md-tone-danger, #c44);
+}
 
 /* ---------- Tape ---------- */
 
@@ -869,9 +924,20 @@
 }
 
 .md-step-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   margin: 0 0 0.35rem;
   font-weight: 650;
   color: var(--md-fg);
+}
+
+.md-step-title .md-icon,
+.md-step-icon-svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--md-tone, var(--md-fg-muted, var(--md-fg)));
 }
 
 .md-step-body > :first-child { margin-top: 0; }
@@ -895,10 +961,18 @@
 
 .md-phase-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.5rem;
   flex-wrap: wrap;
+}
+
+.md-phase-head .md-icon,
+.md-phase-icon-svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--md-tone, var(--md-fg-muted, var(--md-fg)));
 }
 
 .md-phase-tag {
@@ -1051,6 +1125,19 @@
   border-radius: var(--md-radius);
   background: var(--md-surface-muted);
   text-align: center;
+}
+
+.md-stat-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.35rem;
+  color: var(--md-tone, var(--md-fg-muted, var(--md-fg)));
+}
+
+.md-stat-icon .md-icon,
+.md-stat-icon-svg {
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .md-stat-value {

@@ -45,32 +45,60 @@ survive being read on GitHub, where an unknown tag would simply vanish.
 <Col>
 The wide column takes the argument, and the narrow one takes the aside. Below
 about 34rem of *container* width — not viewport, because posts render inside
-resizable windows — the two stack and a rule appears between them.
+resizable windows — the columns stack and a rule appears between them.
 
 Anything works in here: lists, code, even another component.
 </Col>
 <Col>
 <Panel title="Note to self" tone="muted">
-Ratios are `1:1`, `2:1` and `1:2`. Anything else falls back to equal columns
-and fails the publish check.
+Equal columns: `<Cols cols={2|3|4}>`. Unequal tracks: `ratio` values such as
+`1:1`, `2:1`, `1:2`, `1:1:1`, `2:1:1`, `1:1:1:1`. Unknown ratios fall back to
+equal columns and fail the publish check.
+</Panel>
+</Col>
+</Cols>
+
+Three equal columns — the feature-card layout:
+
+<Cols cols={3}>
+<Col>
+<Panel title="Input Modality" icon="arrow-down-left">
+- PDF, images (JPG, PNG)
+- Single image ≤ 10MB, PDF ≤ 50MB
+- Maximum support: 100 pages
+</Panel>
+</Col>
+<Col>
+<Panel title="Output Modality" icon="arrow-up-right">
+Text / Image Links / MD Documents
+</Panel>
+</Col>
+<Col>
+<Panel title="Supported Language" icon="languages">
+Chinese, English, French, Spanish, Russian, German, Japanese, Korean, etc.
 </Panel>
 </Col>
 </Cols>
 
 ### Panels
 
-<Panel title="Setup" tape tilt={-2}>
-A panel is the generic card. It takes an optional title, a strip of masking
-tape, a tone, and a tilt in degrees.
+<Panel title="Setup" icon="settings" tape tilt={-2}>
+A panel is the generic card. It takes an optional title, a Lucide-style `icon`,
+a strip of masking tape, a tone, and a tilt in degrees.
 
 The tilt is inert unless the host site opts in by setting `--md-rotate: 1`, so
 the same post reads as a zine on one site and as a clean article on another.
 </Panel>
 
-<Panel title="Heads up" tone="warn">
+<Panel title="Heads up" tone="warn" icon="alert-triangle">
 Toned panels tint their border and background from the site's own palette
-rather than a hardcoded hue.
+rather than a hardcoded hue. Icons use the same stroke geometry as Lucide /
+react-icons lucide set — write `icon="zap"` the way you would import `Zap`.
 </Panel>
+
+Standalone icons work anywhere:
+
+<Icon name="rocket" size={28} /> <Icon name="sparkles" /> <Icon name="cpu" />
 
 A strip of tape can also stand on its own, as pure decoration:
 

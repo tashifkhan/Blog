@@ -48,6 +48,8 @@ export type MarkdownTheme = {
   calloutTitle?: string
 
   twoCol?: string
+  /** Wrapper around a standalone `<Icon>` glyph. */
+  icon?: string
   col?: string
 
   // Layout

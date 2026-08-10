@@ -22,7 +22,7 @@ import re
 from typing import Any
 
 # Keep in step with RENDERER_VERSION in packages/markdown/outline.ts.
-RENDERER_VERSION = "md-2"
+RENDERER_VERSION = "md-3"
 
 WORDS_PER_MINUTE = 200
 

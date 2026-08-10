@@ -55,11 +55,31 @@ describe('validateDirectives', () => {
     expect(issues[0].message).toContain('Malformed attributes')
   })
 
-  it('requires exactly two columns', () => {
+  it('requires at least two columns', () => {
     const issues = validateDirectives(
       '::::two-col\n:::col\nonly one\n:::\n::::',
     )
-    expect(issues[0].message).toContain('exactly 2 "Col" blocks, found 1')
+    expect(issues[0].message).toContain('at least 2 "Col" blocks, found 1')
+  })
+
+  it('accepts three columns', () => {
+    expect(
+      validateDirectives(
+        [
+          '::::cols{cols=3}',
+          ':::col',
+          'a',
+          ':::',
+          ':::col',
+          'b',
+          ':::',
+          ':::col',
+          'c',
+          ':::',
+          '::::',
+        ].join('\n'),
+      ),
+    ).toEqual([])
   })
 
   it('rejects a column outside a grid', () => {
@@ -78,8 +98,8 @@ describe('validateDirectives', () => {
     const issues = validateDirectives(
       '::::two-col{ratio="3:1"}\n:::col\na\n:::\n:::col\nb\n:::\n::::',
     )
-    expect(issues[0].message).toContain(
-      '"ratio" on "Cols" must be one of 1:1, 2:1, 1:2, found "3:1"',
+    expect(issues[0].message).toMatch(
+      /"ratio" on "Cols" must be one of .+ found "3:1"/,
     )
   })
 
