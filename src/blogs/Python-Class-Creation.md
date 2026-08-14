@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Python", "OOPs", "Low Level"]
 excerpt: "Everything in Python is an object - even classes themselves. Let's explore how Python creates classes internally and the fascinating role of metaclasses."
+coverImage: "/images/blog/Python-Class-Creation/cover.svg"
 ---
 
 <Lede>

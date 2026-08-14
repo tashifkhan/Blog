@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Web", "JS"]
 excerpt: "A deep dive into the browser's rendering process."
+coverImage: "/images/blog/HTMLRendering/cover.svg"
 ---
 
 <Lede>

@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Python", "DSA", "Low Level", "OPPs"]
 excerpt: "Learn how to build a fully functional linked list in Python using dunder methods. Make your custom data structure behave just like built-in Python sequences!"
+coverImage: "/images/blog/Python-Linked-List-Dunder-Methods/cover.svg"
 ---
 
 <Lede>

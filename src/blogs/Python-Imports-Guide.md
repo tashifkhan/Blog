@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Python", "Low Level"]
 excerpt: "Master Python's import system and learn how to structure your projects for maximum maintainability and scalability."
+coverImage: "/images/blog/Python-Imports-Guide/cover.svg"
 ---
 
 <Lede>

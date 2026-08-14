@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Web", "Low Level"]
 excerpt: "A deep dive into the various rendering strategies of web frameworks."
+coverImage: "/images/blog/RenderingSSR/cover.svg"
 ---
 
 <Lede>

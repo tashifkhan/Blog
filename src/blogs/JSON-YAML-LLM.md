@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Mobile Development"]
 excerpt: "Want to cut your LLM API costs by 56%? Try this one formatting change.\n No prompt hacks. No model switching. Just YAML instead of JSON.\n Here's what the data shows after analyzing production workloads and real-world benchmarks\n"
+coverImage: "/images/blog/JSON-YAML-LLM/cover.svg"
 ---
 
 ## A Deep Dive into Token Efficiency and Cost Optimization

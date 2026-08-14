@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["DBMS"]
 excerpt: "Practical, guide to Prisma for Node.js/TypeScript — covers setup, schema design and relationships, migrations, type-safe Prisma Client usage, advanced querying and pagination, plus performance tuning and production best practices for building reliable, maintainable data layers."
+coverImage: "/images/blog/Prisma-Notes/cover.svg"
 ---
 
 <Lede>

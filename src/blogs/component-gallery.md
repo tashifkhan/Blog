@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Meta"]
 excerpt: "A reference for every document component the Markdown renderer understands — steps, meters, panels, tabs, diagrams and the rest — written in both the tag and the directive spelling."
+coverImage: "/images/blog/component-gallery/cover.svg"
 ---
 
 <Lede>

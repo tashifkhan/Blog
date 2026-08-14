@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Python", "Low Level"]
 excerpt: "Python doesn't have 'call by reference' in the traditional sense. Let's explore what really happens when you pass variables to functions and how to work with it effectively."
+coverImage: "/images/blog/Python-Call-By-Reference/cover.svg"
 ---
 
 <Lede>

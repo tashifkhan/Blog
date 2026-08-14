@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["React Native", "Low Level"]
 excerpt: "Understanding the fundamental shift from React Native's old bridge architecture to the new JSI-based system and why it matters."
+coverImage: "/images/blog/React-Native-Architecture/cover.svg"
 ---
 
 <Lede>

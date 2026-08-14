@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Web", "Next.js", "Astro", "React"]
 excerpt: "A comprehensive guide to understanding and optimizing Core Web Vitals from a full-stack perspective, with practical examples using modern frameworks."
+coverImage: "/images/blog/Web-Vitals-Guide/cover.svg"
 ---
 
 <Lede>

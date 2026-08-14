@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["CORS", "API"]
 excerpt: "Understanding CORS - the browser security feature that every web developer needs to master."
+coverImage: "/images/blog/CORS-Explained/cover.svg"
 ---
 
 <Lede>

@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Git"]
 excerpt: "A deep dive into the core components that make Git possible."
+coverImage: "/images/blog/GitUnderTheHood/cover.svg"
 ---
 
 <Lede>

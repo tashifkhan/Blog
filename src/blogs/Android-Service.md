@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["Mobile Development"]
 excerpt: "A concise, practical guide to Android Services—foreground, background, and bound—covering lifecycles, modern background restrictions, and recommended patterns like WorkManager and JobScheduler."
+coverImage: "/images/blog/Android-Service/cover.svg"
 ---
 
 <Lede>

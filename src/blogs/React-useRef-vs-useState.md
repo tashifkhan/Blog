@@ -10,6 +10,7 @@ socials:
   ]
 tags: ["React", "React Native", "Low Level"]
 excerpt: "Confused about when to use useRef versus useState? Let's break down these two fundamental React hooks and when to use each one."
+coverImage: "/images/blog/React-useRef-vs-useState/cover.svg"
 ---
 
 <Lede>
