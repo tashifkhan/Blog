@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="type() — METACLASS FACTORY">
+  <defs>
+    <!-- Halftone dots (sleeck poster texture) -->
+    <pattern id="halftone" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#000000" fill-opacity="0.12"/>
+    </pattern>
+    <!-- Diagonal lime/white stripes (corner accent) -->
+    <pattern id="stripes" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="14" height="28" fill="#A8E63A"/>
+      <rect x="14" width="14" height="28" fill="#FFFFFF"/>
+    </pattern>
+  </defs>
+
+  <!-- Solid lavender field -->
+  <rect width="1200" height="630" fill="#C4B5F0"/>
+  <rect width="1200" height="630" fill="url(#halftone)"/>
+
+  <!-- Top-left stripe wedge -->
+  <path d="M 0 0 L 420 0 L 280 180 L 0 180 Z" fill="url(#stripes)" stroke="#000000" stroke-width="0"/>
+  <path d="M 0 180 L 280 180 L 240 220 L 0 220 Z" fill="#A894E0"/>
+
+  <!-- Outer hard frame -->
+  <rect x="16" y="16" width="1168" height="598" rx="8" fill="none" stroke="#000000" stroke-width="5"/>
+
+  <!-- Art (titles sit in the field; chrome overlays on top like ProjectCover) -->
+  <g><text x="50" y="195" text-anchor="start"
+		fill="#000000" stroke="#FFFFFF" stroke-width="10" paint-order="stroke fill"
+		font-family="Impact, Haettenschweiler, 'Arial Black', 'Helvetica Neue', sans-serif"
+		font-size="92" font-weight="900" letter-spacing="-0.02em">type()</text><text x="58" y="235" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="15" font-weight="700" letter-spacing="0.04em">METACLASS · CLASS · INSTANCE</text><rect x="57" y="287" width="320" height="130" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="50" y="280" width="320" height="130" rx="14" fill="#F0E15C" stroke="#000000" stroke-width="5"/><text x="74" y="322" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="20" font-weight="900">1. METACLASS</text><text x="74" y="354" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="15" font-weight="700" letter-spacing="0.04em">class Meta(type):</text><rect x="78" y="374" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="74" y="370" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/><text x="110" y="392" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">type</text><line x1="370" y1="345" x2="402.23" y2="393.35" stroke="#000000" stroke-width="6" stroke-linecap="round"/><path d="M 408.61 386.69 L 410 405 L 393.64 396.68 Z" fill="#000000" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><rect x="427" y="347" width="320" height="130" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="420" y="340" width="320" height="130" rx="14" fill="#A8E63A" stroke="#000000" stroke-width="5"/><text x="444" y="382" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="20" font-weight="900">2. CLASS</text><text x="444" y="414" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="15" font-weight="700" letter-spacing="0.04em">__new__ → __init__</text><rect x="448" y="434" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="444" y="430" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/><text x="480" y="452" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">User</text><line x1="740" y1="405" x2="772.23" y2="453.35" stroke="#000000" stroke-width="6" stroke-linecap="round"/><path d="M 778.61 446.69 L 780 465 L 763.64 456.68 Z" fill="#000000" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><rect x="797" y="407" width="320" height="130" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="790" y="400" width="320" height="130" rx="14" fill="#9BE7A3" stroke="#000000" stroke-width="5"/><text x="814" y="442" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="20" font-weight="900">3. INSTANCE</text><text x="814" y="474" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="15" font-weight="700" letter-spacing="0.04em">user_1 = User(...)</text><rect x="818" y="494" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="814" y="490" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/><text x="850" y="512" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">obj</text></g>
+
+  <!-- Category + year chips ABOVE art so they never get painted over -->
+  <g transform="translate(40, 36)">
+    <rect x="4" y="4" width="77.2" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="77.2" height="34" rx="6" fill="#F0E15C" stroke="#000000" stroke-width="3"/><text x="38.6" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">Python</text>
+  </g>
+  <g transform="translate(1050, 36)">
+    <rect x="4" y="4" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/><text x="36" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">2025</text>
+  </g>
+
+  <!-- Bottom caption bar -->
+  <g transform="translate(40, 560)">
+    <rect x="4" y="4" width="520" height="36" rx="6" fill="#000000"/>
+    <rect x="0" y="0" width="520" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="16" y="24" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="800" letter-spacing="0.04em">METACLASS FACTORY</text>
+  </g>
+
+  <!-- Brutalist corner mark (sleeck ProjectCover) -->
+  <g transform="translate(1110, 540)">
+    <rect x="6" y="6" width="48" height="48" fill="#000000"/>
+    <rect x="0" y="0" width="48" height="48" fill="#A8E63A" stroke="#000000" stroke-width="4"/>
+    <rect x="10" y="10" width="28" height="28" fill="none" stroke="#000000" stroke-width="2"/>
+  </g>
+</svg>

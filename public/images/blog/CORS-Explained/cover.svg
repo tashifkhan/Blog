@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="CORS — CROSS-ORIGIN SHARING">
+  <defs>
+    <!-- Halftone dots (sleeck poster texture) -->
+    <pattern id="halftone" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#000000" fill-opacity="0.12"/>
+    </pattern>
+    <!-- Diagonal lime/white stripes (corner accent) -->
+    <pattern id="stripes" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="14" height="28" fill="#A8E63A"/>
+      <rect x="14" width="14" height="28" fill="#FFFFFF"/>
+    </pattern>
+  </defs>
+
+  <!-- Solid lavender field -->
+  <rect width="1200" height="630" fill="#C4B5F0"/>
+  <rect width="1200" height="630" fill="url(#halftone)"/>
+
+  <!-- Top-left stripe wedge -->
+  <path d="M 0 0 L 420 0 L 280 180 L 0 180 Z" fill="url(#stripes)" stroke="#000000" stroke-width="0"/>
+  <path d="M 0 180 L 280 180 L 240 220 L 0 220 Z" fill="#A894E0"/>
+
+  <!-- Outer hard frame -->
+  <rect x="16" y="16" width="1168" height="598" rx="8" fill="none" stroke="#000000" stroke-width="5"/>
+
+  <!-- Art (titles sit in the field; chrome overlays on top like ProjectCover) -->
+  <g><text x="60" y="175" text-anchor="start"
+		fill="#000000" stroke="#FFFFFF" stroke-width="10" paint-order="stroke fill"
+		font-family="Impact, Haettenschweiler, 'Arial Black', 'Helvetica Neue', sans-serif"
+		font-size="92" font-weight="900" letter-spacing="-0.02em">CORS</text><rect x="57" y="257" width="360" height="300" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="50" y="250" width="360" height="300" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="5"/><rect x="50" y="250" width="360" height="52" rx="14" fill="#FF8F7A" stroke="#000000" stroke-width="5"/><rect x="50" y="280" width="360" height="22" rx="0" fill="#FF8F7A" stroke="none" stroke-width="0"/><text x="70" y="284" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="18" font-weight="900">ORIGIN A</text><text x="70" y="340" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="18" font-weight="800" letter-spacing="0.04em">https://app.io</text><text x="70" y="380" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="600" letter-spacing="0.04em">fetch(POST, custom)</text><text x="70" y="410" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="600" letter-spacing="0.04em">headers: X-Custom</text><rect x="74" y="474" width="77.2" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="70" y="470" width="77.2" height="34" rx="6" fill="#F0E15C" stroke="#000000" stroke-width="3"/><text x="108.6" y="492" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">CLIENT</text><rect x="797" y="257" width="360" height="300" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="790" y="250" width="360" height="300" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="5"/><rect x="790" y="250" width="360" height="52" rx="14" fill="#9BE7A3" stroke="#000000" stroke-width="5"/><rect x="790" y="280" width="360" height="22" rx="0" fill="#9BE7A3" stroke="none" stroke-width="0"/><text x="810" y="284" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="18" font-weight="900">ORIGIN B</text><text x="810" y="340" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="18" font-weight="800" letter-spacing="0.04em">https://api.com</text><text x="810" y="380" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="600" letter-spacing="0.04em">Allow-Origin: *</text><text x="810" y="410" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="600" letter-spacing="0.04em">Allow-Methods: POST</text><rect x="814" y="474" width="93.6" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="810" y="470" width="93.6" height="34" rx="6" fill="#A8E63A" stroke="#000000" stroke-width="3"/><text x="856.8" y="492" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">APPROVED</text><path d="M 600 300 L 675 345 L 675 430 L 600 485 L 525 430 L 525 345 Z" fill="#A8E63A" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M 570 390 L 595 420 L 640 360" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="420" y1="350" x2="501" y2="350" stroke="#000000" stroke-width="5" stroke-linecap="round"/><path d="M 499 341 L 515 350 L 499 359 Z" fill="#000000" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><line x1="685" y1="430" x2="766" y2="430" stroke="#000000" stroke-width="5" stroke-linecap="round"/><path d="M 764 421 L 780 430 L 764 439 Z" fill="#000000" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><text x="445" y="330" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="12" font-weight="800" letter-spacing="0.04em">OPTIONS</text><text x="700" y="460" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="12" font-weight="800" letter-spacing="0.04em">ALLOW</text></g>
+
+  <!-- Category + year chips ABOVE art so they never get painted over -->
+  <g transform="translate(40, 36)">
+    <rect x="4" y="4" width="93.6" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="93.6" height="34" rx="6" fill="#FF8F7A" stroke="#000000" stroke-width="3"/><text x="46.8" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">Security</text>
+  </g>
+  <g transform="translate(1050, 36)">
+    <rect x="4" y="4" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/><text x="36" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">2025</text>
+  </g>
+
+  <!-- Bottom caption bar -->
+  <g transform="translate(40, 560)">
+    <rect x="4" y="4" width="520" height="36" rx="6" fill="#000000"/>
+    <rect x="0" y="0" width="520" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="16" y="24" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="800" letter-spacing="0.04em">CROSS-ORIGIN SHARING</text>
+  </g>
+
+  <!-- Brutalist corner mark (sleeck ProjectCover) -->
+  <g transform="translate(1110, 540)">
+    <rect x="6" y="6" width="48" height="48" fill="#000000"/>
+    <rect x="0" y="0" width="48" height="48" fill="#A8E63A" stroke="#000000" stroke-width="4"/>
+    <rect x="10" y="10" width="28" height="28" fill="none" stroke="#000000" stroke-width="2"/>
+  </g>
+</svg>

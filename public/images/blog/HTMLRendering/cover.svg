@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="RENDER — DOM → PIXELS">
+  <defs>
+    <!-- Halftone dots (sleeck poster texture) -->
+    <pattern id="halftone" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#000000" fill-opacity="0.12"/>
+    </pattern>
+    <!-- Diagonal lime/white stripes (corner accent) -->
+    <pattern id="stripes" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="14" height="28" fill="#A8E63A"/>
+      <rect x="14" width="14" height="28" fill="#FFFFFF"/>
+    </pattern>
+  </defs>
+
+  <!-- Solid lavender field -->
+  <rect width="1200" height="630" fill="#C4B5F0"/>
+  <rect width="1200" height="630" fill="url(#halftone)"/>
+
+  <!-- Top-left stripe wedge -->
+  <path d="M 0 0 L 420 0 L 280 180 L 0 180 Z" fill="url(#stripes)" stroke="#000000" stroke-width="0"/>
+  <path d="M 0 180 L 280 180 L 240 220 L 0 220 Z" fill="#A894E0"/>
+
+  <!-- Outer hard frame -->
+  <rect x="16" y="16" width="1168" height="598" rx="8" fill="none" stroke="#000000" stroke-width="5"/>
+
+  <!-- Art (titles sit in the field; chrome overlays on top like ProjectCover) -->
+  <g><text x="50" y="195" text-anchor="start"
+		fill="#000000" stroke="#FFFFFF" stroke-width="10" paint-order="stroke fill"
+		font-family="Impact, Haettenschweiler, 'Arial Black', 'Helvetica Neue', sans-serif"
+		font-size="88" font-weight="900" letter-spacing="-0.02em">RENDER</text><text x="58" y="235" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="700" letter-spacing="0.04em">HTML → DOM → LAYOUT → PAINT → COMPOSITE</text><rect x="57" y="272" width="420" height="300" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="50" y="265" width="420" height="300" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="5"/><rect x="50" y="265" width="420" height="48" rx="14" fill="#7EC8FF" stroke="#000000" stroke-width="5"/><rect x="50" y="291" width="420" height="22" rx="0" fill="#7EC8FF" stroke="none" stroke-width="0"/><text x="70" y="296" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="18" font-weight="900">1. DOM TREE</text><circle cx="260" cy="350" r="26" fill="#A8E63A" stroke="#000000" stroke-width="4"/><text x="260" y="355" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="12" font-weight="900" letter-spacing="0.04em">html</text><line x1="260" y1="376" x2="180" y2="420" stroke="#000000" stroke-width="4" stroke-linecap="round"/><line x1="260" y1="376" x2="340" y2="420" stroke="#000000" stroke-width="4" stroke-linecap="round"/><circle cx="180" cy="440" r="22" fill="#FFFFFF" stroke="#000000" stroke-width="4"/><text x="180" y="445" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="11" font-weight="800" letter-spacing="0.04em">body</text><circle cx="340" cy="440" r="22" fill="#FFFFFF" stroke="#000000" stroke-width="4"/><text x="340" y="445" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="11" font-weight="800" letter-spacing="0.04em">head</text><line x1="180" y1="462" x2="140" y2="510" stroke="#000000" stroke-width="3" stroke-linecap="round"/><line x1="180" y1="462" x2="220" y2="510" stroke="#000000" stroke-width="3" stroke-linecap="round"/><circle cx="140" cy="520" r="14" fill="#9BE7A3" stroke="#000000" stroke-width="3"/><circle cx="220" cy="520" r="14" fill="#9BE7A3" stroke="#000000" stroke-width="3"/><line x1="490" y1="410" x2="546" y2="410" stroke="#000000" stroke-width="6" stroke-linecap="round"/><path d="M 544 401 L 560 410 L 544 419 Z" fill="#000000" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><rect x="587" y="272" width="560" height="300" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="580" y="265" width="560" height="300" rx="14" fill="#A894E0" stroke="#000000" stroke-width="5"/><rect x="580" y="265" width="560" height="48" rx="14" fill="#A8E63A" stroke="#000000" stroke-width="5"/><rect x="580" y="291" width="560" height="22" rx="0" fill="#A8E63A" stroke="none" stroke-width="0"/><text x="600" y="296" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="18" font-weight="900">2. COMPOSITED LAYERS</text><path d="M 640 500 L 920 450 L 1000 480 L 720 530 Z" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><text x="740" y="495" text-anchor="start" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">Background</text><path d="M 680 440 L 960 390 L 1040 420 L 760 470 Z" fill="#9BE7A3" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><text x="780" y="435" text-anchor="start" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">Layout</text><path d="M 720 380 L 1000 330 L 1080 360 L 800 410 Z" fill="#A8E63A" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><text x="820" y="375" text-anchor="start" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">GPU Transform</text></g>
+
+  <!-- Category + year chips ABOVE art so they never get painted over -->
+  <g transform="translate(40, 36)">
+    <rect x="4" y="4" width="85.4" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="85.4" height="34" rx="6" fill="#7EC8FF" stroke="#000000" stroke-width="3"/><text x="42.7" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">Browser</text>
+  </g>
+  <g transform="translate(1050, 36)">
+    <rect x="4" y="4" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/><text x="36" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">2025</text>
+  </g>
+
+  <!-- Bottom caption bar -->
+  <g transform="translate(40, 560)">
+    <rect x="4" y="4" width="520" height="36" rx="6" fill="#000000"/>
+    <rect x="0" y="0" width="520" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="16" y="24" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="800" letter-spacing="0.04em">DOM → PIXELS</text>
+  </g>
+
+  <!-- Brutalist corner mark (sleeck ProjectCover) -->
+  <g transform="translate(1110, 540)">
+    <rect x="6" y="6" width="48" height="48" fill="#000000"/>
+    <rect x="0" y="0" width="48" height="48" fill="#A8E63A" stroke="#000000" stroke-width="4"/>
+    <rect x="10" y="10" width="28" height="28" fill="none" stroke="#000000" stroke-width="2"/>
+  </g>
+</svg>

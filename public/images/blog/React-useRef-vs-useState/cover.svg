@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="REF — vs STATE · RENDERS">
+  <defs>
+    <!-- Halftone dots (sleeck poster texture) -->
+    <pattern id="halftone" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#000000" fill-opacity="0.12"/>
+    </pattern>
+    <!-- Diagonal lime/white stripes (corner accent) -->
+    <pattern id="stripes" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="14" height="28" fill="#A8E63A"/>
+      <rect x="14" width="14" height="28" fill="#FFFFFF"/>
+    </pattern>
+  </defs>
+
+  <!-- Solid lavender field -->
+  <rect width="1200" height="630" fill="#C4B5F0"/>
+  <rect width="1200" height="630" fill="url(#halftone)"/>
+
+  <!-- Top-left stripe wedge -->
+  <path d="M 0 0 L 420 0 L 280 180 L 0 180 Z" fill="url(#stripes)" stroke="#000000" stroke-width="0"/>
+  <path d="M 0 180 L 280 180 L 240 220 L 0 220 Z" fill="#A894E0"/>
+
+  <!-- Outer hard frame -->
+  <rect x="16" y="16" width="1168" height="598" rx="8" fill="none" stroke="#000000" stroke-width="5"/>
+
+  <!-- Art (titles sit in the field; chrome overlays on top like ProjectCover) -->
+  <g><text x="50" y="195" text-anchor="start"
+		fill="#000000" stroke="#FFFFFF" stroke-width="10" paint-order="stroke fill"
+		font-family="Impact, Haettenschweiler, 'Arial Black', 'Helvetica Neue', sans-serif"
+		font-size="100" font-weight="900" letter-spacing="-0.02em">REF</text><text x="58" y="240" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="16" font-weight="700" letter-spacing="0.04em">vs useState · RENDER DYNAMICS</text><rect x="57" y="277" width="520" height="290" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="50" y="270" width="520" height="290" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="5"/><rect x="50" y="270" width="520" height="52" rx="14" fill="#FF8F7A" stroke="#000000" stroke-width="5"/><rect x="50" y="300" width="520" height="22" rx="0" fill="#FF8F7A" stroke="none" stroke-width="0"/><text x="70" y="304" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="22" font-weight="900">useState(val)</text><circle cx="310" cy="430" r="84" fill="none" stroke="#000000" stroke-width="4"/><circle cx="310" cy="430" r="56" fill="none" stroke="#000000" stroke-width="4"/><circle cx="310" cy="430" r="28" fill="none" stroke="#000000" stroke-width="4"/><circle cx="310" cy="430" r="24" fill="#FF8F7A" stroke="#000000" stroke-width="5"/><rect x="194" y="514" width="110" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="190" y="510" width="110" height="34" rx="6" fill="#FF8F7A" stroke="#000000" stroke-width="3"/><text x="245" y="532" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">RE-RENDERS</text><rect x="637" y="277" width="520" height="290" rx="14" fill="#000000" stroke="none" stroke-width="0"/><rect x="630" y="270" width="520" height="290" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="5"/><rect x="630" y="270" width="520" height="52" rx="14" fill="#A8E63A" stroke="#000000" stroke-width="5"/><rect x="630" y="300" width="520" height="22" rx="0" fill="#A8E63A" stroke="none" stroke-width="0"/><text x="650" y="304" text-anchor="start" fill="#000000"
+		font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+		font-size="22" font-weight="900">useRef(val)</text><rect x="836" y="376" width="120" height="120" rx="16" fill="#000000" stroke="none" stroke-width="0"/><rect x="830" y="370" width="120" height="120" rx="16" fill="#A8E63A" stroke="#000000" stroke-width="5"/><circle cx="890" cy="430" r="20" fill="#FFFFFF" stroke="#000000" stroke-width="5"/><rect x="774" y="514" width="183.8" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="770" y="510" width="183.8" height="34" rx="6" fill="#A8E63A" stroke="#000000" stroke-width="3"/><text x="861.9" y="532" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">MUTABLE · NO RENDER</text></g>
+
+  <!-- Category + year chips ABOVE art so they never get painted over -->
+  <g transform="translate(40, 36)">
+    <rect x="4" y="4" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="72" height="34" rx="6" fill="#FF8F7A" stroke="#000000" stroke-width="3"/><text x="36" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">React</text>
+  </g>
+  <g transform="translate(1050, 36)">
+    <rect x="4" y="4" width="72" height="34" rx="6" fill="#000000" stroke="none" stroke-width="0"/><rect x="0" y="0" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/><text x="36" y="22" text-anchor="middle" fill="#000000"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="13" font-weight="800" letter-spacing="0.04em">2025</text>
+  </g>
+
+  <!-- Bottom caption bar -->
+  <g transform="translate(40, 560)">
+    <rect x="4" y="4" width="520" height="36" rx="6" fill="#000000"/>
+    <rect x="0" y="0" width="520" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="16" y="24" text-anchor="start" fill="#0F0C1A"
+		font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+		font-size="14" font-weight="800" letter-spacing="0.04em">vs STATE · RENDERS</text>
+  </g>
+
+  <!-- Brutalist corner mark (sleeck ProjectCover) -->
+  <g transform="translate(1110, 540)">
+    <rect x="6" y="6" width="48" height="48" fill="#000000"/>
+    <rect x="0" y="0" width="48" height="48" fill="#A8E63A" stroke="#000000" stroke-width="4"/>
+    <rect x="10" y="10" width="28" height="28" fill="none" stroke="#000000" stroke-width="2"/>
+  </g>
+</svg>
