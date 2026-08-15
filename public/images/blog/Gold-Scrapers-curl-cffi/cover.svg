@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="SCRAPE.STACK — TLS IMPERSONATION · INTERNAL APIS · JINA + GHA">
+  <defs>
+    <!-- Halftone dots (sleeck poster texture) -->
+    <pattern id="halftone" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#000000" fill-opacity="0.12"/>
+    </pattern>
+    <!-- Diagonal lime/white stripes (corner accent) -->
+    <pattern id="stripes" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="14" height="28" fill="#A8E63A"/>
+      <rect x="14" width="14" height="28" fill="#FFFFFF"/>
+    </pattern>
+  </defs>
+
+  <!-- Solid amber field -->
+  <rect width="1200" height="630" fill="#F2C879"/>
+  <rect width="1200" height="630" fill="url(#halftone)"/>
+
+  <!-- Top-left stripe wedge -->
+  <path d="M 0 0 L 420 0 L 280 180 L 0 180 Z" fill="url(#stripes)" stroke="#000000" stroke-width="0"/>
+  <path d="M 0 180 L 280 180 L 240 220 L 0 220 Z" fill="#D9A95C"/>
+
+  <!-- Outer hard frame -->
+  <rect x="16" y="16" width="1168" height="598" rx="8" fill="none" stroke="#000000" stroke-width="5"/>
+
+  <!-- Art: scraper goes AROUND the WAF shield to the JSON the SPA already uses -->
+  <g>
+    <text x="60" y="200" text-anchor="start"
+      fill="#000000" stroke="#FFFFFF" stroke-width="10" paint-order="stroke fill"
+      font-family="Impact, Haettenschweiler, 'Arial Black', 'Helvetica Neue', sans-serif"
+      font-size="96" font-weight="900" letter-spacing="-0.02em">SCRAPE.STACK</text>
+    <text x="70" y="245" text-anchor="start" fill="#0F0C1A"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="16" font-weight="700" letter-spacing="0.04em">TLS IMPERSONATION · INTERNAL APIS · JINA + GHA</text>
+
+    <!-- client chip -->
+    <rect x="94" y="354" width="132" height="44" rx="8" fill="#000000"/>
+    <rect x="90" y="350" width="132" height="44" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="4"/>
+    <text x="156" y="378" text-anchor="middle" fill="#0F0C1A"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="14" font-weight="800" letter-spacing="0.04em">scraper.py</text>
+
+    <!-- direct path: blocked -->
+    <line x1="226" y1="372" x2="262" y2="376" stroke="#000000" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="266" cy="376" r="14" fill="#E35D4F" stroke="#000000" stroke-width="3"/>
+    <path d="M 260 370 L 272 382 M 272 370 L 260 382" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- WAF shield -->
+    <path d="M 340 300 L 418 330 V 396 Q 418 462 340 492 Q 262 462 262 396 V 330 Z"
+      fill="#FFFFFF" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M 340 322 L 396 344 V 396 Q 396 444 340 468 Q 284 444 284 396 V 344 Z"
+      fill="#E35D4F" stroke="#000000" stroke-width="3" stroke-linejoin="round" opacity="0.9"/>
+    <text x="340" y="406" text-anchor="middle" fill="#FFFFFF"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="22" font-weight="900" letter-spacing="0.06em">WAF</text>
+
+    <!-- bypass arrow: over the shield, dashed -->
+    <path d="M 156 346 C 220 236, 420 226, 552 340" fill="none" stroke="#000000"
+      stroke-width="5" stroke-linecap="round" stroke-dasharray="14 12"/>
+    <path d="M 538 330 L 560 346 L 534 352 Z" fill="#000000"/>
+
+    <!-- JSON box the SPA already uses -->
+    <rect x="566" y="344" width="252" height="72" rx="8" fill="#000000"/>
+    <rect x="562" y="340" width="252" height="72" rx="8" fill="#A8E63A" stroke="#000000" stroke-width="4"/>
+    <text x="688" y="368" text-anchor="middle" fill="#0F0C1A"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="13" font-weight="700" letter-spacing="0.04em">GET /graphql-magento</text>
+    <text x="688" y="394" text-anchor="middle" fill="#0F0C1A"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="15" font-weight="900" letter-spacing="0.04em">{ gold_22k: 7245 }</text>
+
+    <!-- signal chips -->
+    <rect x="94" y="474" width="96" height="34" rx="6" fill="#000000"/>
+    <rect x="90" y="470" width="96" height="34" rx="6" fill="#F0E15C" stroke="#000000" stroke-width="3"/>
+    <text x="138" y="492" text-anchor="middle" fill="#000000"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="13" font-weight="800" letter-spacing="0.04em">JA3·OK</text>
+    <rect x="204" y="474" width="116" height="34" rx="6" fill="#000000"/>
+    <rect x="200" y="470" width="116" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="258" y="492" text-anchor="middle" fill="#000000"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="13" font-weight="800" letter-spacing="0.04em">chrome124</text>
+    <rect x="334" y="474" width="108" height="34" rx="6" fill="#000000"/>
+    <rect x="330" y="470" width="108" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="384" y="492" text-anchor="middle" fill="#000000"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="13" font-weight="800" letter-spacing="0.04em">r.jina.ai</text>
+  </g>
+
+  <!-- Category + year chips ABOVE art so they never get painted over -->
+  <g transform="translate(40, 36)">
+    <rect x="4" y="4" width="95" height="34" rx="6" fill="#000000"/>
+    <rect x="0" y="0" width="95" height="34" rx="6" fill="#F0E15C" stroke="#000000" stroke-width="3"/>
+    <text x="47.5" y="22" text-anchor="middle" fill="#000000"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="13" font-weight="800" letter-spacing="0.04em">Scraping</text>
+  </g>
+  <g transform="translate(1050, 36)">
+    <rect x="4" y="4" width="72" height="34" rx="6" fill="#000000"/>
+    <rect x="0" y="0" width="72" height="34" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="36" y="22" text-anchor="middle" fill="#000000"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="13" font-weight="800" letter-spacing="0.04em">2026</text>
+  </g>
+
+  <!-- Bottom caption bar -->
+  <g transform="translate(40, 560)">
+    <rect x="4" y="4" width="340" height="36" rx="6" fill="#000000"/>
+    <rect x="0" y="0" width="340" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <text x="16" y="24" text-anchor="start" fill="#0F0C1A"
+      font-family="ui-monospace, SFMono-Regular, 'Geist Mono', Menlo, monospace"
+      font-size="14" font-weight="800" letter-spacing="0.04em">JA3 · CHROME124 · INTERNAL APIS</text>
+  </g>
+
+  <!-- Brutalist corner mark -->
+  <g transform="translate(1110, 540)">
+    <rect x="6" y="6" width="48" height="48" fill="#000000"/>
+    <rect x="0" y="0" width="48" height="48" fill="#A8E63A" stroke="#000000" stroke-width="4"/>
+    <rect x="10" y="10" width="28" height="28" fill="none" stroke="#000000" stroke-width="2"/>
+  </g>
+</svg>
