@@ -337,3 +337,47 @@ export function watchThemeChanges(onChange: (dark: boolean) => void): () => void
   })
   return () => observer.disconnect()
 }
+
+/**
+ * Upgrade YouTube video links from their id to the video's title.
+ *
+ * A `yt:ID`, `youtu.be/ID` or `youtube.com/watch?v=ID` link renders with the
+ * id as its label; this swaps that text for the title from YouTube's oEmbed
+ * endpoint, which needs no API key. The brand icon and href are left alone, and
+ * a failed fetch (offline, blocked) keeps the id as the fallback.
+ */
+export async function initYtTitles(root: ParentNode = document): Promise<void> {
+  const links = [
+    ...root.querySelectorAll<HTMLAnchorElement>('a[data-md-yt]'),
+  ]
+  if (!links.length) return
+
+  const titles = new Map<string, string>()
+  await Promise.all(
+    [...new Set(links.map((link) => link.dataset.mdYt || '').filter(Boolean))].map(
+      async (id) => {
+        try {
+          const res = await fetch(
+            `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}&format=json`,
+          )
+          if (!res.ok) return
+          const data = await res.json()
+          if (typeof data.title === 'string' && data.title.trim()) {
+            titles.set(id, data.title.trim())
+          }
+        } catch {
+          // Offline or blocked — keep the id label.
+        }
+      },
+    ),
+  )
+
+  for (const link of links) {
+    const title = titles.get(link.dataset.mdYt || '')
+    if (!title) continue
+    const text = [...link.childNodes].find(
+      (node) => node.nodeType === Node.TEXT_NODE,
+    )
+    if (text) text.textContent = title
+  }
+}

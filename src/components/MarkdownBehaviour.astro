@@ -20,6 +20,7 @@
 	import {
 		initCopyButtons,
 		initTabs,
+		initYtTitles,
 		isDarkTheme,
 		renderMermaidBlocks,
 		watchForContent,
@@ -40,6 +41,7 @@
 	watchForContent(() => {
 		initTabs();
 		void drawDiagrams();
+		void initYtTitles();
 	});
 	watchThemeChanges(() => void drawDiagrams(true));
 </script>
