@@ -21,11 +21,11 @@ By the end of this article, you'll have a complete understanding of CORS from a 
 
 <Toc title="Table of Contents" depth={2} />
 
-## The Foundation: Understanding Basic Web Architecture {#foundation}
+## the foundation: understanding basic web architecture {#foundation}
 
 Before we dive into CORS, let's establish the fundamental web architecture that we're all familiar with. In any web application, you have two primary components:
 
-### The Client
+### the client
 
 This could be:
 
@@ -34,7 +34,7 @@ This could be:
 - An Angular or Vue.js app
 - Any client-side JavaScript application
 
-### The Server
+### the server
 
 This is your backend that:
 
@@ -51,11 +51,11 @@ The interaction between these components follows a simple **request-response cyc
 
 This is the foundation of how web applications work, and there's nothing problematic about this basic interaction when both the client and server are on the same domain.
 
-## The Nightmare Scenario: Web Without CORS {#nightmare}
+## the nightmare scenario: web without CORS {#nightmare}
 
 Now, let's imagine a world without CORS restrictions. To understand why CORS exists, we need to visualize the security catastrophe that would unfold without it.
 
-### Scenario 1: The Social Media Attack
+### scenario 1: the social media attack
 
 Picture this realistic scenario:
 
@@ -105,7 +105,7 @@ fetch("https://facebook.com/api/reset-password", {
 });
 ```
 
-### Scenario 2: The Banking Disaster
+### scenario 2: the banking disaster
 
 The implications become even more severe with financial services:
 
@@ -132,7 +132,7 @@ fetch("https://hdfc.com/api/transfer", {
 });
 ```
 
-### The Core Problem: Cross-Origin Requests
+### the core problem: cross-origin requests
 
 These scenarios demonstrate **cross-origin requests** - when one origin (domain) tries to access resources from a different origin. Here's what's happening:
 
@@ -141,11 +141,11 @@ These scenarios demonstrate **cross-origin requests** - when one origin (domain)
 
 Without proper controls, any website could interact with any other website using your stored credentials, leading to complete security chaos.
 
-## Origins Explained: The Building Blocks of Web Security {#origins}
+## origins explained: the building blocks of web security {#origins}
 
 To understand how CORS prevents these attacks, we first need to understand what constitutes an "origin" in web security terms.
 
-### The Origin Tuple
+### the origin tuple
 
 From a browser's perspective, an origin is defined by a **tuple** (combination) of three components:
 
@@ -153,7 +153,7 @@ From a browser's perspective, an origin is defined by a **tuple** (combination) 
 2. **Host** - The domain name (like yoursite.dev)
 3. **Port** - The port number (like 443, 8080, 3000)
 
-### Origin Examples
+### origin examples
 
 Let's look at various examples to understand this better:
 
@@ -181,15 +181,15 @@ http://yoursite.dev:443         ← Origin 3 (different scheme)
 https://yoursite.dev:8080       ← Origin 4 (different port)
 ```
 
-### Why This Matters
+### why this matters
 
 Understanding origins is crucial because browsers use this definition to determine whether a request is "same-origin" (safe by default) or "cross-origin" (requires special permission through CORS).
 
-## Same-Origin Policy: The Default Security Mechanism {#same-origin}
+## same-origin policy: the default security mechanism {#same-origin}
 
 The **Same-Origin Policy** is the foundational security mechanism that browsers implement by default. Let's explore this in detail.
 
-### What is Same-Origin Policy?
+### what is same-origin policy?
 
 According to Mozilla's documentation, the Same-Origin Policy states:
 
@@ -202,7 +202,7 @@ This means:
 - It **cannot** communicate with `hdfc.com`
 - It **cannot** even communicate with `api.yoursite.dev` (different subdomain)
 
-### What's Allowed Under Same-Origin Policy
+### what's allowed under same-origin policy
 
 If your application is hosted on `https://yoursite.dev`, these requests are allowed:
 
@@ -213,7 +213,7 @@ fetch("/api/posts");
 fetch("https://yoursite.dev/api/data");
 ```
 
-### What's Blocked Under Same-Origin Policy
+### what's blocked under same-origin policy
 
 These requests would be blocked:
 
@@ -225,7 +225,7 @@ fetch("http://yoursite.dev/api/data"); // Different scheme
 fetch("https://yoursite.dev:8080/api"); // Different port
 ```
 
-### The Problem with Strict Same-Origin Policy
+### the problem with strict same-origin policy
 
 While this policy provides excellent security, it creates a practical problem in modern web development:
 
@@ -235,15 +235,15 @@ While this policy provides excellent security, it creates a practical problem in
 
 This is where CORS comes to the rescue by providing a controlled way to relax the same-origin policy.
 
-## CORS in Action: How Cross-Origin Requests Work {#cors-action}
+## CORS in action: how cross-origin requests work {#cors-action}
 
 CORS provides a mechanism for servers to explicitly declare which origins they trust, giving fine-grained control over cross-origin access. Let's understand this step-by-step process.
 
-### The CORS Request Flow
+### the CORS request flow
 
 When you make a cross-origin request, here's exactly what happens:
 
-#### Step 1: Browser Adds Origin Header
+#### step 1: browser adds origin header
 
 When your JavaScript code makes a cross-origin request:
 
@@ -260,7 +260,7 @@ Host: api.yoursite.dev
 Origin: https://yoursite.dev
 ```
 
-#### Step 2: Server Examines the Origin
+#### step 2: server examines the origin
 
 Your server receives the request and sees:
 
@@ -268,7 +268,7 @@ Your server receives the request and sees:
 - The request is being made to `https://api.yoursite.dev`
 - This is a cross-origin request (different subdomains)
 
-#### Step 3: Server Makes a Trust Decision
+#### step 3: server makes a trust decision
 
 The server must decide: "Do I trust `https://yoursite.dev`?"
 
@@ -280,7 +280,7 @@ Access-Control-Allow-Origin: https://yoursite.dev
 
 If **NO** - Server omits this header or sends a different origin.
 
-#### Step 4: Browser Enforces the Decision
+#### step 4: browser enforces the decision
 
 When the browser receives the response:
 
@@ -301,7 +301,7 @@ fetch("https://api.yoursite.dev/data")
 // 'https://yoursite.dev' has been blocked by CORS policy"
 ```
 
-### The Key CORS Headers
+### the key CORS headers
 
 The most important CORS header is:
 
@@ -317,11 +317,11 @@ Access-Control-Allow-Origin: https://app.yoursite.dev
 Access-Control-Allow-Origin: *
 ```
 
-## Practical Implementation: Building a CORS-Enabled Server {#implementation}
+## practical implementation: building a CORS-enabled server {#implementation}
 
 Let's build a practical example to see CORS in action. I'll show you a complete setup with both a server and client.
 
-### Server Setup (Express.js on Port 8000)
+### server setup (express.js on port 8000)
 
 ```javascript
 // server/index.js
@@ -344,7 +344,7 @@ app.listen(PORT, () => {
 });
 ```
 
-### Client Setup (Vite React on Port 5173)
+### client setup (vite react on port 5173)
 
 ```javascript
 // client/src/App.jsx
@@ -379,7 +379,7 @@ function App() {
 export default App;
 ```
 
-### Testing the CORS Error
+### testing the CORS error
 
 Let's start both servers:
 
@@ -403,7 +403,7 @@ has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is pres
 on the requested resource.
 ```
 
-### Analyzing the Failed Request
+### analyzing the failed request
 
 Let's examine what happened in the browser's Network tab:
 
@@ -427,7 +427,7 @@ Date: Sun, 21 Sep 2025 12:30:00 GMT
 
 The browser sent the origin (`http://localhost:5173`) but the server didn't respond with the required CORS header, so the browser blocked the request.
 
-### Fixing the CORS Issue
+### fixing the CORS issue
 
 Now let's modify our server to allow cross-origin requests:
 
@@ -465,18 +465,18 @@ Content-Length: 67
 Date: Sun, 21 Sep 2025 12:30:00 GMT
 ```
 
-### Important Observations
+### important observations
 
 1. **Server-side control**: The server decides which origins to trust
 2. **Exact matching**: The header value must exactly match the requesting origin
 3. **Per-route basis**: In this example, only the `/data` route has CORS enabled
 4. **Browser caching**: Browsers may cache CORS preflight responses
 
-## The Wildcard Dilemma: When \* Becomes Dangerous {#wildcard}
+## the wildcard dilemma: when \* becomes dangerous {#wildcard}
 
 The wildcard (`*`) in CORS headers is both powerful and dangerous. Let's explore when to use it and when to avoid it.
 
-### Using the Wildcard
+### using the wildcard
 
 You can allow all origins using the wildcard:
 
@@ -493,7 +493,7 @@ With this setting:
 - **Any origin** will be allowed
 - **No authentication** should be involved
 
-### When Wildcards Are Appropriate
+### when wildcards are appropriate
 
 The wildcard is suitable for:
 
@@ -532,7 +532,7 @@ app.get("/widget.js", (req, res) => {
 });
 ```
 
-### The Danger of Wildcards
+### the danger of wildcards
 
 <Danger title="Never combine a wildcard with authenticated data">
 Using wildcards becomes extremely dangerous when dealing with authenticated users.
@@ -560,11 +560,11 @@ With this configuration:
 - **No control** over who can access sensitive endpoints
 </Strips>
 
-## Credentials and CORS: The Extra Security Layer {#credentials}
+## credentials and CORS: the extra security layer {#credentials}
 
 When working with authentication (cookies, authorization headers, etc.), CORS has additional restrictions that provide an extra layer of security.
 
-### Understanding Credentials in HTTP Requests
+### understanding credentials in HTTP requests
 
 Credentials include:
 
@@ -572,7 +572,7 @@ Credentials include:
 - **Authorization headers** (Bearer tokens, Basic auth)
 - **Client-side certificates**
 
-### Making Requests with Credentials
+### making requests with credentials
 
 By default, cross-origin requests don't include credentials. To include them, you must explicitly specify:
 
@@ -585,7 +585,7 @@ fetch("http://localhost:8000/protected-data", {
 	.then((data) => console.log(data));
 ```
 
-### Server-side Requirements for Credentialed Requests
+### server-side requirements for credentialed requests
 
 When a request includes credentials, the server has stricter requirements:
 
@@ -602,7 +602,7 @@ app.get("/protected-data", (req, res) => {
 });
 ```
 
-### Why This Restriction Exists
+### why this restriction exists
 
 This restriction prevents the following attack scenario:
 
@@ -624,7 +624,7 @@ The restriction ensures that:
 2. **Servers must consciously decide** which origins to trust with authenticated data
 3. **Blanket permissions** aren't possible for sensitive operations
 
-### Complete Example with Authentication
+### complete example with authentication
 
 Here's a complete example showing proper credential handling:
 
@@ -698,11 +698,11 @@ fetch("http://localhost:8000/user/profile", {
 	.then((profile) => console.log(profile));
 ```
 
-## Preflight Requests: Complex HTTP Methods {#preflight}
+## preflight requests: complex HTTP methods {#preflight}
 
 Not all HTTP requests are treated equally by CORS. Simple requests are sent directly, while complex requests trigger a preflight process.
 
-### Simple vs Complex Requests
+### simple vs complex requests
 
 <Cols>
 <Col>
@@ -725,11 +725,11 @@ Not all HTTP requests are treated equally by CORS. Simple requests are sent dire
 </Col>
 </Cols>
 
-### The Preflight Process
+### the preflight process
 
 When you make a complex request, the browser follows this two-step process:
 
-#### Step 1: Preflight Request (OPTIONS)
+#### step 1: preflight request (OPTIONS)
 
 ```javascript
 // Your code makes this request
@@ -751,7 +751,7 @@ Access-Control-Request-Method: DELETE
 Access-Control-Request-Headers: authorization
 ```
 
-#### Step 2: Server Preflight Response
+#### step 2: server preflight response
 
 The server must respond with allowed methods and headers:
 
@@ -765,7 +765,7 @@ app.options("/users/:id", (req, res) => {
 });
 ```
 
-#### Step 3: Actual Request (if preflight succeeds)
+#### step 3: actual request (if preflight succeeds)
 
 Only if the preflight succeeds does the browser send the actual request:
 
@@ -776,7 +776,7 @@ Origin: http://localhost:3000
 Authorization: Bearer token123
 ```
 
-### Complete Preflight Example
+### complete preflight example
 
 Here's a complete server setup handling preflight requests:
 
@@ -854,7 +854,7 @@ fetch("http://localhost:8000/users", {
 });
 ```
 
-### Preflight Optimization
+### preflight optimization
 
 Preflight requests add network overhead. You can optimize them by:
 
@@ -883,20 +883,20 @@ fetch("/api/data", {
 });
 ```
 
-## Browser vs Server-to-Server: Why Postman Always Works {#browser-vs-server}
+## browser vs server-to-server: why postman always works {#browser-vs-server}
 
 <Important title="Why does my API work in Postman but fail in the browser?">
 The answer lies in understanding that CORS is exclusively a browser security feature.
 </Important>
 
-### CORS is Browser-Only
+### CORS is browser-only
 
 CORS restrictions are **only enforced by browsers**. Here's why:
 
 <Cols>
 <Col>
 
-### Browser Environment
+### browser environment
 
 - **Shared resource**: Multiple websites open in different tabs
 - **Stored credentials**: Cookies, tokens, session data from various sites
@@ -906,7 +906,7 @@ CORS restrictions are **only enforced by browsers**. Here's why:
 </Col>
 <Col>
 
-### Server-to-Server Environment
+### server-to-server environment
 
 - **Isolated environment**: Each request is independent
 - **No shared state**: No cookies or stored credentials from other sources
@@ -916,9 +916,9 @@ CORS restrictions are **only enforced by browsers**. Here's why:
 </Col>
 </Cols>
 
-### Practical Examples
+### practical examples
 
-#### Postman Request (No CORS)
+#### postman request (no CORS)
 
 ```bash
 # This works perfectly - no CORS restrictions
@@ -926,7 +926,7 @@ curl -X GET "http://localhost:8000/data" \
   -H "Content-Type: application/json"
 ```
 
-#### Browser Request (CORS Applied)
+#### browser request (CORS applied)
 
 ```javascript
 // This fails without proper CORS headers
@@ -936,7 +936,7 @@ fetch("http://localhost:8000/data")
 // Error: blocked by CORS policy
 ```
 
-#### Server-to-Server Request (No CORS)
+#### server-to-server request (no CORS)
 
 ```javascript
 // Node.js server making request to another server
@@ -952,7 +952,7 @@ async function fetchDataFromAPI() {
 }
 ```
 
-### Why This Distinction Matters
+### why this distinction matters
 
 Understanding this distinction helps explain:
 
@@ -960,7 +960,7 @@ Understanding this distinction helps explain:
 2. **Development confusion**: Backend developers often don't encounter CORS issues
 3. **Production surprises**: CORS errors appear when deploying frontend applications
 
-### Tools That Don't Enforce CORS
+### tools that DON'T enforce CORS
 
 These tools make direct HTTP requests without browser security restrictions:
 
@@ -972,7 +972,7 @@ These tools make direct HTTP requests without browser security restrictions:
 - **Mobile apps** - Native iOS/Android applications
 - **Desktop applications** - Electron, native desktop apps
 
-### Browser Security Context
+### browser security context
 
 Browsers enforce CORS because they're a **shared resource environment**:
 
@@ -987,11 +987,11 @@ Browsers enforce CORS because they're a **shared resource environment**:
 
 This is why browsers need CORS - to isolate origins and prevent data leakage between different websites.
 
-## Common CORS Issues and Solutions {#common-issues}
+## common CORS issues and solutions {#common-issues}
 
 Let's address the most frequent CORS problems developers encounter and provide comprehensive solutions.
 
-### Issue 1: Missing Access-Control-Allow-Origin Header
+### issue 1: missing access-control-allow-origin header
 
 **Error Message:**
 
@@ -1023,7 +1023,7 @@ app.use(
 );
 ```
 
-### Issue 2: Origin Mismatch
+### issue 2: origin mismatch
 
 **Error Message:**
 
@@ -1064,7 +1064,7 @@ app.use(
 );
 ```
 
-### Issue 3: Preflight Request Failures
+### issue 3: preflight request failures
 
 **Error Message:**
 
@@ -1105,7 +1105,7 @@ app.use(
 );
 ```
 
-### Issue 4: Credentials with Wildcard
+### issue 4: credentials with wildcard
 
 **Error Message:**
 
@@ -1138,7 +1138,7 @@ app.use(
 );
 ```
 
-### Issue 5: Custom Headers Not Allowed
+### issue 5: custom headers not allowed
 
 **Error Message:**
 
@@ -1173,7 +1173,7 @@ fetch("http://localhost:8000/api/data", {
 });
 ```
 
-### Issue 6: Development vs Production CORS Issues
+### issue 6: development vs production CORS issues
 
 **Problem:**
 CORS works in development but fails in production.
@@ -1204,7 +1204,7 @@ app.use(
 );
 ```
 
-### Issue 7: Browser Caching Old CORS Headers
+### issue 7: browser caching old CORS headers
 
 **Problem:**
 CORS changes don't take effect immediately.
@@ -1228,13 +1228,13 @@ app.options("*", (req, res) => {
 // Firefox: DevTools -> Storage -> Clear All
 ```
 
-## Best Practices and Security Considerations {#best-practices}
+## best practices and security considerations {#best-practices}
 
 Implementing CORS correctly requires balancing functionality with security. Here are comprehensive best practices to follow.
 
-### Security-First Approach
+### security-first approach
 
-#### 1. Principle of Least Privilege
+#### 1. principle of least privilege
 
 Only allow the minimum necessary origins, methods, and headers:
 
@@ -1259,7 +1259,7 @@ app.use(
 );
 ```
 
-#### 2. Never Use Wildcards with Credentials
+#### 2. never use wildcards with credentials
 
 This is a critical security rule:
 
@@ -1288,7 +1288,7 @@ app.use(
 );
 ```
 
-#### 3. Validate Origins Dynamically
+#### 3. validate origins dynamically
 
 For applications with dynamic subdomains or multiple environments:
 
@@ -1324,9 +1324,9 @@ app.use(
 );
 ```
 
-### Environment-Specific Configuration
+### environment-specific configuration
 
-#### Development Configuration
+#### development configuration
 
 ```javascript
 // cors-config.js
@@ -1344,7 +1344,7 @@ const developmentConfig = {
 };
 ```
 
-#### Production Configuration
+#### production configuration
 
 ```javascript
 const productionConfig = {
@@ -1360,7 +1360,7 @@ const productionConfig = {
 };
 ```
 
-#### Configuration Selection
+#### configuration selection
 
 ```javascript
 const corsConfig =
@@ -1369,9 +1369,9 @@ const corsConfig =
 app.use(cors(corsConfig));
 ```
 
-### Performance Optimization
+### performance optimization
 
-#### 1. Preflight Caching
+#### 1. preflight caching
 
 ```javascript
 // Cache preflight responses to reduce OPTIONS requests
@@ -1385,7 +1385,7 @@ app.use(
 );
 ```
 
-#### 2. Route-Specific CORS
+#### 2. route-specific CORS
 
 Instead of applying CORS globally, apply it only where needed:
 
@@ -1405,9 +1405,9 @@ app.use(
 );
 ```
 
-### Monitoring and Logging
+### monitoring and logging
 
-#### 1. CORS Error Logging
+#### 1. CORS error logging
 
 ```javascript
 const corsOptions = {
@@ -1430,7 +1430,7 @@ const corsOptions = {
 };
 ```
 
-#### 2. Request Analytics
+#### 2. request analytics
 
 ```javascript
 app.use((req, res, next) => {
@@ -1449,9 +1449,9 @@ app.use((req, res, next) => {
 });
 ```
 
-### Common Middleware Patterns
+### common middleware patterns
 
-#### 1. Express.js with CORS Middleware
+#### 1. express.js with CORS middleware
 
 ```javascript
 const express = require("express");
@@ -1488,7 +1488,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 ```
 
-#### 2. Manual CORS Implementation
+#### 2. manual CORS implementation
 
 ```javascript
 const allowedOrigins = ["https://yourapp.com"];
@@ -1521,9 +1521,9 @@ app.use((req, res, next) => {
 });
 ```
 
-### Testing CORS Configuration
+### testing CORS configuration
 
-#### 1. Automated Testing
+#### 1. automated testing
 
 ```javascript
 // test/cors.test.js
@@ -1562,7 +1562,7 @@ describe("CORS Configuration", () => {
 });
 ```
 
-#### 2. Browser Testing Checklist
+#### 2. browser testing checklist
 
 ```javascript
 // Create a test page to verify CORS in browser
@@ -1615,15 +1615,15 @@ const testCORS = async () => {
 };
 ```
 
-## Conclusion: Mastering CORS for Secure Web Development
+## conclusion: mastering CORS for secure web development
 
 Throughout this comprehensive guide, we've explored CORS from every angle - from understanding the fundamental security problems it solves to implementing robust, production-ready solutions. Let's recap the key insights:
 
-### The Security Foundation
+### the security foundation
 
 CORS exists because browsers are **shared resources** where users access multiple websites simultaneously. Without CORS, any website could access your data from other sites, leading to catastrophic security breaches. The same-origin policy provides the default protection, while CORS offers a controlled way to relax these restrictions.
 
-### Key Technical Insights
+### key technical insights
 
 1. **Origins are defined by scheme + host + port** - understanding this tuple is crucial for CORS configuration
 2. **Servers control access** - not clients. CORS errors are always server-side configuration issues
@@ -1631,7 +1631,7 @@ CORS exists because browsers are **shared resources** where users access multipl
 4. **Complex requests trigger preflight** - be prepared to handle OPTIONS requests
 5. **Browser-only enforcement** - CORS doesn't apply to server-to-server communication
 
-### Implementation Best Practices
+### implementation best practices
 
 - **Start restrictive, then relax as needed** - follow the principle of least privilege
 - **Use environment-specific configurations** - development and production have different needs
@@ -1639,7 +1639,7 @@ CORS exists because browsers are **shared resources** where users access multipl
 - **Test thoroughly** - automated testing prevents production CORS surprises
 - **Cache preflight responses** - optimize performance while maintaining security
 
-### Beyond Basic Implementation
+### beyond basic implementation
 
 Modern CORS implementation goes beyond just "making it work" - it requires thinking about:
 
@@ -1648,7 +1648,7 @@ Modern CORS implementation goes beyond just "making it work" - it requires think
 - **Monitoring and observability** to understand access patterns
 - **Scalability considerations** for applications with dynamic origins
 
-### The Bigger Picture
+### the bigger picture
 
 CORS is more than just a technical hurdle - it's a fundamental web security mechanism that enables the modern web's flexibility while protecting users' privacy and security. By understanding CORS deeply, you're not just solving immediate technical problems, but contributing to a more secure web ecosystem.
 

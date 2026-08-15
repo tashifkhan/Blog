@@ -19,11 +19,11 @@ If you've been working with React Native or following its evolution, you've prob
 
 <Toc />
 
-## The Old Bridge Architecture: How It All Began
+## the old bridge architecture: how it all began
 
 When React Native first launched, it introduced a clever solution to run JavaScript code alongside native iOS and Android code. At its core was the "bridge" - a communication layer that allowed JavaScript and native code to talk to each other.
 
-### How the Old Bridge Worked
+### how the old bridge worked
 
 Imagine you're building a React Native app. Your code lives in three main spaces:
 
@@ -57,7 +57,7 @@ The data would travel:
   Native code ◀── JSON deserialize ─└────────┘
 </Ascii>
 
-### The Problems That Emerged
+### the problems that emerged
 
 While this architecture worked, it had some serious limitations:
 
@@ -81,15 +81,15 @@ There was no automatic way to ensure that the data JavaScript sent matched what 
 
 All native modules typically had to be loaded and initialized when your app started, even if you weren't using them right away. This bloated app startup times and memory usage.
 
-## The New Architecture: A Complete Reimagining
+## the new architecture: a complete reimagining
 
 The New Architecture (sometimes called the "Fabric" architecture or "JSI-based" architecture) isn't just an incremental improvement - it's a fundamental rethinking of how React Native works. The key innovation? **Eliminating the bridge entirely** and replacing it with direct communication between JavaScript and native code.
 
-### The Core Components
+### the core components
 
 Let's break down the four pillars of the new system:
 
-### 1. JavaScript Interface (JSI): The Game Changer
+### 1. javascript interface (JSI): the game changer
 
 JSI is the foundation of everything. It's a lightweight C++ layer that allows JavaScript to directly hold references to native C++ objects and call their methods - and vice versa.
 
@@ -101,7 +101,7 @@ const result = nativeModule.someFunction(arg1, arg2);
 // No JSON, no bridge, just a direct C++ function call
 ```
 
-### 2. Fabric: The New Rendering Engine
+### 2. fabric: the new rendering engine
 
 Fabric replaces the old UI Manager and Shadow Tree system. It's a C++ rendering layer that manages UI components across both platforms.
 
@@ -119,7 +119,7 @@ When you update your UI now, the path is:
                  └──────── synchronous ────────┘
 </Ascii>
 
-### 3. TurboModules: Smarter Native Modules
+### 3. turbomodules: smarter native modules
 
 TurboModules are the new generation of Native Modules, built on top of JSI. They bring three major improvements:
 
@@ -153,7 +153,7 @@ console.log(level);
 
 **Type Safety**: TurboModules work with Codegen to ensure type consistency between JavaScript and native code.
 
-### 4. Codegen: Automatic Type Safety
+### 4. codegen: automatic type safety
 
 Codegen is a build-time tool that automatically generates interface code for both JavaScript and native platforms. It reads your component or module definitions and creates:
 
@@ -163,7 +163,7 @@ Codegen is a build-time tool that automatically generates interface code for bot
 
 This ensures that your JavaScript code and native code always agree on data types and function signatures, catching errors at build time rather than runtime.
 
-## The Key Differences at a Glance
+## the key differences at a glance
 
 | Aspect             | Old Bridge                                 | New Architecture                       |
 | ------------------ | ------------------------------------------ | -------------------------------------- |
@@ -175,24 +175,24 @@ This ensures that your JavaScript code and native code always agree on data type
 | **Concurrency**    | Limited                                    | Full React Concurrent Mode support     |
 | **Debugging**      | Complex across async boundaries            | Easier with synchronous calls          |
 
-## Real-World Impact: What This Means for You
+## real-world impact: what this means for you
 
 So what does all this technical jargon actually mean for your app?
 
-### Performance Gains
+### performance gains
 
 - **Smoother Animations**: Complex animations that used to drop frames now run at a consistent 60fps
 - **Faster Interactions**: Touch gestures and scrolling feel more responsive
 - **Quicker Startup**: Apps launch faster thanks to lazy-loaded modules
 - **Better Memory Usage**: Only load what you actually need
 
-### Developer Experience
+### developer experience
 
 - **Fewer Runtime Errors**: Type safety catches issues at build time
 - **Easier Debugging**: Synchronous calls make stack traces more meaningful
 - **Modern React Features**: Access to Concurrent Mode, Suspense, and other cutting-edge React capabilities
 
-### Future-Proofing
+### future-proofing
 
 The New Architecture aligns React Native more closely with React's core principles and with native development practices. This means:
 
@@ -201,13 +201,13 @@ The New Architecture aligns React Native more closely with React's core principl
 - More predictable behavior
 - Stronger community support going forward
 
-## Why "Fiber" Architecture?
+## why "fiber" architecture?
 
 You might wonder why it's called the "Fiber" architecture. React Fiber is React's reconciliation algorithm that allows for interruptible rendering and work prioritization. The New Architecture in React Native is specifically designed to fully leverage these Fiber capabilities.
 
 Fabric (the rendering engine) works hand-in-hand with React Fiber to translate React's rendering output into native UI commands efficiently. So while the technical components are JSI, Fabric, TurboModules, and Codegen, they all work together to support and enhance what React Fiber brings to the table.
 
-## Should You Migrate?
+## should you migrate?
 
 <Tip title="Short answer: yes">
 If you're working on a new React Native project, the New Architecture is the way to go. For existing apps, the migration might require some work, especially if you have custom native modules, but the performance and developer experience improvements make it worthwhile.
@@ -215,7 +215,7 @@ If you're working on a new React Native project, the New Architecture is the way
 
 The React Native team has put significant effort into making the migration path as smooth as possible, with extensive documentation and tools to help you through the process.
 
-## Wrapping Up
+## wrapping up
 
 The shift from the old bridge to the New Architecture represents one of the most significant improvements in React Native's history. By replacing asynchronous message passing with direct synchronous communication, React Native has addressed its fundamental performance limitations while maintaining the developer-friendly experience that made it popular in the first place.
 

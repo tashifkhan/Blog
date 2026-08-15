@@ -23,7 +23,7 @@ Let's explore the best approaches, from the most intuitive to the most Pythonic.
 
 <Toc />
 
-## The Challenge
+## the challenge
 
 Imagine you want to generate all combinations of `n` numbers, where each number can be from 0 to some maximum value. For example:
 
@@ -32,7 +32,7 @@ Imagine you want to generate all combinations of `n` numbers, where each number 
 
 The total combinations will be `max^n`, which can grow quickly!
 
-## Solution 1: Recursion (The Elegant Approach)
+## solution 1: recursion (the elegant approach)
 
 Recursion is perhaps the most intuitive way to think about nested loops. Each recursive call represents one level of nesting.
 
@@ -117,7 +117,7 @@ Combination: [1, 1, 1]
 </Col>
 </Cols>
 
-## Solution 2: itertools.product (The Pythonic Way)
+## solution 2: itertools.product (the pythonic way)
 
 Python's `itertools` module is built for exactly this kind of problem. The `product()` function computes the Cartesian product of input iterables - which is exactly what nested loops do!
 
@@ -182,7 +182,7 @@ Combination: [1, 1, 1]
 **This is my recommended approach for most use cases.** It's clean, fast, and idiomatic Python.
 </Tip>
 
-## Solution 3: Iterative with Manual State (The Low-Level Approach)
+## solution 3: iterative with manual state (the low-level approach)
 
 You can also simulate nested loops iteratively by maintaining a list of indices, similar to how an odometer works.
 
@@ -263,7 +263,7 @@ Combination: [1, 1, 1]
 </Col>
 </Cols>
 
-## Real-World Example: Password Cracking Simulation
+## real-world example: password cracking simulation
 
 Let's say you want to generate all possible n-character passwords using a limited character set:
 
@@ -305,7 +305,7 @@ generate_passwords(3, '0123456789')
 Total passwords: 1000
 ```
 
-## Performance Comparison
+## performance comparison
 
 Let's benchmark the different approaches:
 
@@ -347,7 +347,7 @@ benchmark(5, 6)
 Typical results show `itertools.product` is 2-3x faster than recursion, thanks to its C implementation.
 </Note>
 
-## When to Use Each Approach
+## when to use each approach
 
 <Panel title="Use itertools.product when" tone="ok">
 
@@ -376,7 +376,7 @@ Typical results show `itertools.product` is 2-3x faster than recursion, thanks t
 
 </Panel>
 
-## Advanced: Varying Ranges Per Level
+## advanced: varying ranges per level
 
 What if each "loop" needs a different range? `itertools.product` handles this beautifully:
 
@@ -406,7 +406,7 @@ blue L polyester
 
 This is incredibly useful for e-commerce product variants, test case generation, or configuration exploration!
 
-## Warning: Don't Use Dynamic Code Generation!
+## warning: DON'T use dynamic code generation!
 
 <Danger title="Don't do it">
 You might be tempted to use `exec()` to build loop code as a string. **Don't.** It's:
@@ -425,7 +425,7 @@ code += "    print([i, j])"
 exec(code)  # Evil!
 ```
 
-## Wrapping Up
+## wrapping up
 
 Generating n nested loops programmatically is a classic problem with elegant solutions:
 

@@ -21,7 +21,7 @@ The truth is, Python's import system is elegant once you understand it. Let's de
 
 <Toc />
 
-## Why Project Structure Matters
+## why project structure matters
 
 Before diving into imports, let's talk about why a good project structure is crucial:
 
@@ -33,7 +33,7 @@ Before diving into imports, let's talk about why a good project structure is cru
 - **Import clarity** - Python's import system relies on logical structure
 </Strips>
 
-## A Typical Python Project Structure
+## a typical python project structure
 
 Here's a well-organized project structure we'll use as reference:
 
@@ -56,7 +56,7 @@ my_project/
         └── module_c1.py
 </Ascii>
 
-### The Magic of `__init__.py`
+### the magic of `__init__.py`
 
 That `__init__.py` file is crucial. Its presence tells Python: "This directory is a package, not just a folder."
 
@@ -88,7 +88,7 @@ Now you can do:
 from package_a import greet_a1  # Instead of package_a.module_a1.greet_a1
 ```
 
-## Understanding Python's Import Search Path
+## understanding python's import search path
 
 When you write `import something`, Python searches in this order:
 
@@ -106,11 +106,11 @@ import sys
 print(sys.path)
 ```
 
-## Absolute Imports: The Recommended Approach
+## absolute imports: the recommended approach
 
 Absolute imports specify the full path from your project root or from `sys.path`.
 
-### Example Setup
+### example setup
 
 **`my_project/package_a/module_a1.py`**:
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     run()
 ```
 
-### Running the Code
+### running the code
 
 <Tabs>
 <Tab title="From above my_project">
@@ -168,7 +168,7 @@ python main.py
 </Tab>
 </Tabs>
 
-### Why Absolute Imports Rock
+### why absolute imports rock
 
 <Tip title="Why absolute imports rock">
 - **Crystal clear** - No ambiguity about where modules come from
@@ -177,7 +177,7 @@ python main.py
 - **Explicit is better than implicit** - The Zen of Python
 </Tip>
 
-## Relative Imports: For Intra-Package Use
+## relative imports: for intra-package use
 
 Relative imports use dots (`.`) to navigate the package hierarchy, like Unix paths:
 
@@ -185,11 +185,11 @@ Relative imports use dots (`.`) to navigate the package hierarchy, like Unix pat
 - `..` = parent package
 - `...` = grandparent package
 
-### When to Use Them
+### when to use them
 
 Relative imports shine for **imports within the same package**. They make code more portable when you rename or move packages.
 
-### Examples
+### examples
 
 **`my_project/package_a/module_a2.py`**:
 
@@ -228,7 +228,7 @@ def perform_subtask():
     # perform_task()
 ```
 
-## The Relative Import Gotcha
+## the relative import gotcha
 
 <Danger title="You cannot run a module with relative imports directly as a script">
 This will fail:
@@ -241,7 +241,7 @@ python my_project/package_a/module_a2.py
 Why? When you run a Python file directly, it becomes `__main__`, not part of a package. It has no "parent package" to reference with `.` or `..`.
 </Danger>
 
-### The Solution
+### the solution
 
 Always run your **entry point** (like `main.py`), which uses absolute imports:
 
@@ -253,7 +253,7 @@ if __name__ == "__main__":
     extended_greet()
 ```
 
-## Using `-m` Flag for Package Modules
+## using `-m` flag for package modules
 
 If you need to run a module within a package, use the `-m` flag:
 
@@ -264,7 +264,7 @@ python -m my_project.package_a.module_a2
 
 This tells Python to run the module as part of its package, so relative imports work.
 
-## Best Practices Cheatsheet
+## best practices cheatsheet
 
 <Cols>
 <Col>
@@ -292,7 +292,7 @@ This tells Python to run the module as part of its package, so relative imports 
 </Col>
 </Cols>
 
-## Advanced: Making Your Package Installable
+## advanced: making your package installable
 
 Want to install your package with `pip`? Create a `setup.py`:
 
@@ -327,11 +327,11 @@ Now you can import your package from anywhere:
 from my_project.package_a import module_a1
 ```
 
-## How Python Actually Handles Imports
+## how python actually handles imports
 
 You mentioned it looks like "making an object and calling it" - great intuition! Let's explore what's really happening.
 
-### Modules Are Objects
+### modules are objects
 
 When you `import my_module`, Python:
 
@@ -349,7 +349,7 @@ print(type(my_module))  # <class 'module'>
 print(sys.modules['my_module'])  # Same object
 ```
 
-### Packages Are Module Objects Too
+### packages are module objects too
 
 When you `import package_a`, Python:
 
@@ -367,7 +367,7 @@ module_a1.greet_a1()
 
 You're accessing attributes on module objects, just like accessing methods on class instances!
 
-### Modules vs Classes
+### modules vs classes
 
 The difference is:
 
@@ -389,7 +389,7 @@ obj2 = MyClass()
 print(obj1 is obj2)  # False - different objects
 ```
 
-## Real-World Project Example
+## real-world project example
 
 Let's build a practical project structure:
 
@@ -471,9 +471,9 @@ def setup_routes():
     pass
 ```
 
-## Troubleshooting Common Issues
+## troubleshooting common issues
 
-### "No module named X"
+### "no module named X"
 
 **Problem**: Python can't find your module
 
@@ -484,13 +484,13 @@ def setup_routes():
 3. Check module spelling and path
 4. Ensure package is in `sys.path`
 
-### "Attempted relative import with no known parent package"
+### "attempted relative import with no known parent package"
 
 **Problem**: Running a module with relative imports directly
 
 **Solution**: Run the entry point instead, or use `python -m package.module`
 
-### Circular imports
+### circular imports
 
 **Problem**: Module A imports B, B imports A
 
@@ -500,7 +500,7 @@ def setup_routes():
 2. Move imports inside functions
 3. Use forward references (type hints with quotes)
 
-## Wrapping Up
+## wrapping up
 
 Python's import system is powerful once you understand the patterns:
 

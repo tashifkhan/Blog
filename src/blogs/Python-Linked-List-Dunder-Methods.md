@@ -21,7 +21,7 @@ Today, we're going to build a complete linked list implementation that feels as 
 
 <Toc depth={2} />
 
-## What Are Dunder Methods?
+## what are dunder methods?
 
 Dunder methods (also called "magic methods" or "special methods") are methods with names like `__init__`, `__str__`, `__len__`. They have two leading and two trailing underscores.
 
@@ -52,13 +52,13 @@ item in my_list
 </Col>
 </Cols>
 
-## Why Build a Linked List?
+## why build a linked list?
 
 Linked lists are fundamental data structures where elements are stored in nodes, each pointing to the next. Unlike arrays, they don't need contiguous memory, making insertions and deletions efficient at specific points.
 
 But more importantly, building one from scratch with dunder methods teaches you how Python really works under the hood.
 
-## The Node Class
+## the node class
 
 Every linked list needs nodes:
 
@@ -78,9 +78,9 @@ class Node:
 
 Simple, right? Now for the interesting part.
 
-## Building the LinkedList Class
+## building the linkedlist class
 
-### Initialization with `__init__`
+### initialization with `__init__`
 
 ```python
 class LinkedList:
@@ -104,7 +104,7 @@ Key design decisions:
 - **`tail`**: Points to the last node (makes appending O(1) instead of O(n))
 - **`length`**: Cached size (makes `len()` O(1) instead of O(n))
 
-### String Representation: `__str__` and `__repr__`
+### string representation: `__str__` and `__repr__`
 
 ```python
 def __str__(self):
@@ -145,7 +145,7 @@ print(my_list)        # [a -> b -> c]
 print(repr(my_list))  # LinkedList(['a', 'b', 'c'])
 ```
 
-### Length with `__len__`
+### length with `__len__`
 
 ```python
 def __len__(self):
@@ -156,7 +156,7 @@ def __len__(self):
     return self.length
 ```
 
-### Index Access: `__getitem__` and `__setitem__`
+### index access: `__getitem__` and `__setitem__`
 
 First, a helper method to traverse to any index:
 
@@ -206,7 +206,7 @@ my_list[0] = 15
 print(my_list)        # [15 -> 20 -> 30]
 ```
 
-### Deletion: `__delitem__`
+### deletion: `__delitem__`
 
 ```python
 def __delitem__(self, index):
@@ -225,7 +225,7 @@ del my_list[1]  # Removes 'b'
 print(my_list)  # [a -> c -> d]
 ```
 
-### Membership Testing: `__contains__`
+### membership testing: `__contains__`
 
 ```python
 def __contains__(self, item):
@@ -248,7 +248,7 @@ print(2 in my_list)     # True
 print(99 in my_list)    # False
 ```
 
-### Concatenation: `__add__`
+### concatenation: `__add__`
 
 ```python
 def __add__(self, other):
@@ -289,7 +289,7 @@ print(list3)  # [1 -> 2 -> 3 -> 4]
 print(list1)  # [1 -> 2] (unchanged)
 ```
 
-### The Iterator Protocol: `__iter__` and `__next__`
+### the iterator protocol: `__iter__` and `__next__`
 
 This is what makes `for item in my_list:` work!
 
@@ -348,7 +348,7 @@ py_list = list(my_list)
 total = sum(LinkedList([10, 20, 30]))  # 60
 ```
 
-### The Destructor: `__del__`
+### the destructor: `__del__`
 
 ```python
 def __del__(self):
@@ -365,11 +365,11 @@ def __del__(self):
 
 **Important**: `__del__` timing is unpredictable. For predictable cleanup, use context managers (`with` statement).
 
-## Essential Methods
+## essential methods
 
 Beyond dunder methods, we need core functionality:
 
-### Append (O(1))
+### append (O(1))
 
 ```python
 def append(self, data):
@@ -386,7 +386,7 @@ def append(self, data):
     self.length += 1
 ```
 
-### Prepend (O(1))
+### prepend (O(1))
 
 ```python
 def prepend(self, data):
@@ -403,7 +403,7 @@ def prepend(self, data):
     self.length += 1
 ```
 
-### Insert (O(n))
+### insert (O(n))
 
 ```python
 def insert(self, index, data):
@@ -425,7 +425,7 @@ def insert(self, index, data):
         self.length += 1
 ```
 
-### Remove (O(n))
+### remove (O(n))
 
 ```python
 def remove(self, data):
@@ -457,7 +457,7 @@ def remove(self, data):
         raise ValueError(f"{data} not in list")
 ```
 
-### Pop (O(n))
+### pop (O(n))
 
 ```python
 def pop(self, index=-1):
@@ -489,7 +489,7 @@ def pop(self, index=-1):
     return data
 ```
 
-## Putting It All Together
+## putting it all together
 
 Here's how naturally our LinkedList behaves:
 
@@ -534,7 +534,7 @@ my_list.remove(4)
 popped = my_list.pop()
 ```
 
-## Performance Characteristics
+## performance characteristics
 
 | Operation             | Time Complexity |
 | --------------------- | --------------- |
@@ -549,19 +549,19 @@ popped = my_list.pop()
 | `__contains__ (in)`   | O(n)            |
 | `__len__`             | O(1)            |
 
-## Best Practices for Dunder Methods
+## best practices for dunder methods
 
-### 1. Follow Conventions
+### 1. follow conventions
 
 When you override `__add__`, it should truly represent addition or concatenation, not something unrelated.
 
-### 2. Pair Related Methods
+### 2. pair related methods
 
 - Implement both `__str__` and `__repr__`
 - If you have `__getitem__`, consider `__setitem__` and `__delitem__`
 - If you have `__eq__`, consider `__ne__`, `__lt__`, etc.
 
-### 3. Handle Edge Cases
+### 3. handle edge cases
 
 ```python
 def __getitem__(self, index):
@@ -571,13 +571,13 @@ def __getitem__(self, index):
     # ...
 ```
 
-### 4. Return Appropriate Types
+### 4. return appropriate types
 
 - `__str__` and `__repr__` must return strings
 - `__len__` must return an integer
 - `__iter__` must return an iterator
 
-### 5. Don't Rely on `__del__`
+### 5. DON'T rely on `__del__`
 
 <Caution>
 `__del__` runs when the garbage collector gets round to it, which is not a
@@ -599,7 +599,7 @@ with ResourceHolder() as holder:
     pass  # Cleanup happens here, guaranteed
 ```
 
-## Testing Your Implementation
+## testing your implementation
 
 <Details summary="The full test suite">
 
@@ -653,7 +653,7 @@ test_linked_list()
 
 </Details>
 
-## What You've Learned
+## what you've learned
 
 By building this linked list, you've mastered:
 
@@ -667,7 +667,7 @@ By building this linked list, you've mastered:
 - **Destructor behavior** with `__del__`
 </Strips>
 
-## Wrapping Up
+## wrapping up
 
 Dunder methods are what make Python feel magical. They let you create custom objects that behave naturally with Python's syntax, making your code more intuitive and Pythonic.
 

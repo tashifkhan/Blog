@@ -21,7 +21,7 @@ Let's dive into the core strategies and how various popular frameworks implement
 
 <Toc />
 
-## 1. Classic Multi-Page Apps (MPA): The HTML Foundation
+## 1. classic multi-page apps (MPA): the HTML foundation
 
 At its heart, the web was built on the Multi-Page Application (MPA) model. When a user requests a page, the server generates and sends back a complete HTML document. If the user clicks a link, the browser makes another request to the server, which then responds with an entirely new HTML page.
 
@@ -64,11 +64,11 @@ At its heart, the web was built on the Multi-Page Application (MPA) model. When 
 </Col>
 </Cols>
 
-### HTMX: Modernizing the MPA
+### HTMX: modernizing the MPA
 
 **HTMX** takes the MPA concept and supercharges it. Instead of full page reloads, HTMX allows specific elements on the page to trigger AJAX requests that return _HTML fragments_ (not JSON). This HTML fragment then replaces a specified part of the current page. This gives a "SPA-like" feel without needing a large client-side JavaScript framework.
 
-## 2. Classic Single-Page Apps (SPA): Client-Side Dominance
+## 2. classic single-page apps (SPA): client-side dominance
 
 The rise of powerful client-side JavaScript introduced the Single-Page Application (SPA) model. In an SPA, the server initially sends a minimal HTML scaffold, often just an empty `<body>` tag and a `<script>` tag. The vast majority of the application's UI is then rendered, managed, and navigated client-side using JavaScript.
 
@@ -113,7 +113,7 @@ The rise of powerful client-side JavaScript introduced the Single-Page Applicati
 </Col>
 </Cols>
 
-## 3. Server-Side Rendered (SSR) SPAs: Bridging the Gap
+## 3. server-side rendered (SSR) SPAs: bridging the gap
 
 To address the SEO and initial load performance issues of classic SPAs, Server-Side Rendering (SSR) emerged. With SSR, the initial request for a page is handled by a server-side JavaScript runtime (like Node.js) that executes the same application code that would normally run in the browser. This generates the complete HTML on the server and sends it to the client. Once on the client, the JavaScript then "hydrates" the already-rendered HTML, making it interactive.
 
@@ -155,7 +155,7 @@ To address the SEO and initial load performance issues of classic SPAs, Server-S
 </Col>
 </Cols>
 
-## 4. Isomorphic Rendering & Server Components: The Modern Hybrid (Next.js App Directory)
+## 4. isomorphic rendering & server components: the modern hybrid (next.js app directory)
 
 Isomorphic (or Universal) applications are those where the _same codebase_ can run on both the server and the client, but critically, it can behave _differently_ in each environment. This concept has been refined with **React Server Components (RSC)**, heavily adopted by **Next.js in its "App" directory**.
 
@@ -200,7 +200,7 @@ Isomorphic (or Universal) applications are those where the _same codebase_ can r
 </Col>
 </Cols>
 
-## 5. MPA-Influenced Split Execution: The "Islands" Architecture
+## 5. MPA-influenced split execution: the "islands" architecture
 
 The "Islands" architecture aims to blend the best of both worlds without the full server-side React runtime overhead across the entire application. It leverages the traditional MPA's ability to serve static HTML from a CDN very quickly, while selectively "hydrating" or making interactive only small, isolated parts ("islands") of the page.
 
@@ -240,7 +240,7 @@ The "Islands" architecture aims to blend the best of both worlds without the ful
 </Col>
 </Cols>
 
-## Conclusion: The Blended Future
+## conclusion: the blended future
 
 The journey through web rendering strategies reveals a clear trend: the industry is striving for a harmonious blend of server-side power and client-side fluidity.
 

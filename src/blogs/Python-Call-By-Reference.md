@@ -21,7 +21,7 @@ But don't worry! Once you understand what Python actually does, you'll see it's 
 
 <Toc />
 
-## The Truth About Python Variables
+## the truth about python variables
 
 First, we need to shift our mental model. In many languages, variables are like boxes that hold values. In Python, variables are more like **name tags** that point to objects in memory.
 
@@ -38,7 +38,7 @@ You're not creating a box labeled "count" that contains the number 5. Instead, y
 
 This distinction is crucial for understanding how function arguments work in Python.
 
-## Pass by Assignment: Python's Actual Mechanism
+## pass by assignment: python's actual mechanism
 
 Python uses something called "**pass by assignment**" or "**call by object reference**." Here's what happens when you pass an argument to a function:
 
@@ -50,7 +50,7 @@ Python uses something called "**pass by assignment**" or "**call by object refer
 
 Think of it like this: you're giving the object a second name tag, not making a copy of the object.
 
-## The Immutability Catch: Why Integers Behave Differently
+## the immutability catch: why integers behave differently
 
 Let's see why you can't directly modify an integer in a function:
 
@@ -90,7 +90,7 @@ Notice the `id` values (memory addresses). Here's what happened:
 Because integers in Python are **immutable** - they can't be changed after creation. You can't modify a 5 to become a 6; you can only create a new 6.
 </Note>
 
-## Solution 1: Return the New Value (Most Pythonic)
+## solution 1: return the new value (most pythonic)
 
 The simplest and most Pythonic approach is to return the new value:
 
@@ -115,7 +115,7 @@ print(f"After decrement: {my_count}")  # Output: After decrement: 5
 
 This makes the data flow explicit and clear. It's the preferred approach for simple immutable values like integers, strings, or tuples.
 
-## Solution 2: Use a Mutable Container
+## solution 2: use a mutable container
 
 Since Python passes object references, if you pass a **mutable** object (one that can be modified in place), changes made inside the function will be visible outside. This is because both names point to the same mutable object.
 
@@ -201,7 +201,7 @@ This approach is clean, readable, and makes your intent clear.
 </Tab>
 </Tabs>
 
-## Solution 3: Global Variables (Use Sparingly!)
+## solution 3: global variables (use sparingly!)
 
 You can use the `global` keyword to modify a global variable from within a function:
 
@@ -229,7 +229,7 @@ print(f"After decrement: {count}")  # Output: After decrement: 5
 Global variables can make code harder to understand, test, and debug. They create hidden dependencies between different parts of your code. Use this approach only when absolutely necessary.
 </Warning>
 
-## When to Use Which Approach?
+## when to use which approach?
 
 Here's my guide for choosing the right pattern:
 
@@ -275,7 +275,7 @@ Here's my guide for choosing the right pattern:
 </Col>
 </Cols>
 
-## The Bigger Picture: Python's Philosophy
+## the bigger picture: python's philosophy
 
 Python's approach might seem strange at first, but it aligns with the language's philosophy:
 
@@ -285,7 +285,7 @@ Python's approach might seem strange at first, but it aligns with the language's
 
 Once you internalize that everything in Python is an object reference and understand the mutable vs. immutable distinction, the behavior becomes intuitive and predictable.
 
-## Quick Reference: Mutable vs. Immutable
+## quick reference: mutable vs. immutable
 
 <Cols>
 <Col>
@@ -312,7 +312,7 @@ Once you internalize that everything in Python is an object reference and unders
 </Col>
 </Cols>
 
-## Wrapping Up
+## wrapping up
 
 Python doesn't have "call by reference" because it doesn't need it. The combination of pass-by-assignment with mutable and immutable types provides a clean, consistent model that works well once you understand it.
 

@@ -21,7 +21,7 @@ three sites that render these posts, it breaks here first and visibly.
 
 <Toc />
 
-## Why components at all {#why}
+## why components at all {#why}
 
 Plain Markdown gives you prose, lists, tables and code. That is enough for a
 tutorial and not enough for a plan, a comparison, or a postmortem — documents
@@ -38,9 +38,9 @@ Everything here can be written as a tag (`<Steps>`) or as a directive
 survive being read on GitHub, where an unknown tag would simply vanish.
 </Note>
 
-## Layout {#layout}
+## layout {#layout}
 
-### Columns
+### columns
 
 <Cols ratio="2:1">
 <Col>
@@ -81,7 +81,7 @@ Chinese, English, French, Spanish, Russian, German, Japanese, Korean, etc.
 </Col>
 </Cols>
 
-### Panels
+### panels
 
 <Panel title="Setup" icon="settings" tape tilt={-2}>
 A panel is the generic card. It takes an optional title, a Lucide-style `icon`,
@@ -105,14 +105,14 @@ A strip of tape can also stand on its own, as pure decoration:
 
 <Tape rotate={-6} />
 
-### Ink band
+### ink band
 
 <InkBand title="House rules">
 An inverted section, for a break in the page. Everything inside follows the
 inverted colour rather than the page's, including [links](#layout) and `code`.
 </InkBand>
 
-### Strips
+### strips
 
 <Strips>
 - Each list item becomes its own card
@@ -120,9 +120,9 @@ inverted colour rather than the page's, including [links](#layout) and `code`.
 - Good for a set of short, unordered points
 </Strips>
 
-## Document structure {#structure}
+## document structure {#structure}
 
-### Steps
+### steps
 
 <Steps>
 <Step title="Install">
@@ -142,7 +142,7 @@ renumbering the ones below by hand.
 </Step>
 </Steps>
 
-### Phases
+### phases
 
 <Phases>
 <Phase title="Foundation" tag="done" tone="ok">
@@ -156,7 +156,7 @@ Blog theme, API manifest, portfolio, editor palette.
 </Phase>
 </Phases>
 
-### Checklist
+### checklist
 
 <Checklist title="Before publish">
 - [x] Directives validate
@@ -164,7 +164,7 @@ Blog theme, API manifest, portfolio, editor palette.
 - [ ] Cover image set
 </Checklist>
 
-### Collapsible detail
+### collapsible detail
 
 <Details summary="Why not just use MDX?">
 MDX compiles to JavaScript with arbitrary imports. The API serves Markdown
@@ -173,9 +173,9 @@ renders a string — none of those can evaluate a module. A closed registry keep
 the authoring ergonomics and drops the runtime.
 </Details>
 
-## Data {#data}
+## data {#data}
 
-### Headline numbers
+### headline numbers
 
 <Kpi cols={3}>
 <Stat value="34" label="components" tone="accent" />
@@ -183,7 +183,7 @@ the authoring ergonomics and drops the runtime.
 <Stat value="1" label="renderer" />
 </Kpi>
 
-### Scored rubric
+### scored rubric
 
 <Meters>
 <Meter label="Renderer drift between sites" level="low" score={2}>
@@ -200,7 +200,7 @@ tag into the page.
 </Meter>
 </Meters>
 
-### Bars
+### bars
 
 <Bars title="Where the lines went">
 <Bar label="components.ts" value={720} max={900} tone="accent" />
@@ -215,7 +215,7 @@ tag into the page.
 - Checks
 </Legend>
 
-## Marginalia {#marginalia}
+## marginalia {#marginalia}
 
 Inline components sit inside a sentence: a <Mark>highlighted phrase</Mark>, a
 <Sticker shape="round" tone="ok">NEW</Sticker> stamp, or <Hand>a note in the
@@ -226,9 +226,9 @@ Standing alone, the same component becomes a block instead — a `span` cannot
 hold paragraphs, so the element follows the position.
 </Hand>
 
-## Media {#media}
+## media {#media}
 
-### Diagrams that Markdown would mangle
+### diagrams that markdown would mangle
 
 <Ascii label="Publishing flow from the editor to the two reading sites">
   editor ──▶ POST /api/publish ──▶ GitHub (src/blogs/*.md)
@@ -243,7 +243,7 @@ The body of an `Ascii` block is captured verbatim — the alignment, the pipes
 and the underscores all survive, which they would not if the content went
 through the Markdown parser.
 
-### Figures
+### figures
 
 <Figure caption="A mermaid diagram inside an explicit figure" credit="Generated at render time">
 
@@ -258,7 +258,7 @@ flowchart LR
 
 </Figure>
 
-### Embeds
+### embeds
 
 Only an allowlisted provider with a pattern-checked id ever becomes a frame,
 because this content crosses an API boundary and is rendered by two other
@@ -266,7 +266,7 @@ sites.
 
 <Embed type="youtube" id="dQw4w9WgXcQ" title="An allowlisted embed" />
 
-## Tabs {#tabs}
+## tabs {#tabs}
 
 <Tabs>
 <Tab title="bun">
@@ -289,7 +289,7 @@ pnpm add @tashif/markdown
 Without JavaScript every panel stays visible under its own heading, which reads
 as a document rather than as a widget that failed to load.
 
-## The directive spelling {#directives}
+## the directive spelling {#directives}
 
 Everything above also works with colons, which is what already-published posts
 use and what stays readable on GitHub:
@@ -324,7 +324,7 @@ do it
 :::
 ::::
 
-## Callouts {#callouts}
+## callouts {#callouts}
 
 :::note
 The six callouts predate the registry and are unchanged.

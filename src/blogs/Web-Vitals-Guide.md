@@ -21,7 +21,7 @@ We've all been there. You build a beautiful application, test it locally, everyt
 
 After years of building with everything from Flask and FastAPI backends to Next.js, React, and Astro frontends, I've learned that understanding Core Web Vitals isn't just about appeasing Google's algorithms - it's about delivering genuinely exceptional user experiences. And honestly? It's become one of the most important skills in modern web development.
 
-## What Are Core Web Vitals, Really?
+## what are core web vitals, really?
 
 Core Web Vitals are Google's attempt to quantify user experience through measurable metrics. Think of them as the vital signs of your web application - like a doctor checking your pulse, blood pressure, and temperature. These metrics capture the most critical aspects of how users perceive performance.
 
@@ -47,13 +47,13 @@ But the story doesn't end there. To truly understand performance, we also need t
 
 Let's dive deep into each one.
 
-## First Contentful Paint: The Moment Your Users Know Something's Happening
+## first contentful paint: the moment your users know something's happening
 
 FCP marks when users first see _something_ meaningful on their screens. For a site like `tashif.codes`, this might be the header text, the navigation bar, or the beginning of a hero section.
 
 Google's guideline is sub-1.8 seconds, but if you want to truly impress, aim for under 1 second.
 
-### Optimizing FCP with FastAPI
+### optimizing FCP with fastapi
 
 On the backend, you want to send critical content as quickly as possible:
 
@@ -93,7 +93,7 @@ async def home():
 **Prioritize above-the-fold content and inline critical CSS**. Everything else can wait.
 </Tip>
 
-## Largest Contentful Paint: The Heavy Hitter
+## largest contentful paint: the heavy hitter
 
 LCP is usually the hero image, a large text block, or a video thumbnail. On `tashif.codes`, if your portfolio hero image takes 4 seconds to load, that's your LCP - and you're failing Google's 2.5-second threshold.
 
@@ -163,13 +163,13 @@ Astro automatically optimizes images at build time, converting them to modern fo
 </Tab>
 </Tabs>
 
-## Interaction to Next Paint: The Responsiveness Reality Check
+## interaction to next paint: the responsiveness reality check
 
 INP is the newest Core Web Vital, and it's tough. It measures the latency of _every_ user interaction throughout the page's entire lifecycle - not just the first one like the old FID metric.
 
 Think about it: users don't just interact once. They click, type, scroll, hover. INP captures all of that.
 
-### Optimizing INP in React
+### optimizing INP in react
 
 ```javascript
 import { useCallback, useMemo, startTransition } from "react";
@@ -230,11 +230,11 @@ The key techniques:
 - **Debouncing** to avoid thrashing on rapid input
 - **Code splitting** to reduce bundle size
 
-## Cumulative Layout Shift: The Stability Champion
+## cumulative layout shift: the stability champion
 
 CLS is perhaps the most user-facing metric. You know that moment when you're about to click a button and an ad loads, shifting everything down, and you end up clicking something else? That's CLS, and it's infuriating.
 
-### Preventing CLS with CSS
+### preventing CLS with CSS
 
 ```css
 /* Reserve space for images using aspect ratio */
@@ -289,7 +289,7 @@ video {
 
 </Panel>
 
-## Framework-Specific Strategies
+## framework-specific strategies
 
 <Tabs>
 <Tab title="Next.js">
@@ -389,7 +389,7 @@ async def get_cached_projects(category: str):
 </Tab>
 </Tabs>
 
-## Measuring Core Web Vitals
+## measuring core web vitals
 
 You can't optimize what you don't measure. Here's how I monitor `tashif.codes`:
 
@@ -431,7 +431,7 @@ Tools I use:
 - **Search Console** (Core Web Vitals report)
 - **Real User Monitoring** (via web-vitals.js)
 
-## The Business Impact
+## the business impact
 
 Let's talk numbers. Google's research shows:
 
@@ -450,7 +450,7 @@ For `tashif.codes` or any portfolio/business site, poor Core Web Vitals mean:
 
 Performance isn't just technical - it's a business imperative.
 
-## Your Action Plan
+## your action plan
 
 <Steps>
 <Step title="Audit now">Run Lighthouse on your site today.</Step>
@@ -462,7 +462,7 @@ Performance isn't just technical - it's a business imperative.
 <Step title="Iterate">Performance is a journey, not a destination.</Step>
 </Steps>
 
-## Wrapping Up
+## wrapping up
 
 Core Web Vitals represent the future of web development - where user experience is quantified, measured, and optimized. As full-stack developers, we have unique leverage: we control both the frontend rendering and backend delivery.
 

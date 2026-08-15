@@ -21,7 +21,7 @@ You've probably heard the phrase "everything in Python is an object." It's not j
 
 If classes are objects, then something must create them, right? Just like a class creates its instances, something creates the class itself. That "something" is called a **metaclass**, and understanding this concept opens up a whole new level of Python mastery.
 
-## The `type` Enigma: Function or Class?
+## the `type` enigma: function or class?
 
 Let's start with `type` - one of the most fundamental yet confusing elements in Python. You've probably used it to check an object's type:
 
@@ -32,7 +32,7 @@ print(type(x))  # <class 'int'>
 
 But here's the twist: `type` is both a function AND a class. Mind-bending? Let's unpack it.
 
-### `type` as a Function
+### `type` as a function
 
 When you call `type()` with one argument, it acts like a function that returns the type of an object:
 
@@ -45,7 +45,7 @@ When you call `type()` with one argument, it acts like a function that returns t
 <class 'list'>
 ```
 
-### `type` as a Metaclass
+### `type` as a metaclass
 
 But `type` has a secret identity. It's actually the default **metaclass** - the class that creates other classes. Every class you define in Python is, by default, an instance of `type`.
 
@@ -69,7 +69,7 @@ print(type(my_instance))  # <class '__main__.MyClass'>
 
 So `type` is to `MyClass` what `MyClass` is to `my_instance`. It's turtles all the way down!
 
-## The Class Creation Process: Behind the Scenes
+## the class creation process: behind the scenes
 
 When Python encounters a `class` definition, it doesn't just magically create a class object. There's an elegant choreography happening behind the scenes. Let's break it down step by step.
 
@@ -161,7 +161,7 @@ After this, `MyClass` is ready to use! It's a fully-formed class object that can
 </Step>
 </Steps>
 
-## Creating Classes Dynamically with `type()`
+## creating classes dynamically with `type()`
 
 Here's where things get really cool. Since `type` is what creates classes, you can call it directly to create classes programmatically, without using the `class` statement at all!
 
@@ -199,7 +199,7 @@ print(fido.species)  # Canis familiaris
 
 This is incredibly powerful for metaprogramming - creating classes on the fly based on configuration, data, or other runtime conditions.
 
-## Custom Metaclasses: Taking Control
+## custom metaclasses: taking control
 
 Sometimes you want to customize how classes are created. This is where custom metaclasses shine. They allow you to:
 
@@ -239,7 +239,7 @@ print(person.describe())  # I am an instance of Person
 print(dog.describe())      # I am an instance of Dog
 ```
 
-## Real-World Example: A Singleton Metaclass
+## real-world example: a singleton metaclass
 
 One of the most popular uses of metaclasses is implementing the Singleton pattern - ensuring only one instance of a class can exist:
 
@@ -267,7 +267,7 @@ db2 = Database()  # (no output - returns existing instance)
 print(db1 is db2)  # True - same object!
 ```
 
-## The Object Model Hierarchy
+## the object model hierarchy
 
 Let's visualize the complete picture:
 
@@ -318,7 +318,7 @@ True
 True
 ```
 
-## When Should You Use Metaclasses?
+## when should you use metaclasses?
 
 <Caution title="Honest truth">
 **Most of the time, you shouldn't.** As Python core developer Tim Peters famously said:
@@ -339,7 +339,7 @@ For everyday programming, simpler alternatives usually suffice:
 - Class methods and properties for class-level behavior
 - Regular inheritance for sharing functionality
 
-## Key Takeaways
+## key takeaways
 
 <Panel title="Key takeaways" tone="accent">
 

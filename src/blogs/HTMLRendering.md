@@ -29,11 +29,11 @@ Let's embark on this journey and unveil the browser's hidden process, revealing 
 
 <Toc />
 
-## The Genesis: From Raw Code to Rendered Glory
+## the genesis: from raw code to rendered glory
 
 When you hit Enter after typing a URL, or when a webpage first loads, your browser isn't just mindlessly throwing content onto the screen. Oh no, it's meticulously following a multi-stage pipeline, processing information and building complex internal representations before anything becomes visible.
 
-### Phase 1: The Blueprint – Constructing the DOM (Document Object Model)
+### phase 1: the blueprint – constructing the DOM (document object model)
 
 Imagine your HTML document as the architectural blueprint of a building. It defines the structure: where the walls are, where the windows go, the foundational elements. The browser's first task is to read this blueprint.
 
@@ -43,7 +43,7 @@ It begins by parsing the HTML byte by byte, converting it into a sequence of cha
 **Think of it:** The DOM is the browser's internal map of your webpage's _content_ and _structure_. It's purely logical, without any visual styling applied yet.
 </Hand>
 
-### Phase 2: The Style Guide – Crafting the CSSOM (CSS Object Model)
+### phase 2: the style guide – crafting the CSSOM (CSS object model)
 
 While the DOM is being constructed, the browser is simultaneously doing something similar with your CSS. It fetches all CSS files (or processes inline styles), parses them, and builds the **CSS Object Model (CSSOM)**. This is another tree structure, but instead of representing the document's content hierarchy, it represents all the style rules that apply to your page.
 
@@ -53,7 +53,7 @@ The CSSOM accounts for all CSS sources: external stylesheets, inline styles, emb
 **Think of it:** The CSSOM is the browser's comprehensive style guide, dictating the _visual appearance_ of every element.
 </Hand>
 
-### Phase 3: The Master Plan – Merging into the Render Tree
+### phase 3: the master plan – merging into the render tree
 
 Now, here's where things get interesting! The DOM (the content structure) and the CSSOM (the style rules) are two separate entities. To actually _see_ something, the browser needs to combine them. This fusion results in the creation of the **Render Tree** (sometimes called the Layout Tree or Frame Tree).
 
@@ -67,7 +67,7 @@ Elements like `<head>` or those with `display: none` in their CSS are not part o
 **Think of it:** The Render Tree is the browser's distilled, visual representation of what actually needs to be drawn. It's the pre-production storyboard, ready for action.
 </Hand>
 
-### Phase 4: The Blueprint in Action – Layout (Reflow)
+### phase 4: the blueprint in action – layout (reflow)
 
 With the Render Tree constructed, the browser now knows _what_ to draw. But it doesn't yet know _where_ to draw it. This critical phase is called **Layout**, and it's often referred to as **Reflow**.
 
@@ -79,7 +79,7 @@ The transcript notes that "browsers generally use an optimized approach where si
 **Think of it:** Reflow is like the choreographer on a stage, determining every dancer's exact spot, size, and relationship to the others before the curtain rises. It's all about geometry.
 </Hand>
 
-### Phase 5: The Grand Reveal – Painting
+### phase 5: the grand reveal – painting
 
 Finally, after all the meticulous calculations of position and size are done, we arrive at the **Painting** phase. This is where the browser actually draws the pixels onto the screen. Using the information from the Render Tree (the "what") and the Layout phase (the "where"), the browser renders the visible content, applying colors, background images, borders, text, shadows, and all other visual properties.
 
@@ -91,11 +91,11 @@ The content is painted onto various "layers" which can then be composited togeth
 
 So, when a webpage first appears on your screen, it's gone through at least one full cycle of DOM parsing, CSSOM construction, Render Tree generation, Reflow, and Painting. But what happens when the page changes _after_ this initial load? That's where the real performance considerations come into play.
 
-## The Dynamic Dance: Reflow vs. Repaint in Action
+## the dynamic dance: reflow vs. repaint in action
 
 Webpages aren't static images; they're dynamic. User interactions, data updates, and animations constantly alter their state. When these changes occur, the browser needs to update the display. This is where Reflow and Repaint truly shine – or stumble – in terms of performance.
 
-### Reflow (Layout): The Heavyweight Operation
+### reflow (layout): the heavyweight operation
 
 As we've learned, Reflow is about recalculating the _geometric properties_ of elements. When the structure or layout of even a single element changes in a way that affects its size or position, the browser might need to re-run the layout process for a significant portion, or even the entirety, of the page. This means re-evaluating the positions and dimensions of potentially many elements, accounting for their relationships.
 
@@ -144,7 +144,7 @@ element.classList.add("new-dimensions");
 - **Utilize `transform` for Animations:** As the transcript highlights, "using CSS techniques like utilizing the transform property for animations... doesn't trigger a Reflow." Properties like `transform: translate()`, `scale()`, and `rotate()` are often handled by the GPU on a separate "compositing layer," meaning they don't affect the document's layout and thus bypass the Reflow stage entirely, leading to buttery-smooth animations.
 - **Avoid Layout Thrashing:** Be mindful of repeatedly reading layout properties _and then_ writing layout-affecting properties in a loop. This forces the browser to Reflow on each iteration. Batch your reads and writes.
 
-### Repaint: The Visual Freshener
+### repaint: the visual freshener
 
 **Repaint** refers to updating the visual appearance of elements _without changing their layout_. It involves redrawing pixels on the screen to reflect changes in visual properties that don't impact the document flow or geometry.
 
@@ -165,7 +165,7 @@ While less impactful than Reflows, it's still good practice to optimize Repaints
 - **Minimize Animated Properties:** If you're animating a property that only causes a Repaint, consider if it's strictly necessary to animate.
 - **Leverage Hardware-Accelerated CSS Properties:** The transcript correctly notes, "utilize Hardware accelerated CSS properties." Properties like `opacity` and `transform` are excellent candidates. When these properties are animated, the browser can often create a new "compositing layer" for the element, which is then rendered by the GPU directly. This offloads work from the main CPU thread, leading to significantly smoother animations. Think of it like a separate transparent sheet that the GPU can move or fade independently without touching the underlying content or layout.
 
-## The Developer's Advantage: Understanding the Undercurrents
+## the developer's advantage: understanding the undercurrents
 
 As someone interested in Computer Science, customisation, and efficiency, you can appreciate that understanding these fundamental browser operations is more than just trivia. It's a foundational pillar for building highly performant and user-friendly web experiences. A fast, responsive website isn't just a nicety; it's a critical component of user satisfaction and conversion rates.
 

@@ -23,11 +23,11 @@ If you're working with React or React Native, you've probably encountered both `
 
 <Toc />
 
-## useState: The Reactive State Manager
+## usestate: the reactive state manager
 
 `useState` is probably the first hook you learned in React. It's the go-to solution for managing data that affects what users see on screen.
 
-### How useState Works
+### how usestate works
 
 When you call `useState`, you get back an array with two elements:
 
@@ -56,7 +56,7 @@ function Counter() {
 }
 ```
 
-### The Magic of Re-rendering
+### the magic of re-rendering
 
 The crucial thing about `useState`: **calling `setValue` triggers a re-render**. This is exactly what you want when data changes and the UI needs to update.
 
@@ -69,7 +69,7 @@ When you click the button:
 
 This reactive behavior is what makes React... well, React!
 
-### Common useState Use Cases
+### common usestate use cases
 
 <Strips>
 - **Form inputs**: Text fields, checkboxes, radio buttons
@@ -80,7 +80,7 @@ This reactive behavior is what makes React... well, React!
 - **Visibility flags**: Showing/hiding components
 </Strips>
 
-## useRef: The Silent Value Keeper
+## useref: the silent value keeper
 
 `useRef` is quite different. It returns a mutable object that persists for the component's entire lifetime:
 
@@ -90,7 +90,7 @@ const myRef = useRef(initialValue);
 
 You get back an object with a single property: `current`. You can read from and write to `myRef.current` freely, and React won't bat an eye - no re-renders triggered.
 
-### Accessing DOM Elements
+### accessing DOM elements
 
 The most common use case is getting direct access to DOM elements:
 
@@ -116,7 +116,7 @@ function TextInputWithFocusButton() {
 
 When you attach a ref to a React element with `ref={inputRef}`, React sets `inputRef.current` to point to the actual DOM node.
 
-### Storing Values Between Renders
+### storing values between renders
 
 You can also use `useRef` to store any value that needs to persist but shouldn't trigger re-renders:
 
@@ -165,7 +165,7 @@ function Stopwatch() {
 
 Notice how `intervalRef` stores the interval ID. We need this value to persist between renders, but we don't want changing it to cause a re-render - that would be wasteful!
 
-## The Key Differences
+## the key differences
 
 Let's put them side-by-side:
 
@@ -178,7 +178,7 @@ Let's put them side-by-side:
 | **Persists across renders?** | ✅ Yes                           | ✅ Yes                                    |
 | **Typical use cases**        | UI state, form data, API results | DOM access, timer IDs, previous values    |
 
-## React Native: Same Concepts, Different Elements
+## react native: same concepts, different elements
 
 The good news? Everything works the same way in React Native!
 
@@ -262,7 +262,7 @@ function ScrollableContent() {
 </Tab>
 </Tabs>
 
-## When to Use Each
+## when to use each
 
 <Cols>
 <Col>
@@ -289,7 +289,7 @@ function ScrollableContent() {
 </Col>
 </Cols>
 
-## Common Pitfall: Using useRef When You Need useState
+## common pitfall: using useref when you need usestate
 
 A mistake I see often:
 
@@ -338,7 +338,7 @@ function WorkingCounter() {
 </Col>
 </Cols>
 
-## Advanced Pattern: Combining Both
+## advanced pattern: combining both
 
 Sometimes you need both! Here's a real-world example - tracking whether a component has mounted:
 
@@ -383,9 +383,9 @@ function DataFetcher() {
 
 Here, `isMountedRef` prevents state updates after unmounting (which causes warnings), while `data` and `loading` manage the UI.
 
-## Performance Considerations
+## performance considerations
 
-### useState Optimization
+### usestate optimization
 
 React is smart about re-renders, but you can optimize further:
 
@@ -404,7 +404,7 @@ const [state, setState] = useState(() => {
 Since `useRef` doesn't trigger re-renders, there's no performance concern with updating it frequently. That's actually one of its key benefits!
 </Note>
 
-## Wrapping Up
+## wrapping up
 
 The distinction between `useState` and `useRef` is fundamental to React:
 

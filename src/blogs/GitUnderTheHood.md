@@ -23,7 +23,7 @@ Let's dive deeper into the core components that make this possible.
 
 <Toc />
 
-### The Immutable Building Blocks: Git Objects
+### the immutable building blocks: git objects
 
 At its heart, Git is a database of four primary object types, each identified by a unique SHA-1 hash of its content. This cryptographic hashing is what gives Git its incredible integrity – if even a single bit of an object changes, its hash changes, making tampering immediately detectable.
 
@@ -55,7 +55,7 @@ At its heart, Git is a database of four primary object types, each identified by
 
 </Panel>
 
-### References (Refs): Your Navigational Pointers
+### references (refs): your navigational pointers
 
 While objects are the immutable data, **references (refs)** are the mutable pointers that help you navigate your project's history. They are essentially files in the `.git/refs` directory that contain the SHA-1 hash of a commit object.
 
@@ -63,7 +63,7 @@ While objects are the immutable data, **references (refs)** are the mutable poin
 - **Tags:** As mentioned, lightweight tags are just references to commits. Annotated tags are Git objects that _then_ point to a commit.
 - **HEAD:** This is the most important reference. `HEAD` is a symbolic reference that points to the branch you are currently working on. When you `git checkout feature-x`, `HEAD` now points to `refs/heads/feature-x`. When you commit, the branch that `HEAD` points to moves forward.
 
-### Branching: A Simple Pointer Game
+### branching: a simple pointer game
 
 Given Git's object model and ref system, branching becomes incredibly simple and cheap.
 
@@ -95,11 +95,11 @@ As you make commits on `new-feature`, the `new-feature` pointer moves forward, w
           HEAD (after checkout new-feature)
 </Ascii>
 
-### Merging: Weaving Histories Together
+### merging: weaving histories together
 
 When separate lines of development need to be brought together, Git offers merging.
 
-#### Fast-forward merge
+#### fast-forward merge
 
 - **When it happens:** If the branch you're merging _into_ (e.g., `main`) is an ancestor of the branch you're merging _from_ (e.g., `feature-x`). This means `main` hasn't had any new commits since `feature-x` branched off.
 - **How it works:** Git simply moves the pointer of the target branch (`main`) forward to the latest commit of the source branch (`feature-x`). No new commit is created.
@@ -115,7 +115,7 @@ When separate lines of development need to be brought together, Git offers mergi
       A -- B -- C -- D (main, feature-x)
 </Ascii>
 
-#### Three-way merge (recursive merge)
+#### three-way merge (recursive merge)
 
 - **When it happens:** If the target branch has new commits that are _not_ on the source branch, and the source branch has new commits _not_ on the target branch. The histories have diverged.
 - **How it works:**
@@ -143,7 +143,7 @@ When separate lines of development need to be brought together, Git offers mergi
 If Git cannot automatically combine changes (e.g., the same line was modified differently in both branches), it marks a **merge conflict**. You then manually resolve these conflicts in your files, add them, and commit the merge.
 </Warning>
 
-### Rebasing: Rewriting History for a Linear Path
+### rebasing: rewriting history for a linear path
 
 Rebasing is an alternative to merging that allows you to integrate changes from one branch onto another by **replaying** commits. Instead of creating a merge commit, it rewrites the history of your branch to appear as if it branched off at a later point.
 
@@ -196,6 +196,6 @@ Creates a linear history by rewriting commits. Useful for cleaning up your local
 **Never rebase commits that have already been pushed to a shared remote repository and other people might have pulled!** Because rebase rewrites history (creates new commit objects), it can cause significant problems for collaborators who have based their work on the "old" commits. This leads to conflicting histories and messy merges down the line. Rebase only on local, unpushed branches, or branches where you are absolutely certain no one else has based their work on.
 </Danger>
 
-### Conclusion
+### conclusion
 
 Git's power comes from its elegant and efficient design, rooted in its object model and content-addressable nature. Understanding how blobs, trees, and commits form snapshots, how references like branches and `HEAD` navigate these snapshots, and how merging and rebasing manipulate this history empowers you to wield Git with greater confidence and control. The next time you type a Git command, remember the fascinating ballet of pointers and immutable objects happening silently beneath the surface, ensuring the integrity and flexibility of your codebase.

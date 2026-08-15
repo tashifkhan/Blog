@@ -23,7 +23,7 @@ This guide aims to provide a comprehensive understanding of Prisma, from the ini
 
 ---
 
-## Prerequisites: Setting the Stage for Prisma
+## prerequisites: setting the stage for prisma
 
 Before diving into the world of Prisma, ensure you have the following essential tools installed and accessible:
 
@@ -34,7 +34,7 @@ Before diving into the world of Prisma, ensure you have the following essential 
 
 ---
 
-## Getting Started with Prisma: Initializing Your Project
+## getting started with prisma: initializing your project
 
 Integrating Prisma into a new or existing project involves a few straightforward steps to set up the necessary files and dependencies.
 
@@ -100,7 +100,7 @@ Integrating Prisma into a new or existing project involves a few straightforward
 
 ---
 
-## Prisma Schema File (`schema.prisma`): The Single Source of Truth
+## prisma schema file (`schema.prisma`): the single source of truth
 
 The `schema.prisma` file is arguably the most important component of your Prisma project. It serves as the **single source of truth** for your database schema, defining your data models, their relationships, and the connection details to your database. It uses a declarative, human-readable language (Prisma Schema Language) that abstracts away database-specific syntax, making schema definition much more intuitive.
 
@@ -109,7 +109,7 @@ The `schema.prisma` file is arguably the most important component of your Prisma
   - The VS Code extension can be configured to **auto-format on save**, ensuring your schema always adheres to Prisma's recommended style.
   - You can also manually format your schema file from the command line: `npx prisma format`.
 
-### Components of `schema.prisma`
+### components of `schema.prisma`
 
 The `schema.prisma` file is logically divided into several blocks, each serving a distinct purpose in defining your database layer.
 
@@ -370,7 +370,7 @@ The `schema.prisma` file is logically divided into several blocks, each serving 
 
 ---
 
-## Database Migrations: Applying Schema Changes to Your Database
+## database migrations: applying schema changes to your database
 
 Defining your schema in `schema.prisma` is merely the blueprint. To transform this blueprint into actual tables and structures in your database, you need to execute **migrations**. Migrations are version-controlled changes to your database schema, managed by Prisma.
 
@@ -389,7 +389,7 @@ Prisma includes robust validation during migrations. If a proposed schema change
 
 ---
 
-## Prisma Client: Your Type-Safe Database Gateway
+## prisma client: your type-safe database gateway
 
 The Prisma Client is the automatically generated, type-safe query builder that enables your application code to interact with your database using intuitive methods, rather than raw SQL or complex object mapping. It's built specifically from your `schema.prisma` file, meaning its methods and return types perfectly match your data models.
 
@@ -459,13 +459,13 @@ The Prisma Client is the automatically generated, type-safe query builder that e
 
 ---
 
-## Prisma Client Operations (CRUD): Interacting with Your Data
+## prisma client operations (CRUD): interacting with your data
 
 The Prisma Client provides a comprehensive and type-safe API for performing common CRUD operations on your database, along with powerful querying capabilities.
 
-### 1. Creating Data
+### 1. creating data
 
-#### `prisma.model.create()`: Adding a Single Record
+#### `prisma.model.create()`: adding a single record
 
 This method is used to insert a single new record into your database for a specific model.
 
@@ -536,7 +536,7 @@ Created user: {
   - `select`: Allows you to meticulously pick _only_ the specific fields you need from the main model and optionally from its related models. This is useful for optimizing query performance and reducing data transfer when you don't need all information.
   - **Crucial Note**: You can use `include` or `select`, but never both, in the same query. Prisma will throw an error if both are present.
 
-#### `prisma.model.createMany()`: Batch Creation
+#### `prisma.model.createMany()`: batch creation
 
 For inserting multiple records efficiently, especially when they don't involve complex nested relationships that need to be returned immediately, `createMany()` is the ideal choice.
 
@@ -558,11 +558,11 @@ console.log("Created multiple users:", users); // Returns { count: 4 }
 
 - **Limitation**: `createMany` does not support `include` or `select`. This is because it's designed for bulk insertion and typically returns only the count of records created, not the full objects, for performance reasons. If you need the created records with related data, use multiple `create` calls or fetch them in a subsequent `findMany` query.
 
-### 2. Reading Data (Finding)
+### 2. reading data (finding)
 
 Prisma provides a rich set of methods for retrieving data, along with powerful filtering, sorting, and pagination options.
 
-#### `prisma.model.findUnique()`: Retrieving a Single Unique Record
+#### `prisma.model.findUnique()`: retrieving a single unique record
 
 This method is designed to fetch a single record based on a **unique identifier**. This could be the primary key (`@id` field) or any field marked with `@unique` or `@@unique` (composite unique key).
 
@@ -596,7 +596,7 @@ console.log("User by composite unique key:", userByAgeName);
 
 - `findUnique` is strict: if no unique record matches the `where` clause, it returns `null`. If multiple records somehow match (due to data inconsistencies or a non-unique field being queried), it will throw an error.
 
-#### `prisma.model.findFirst()`: Getting the First Matching Record
+#### `prisma.model.findFirst()`: getting the first matching record
 
 When uniqueness is not guaranteed, or you simply need _any_ single record that matches your criteria (e.g., the oldest, the newest, or just the first one found), `findFirst()` is suitable.
 
@@ -616,7 +616,7 @@ const firstSally = await prisma.user.findFirst({
 console.log("First (youngest) Sally:", firstSally);
 ```
 
-#### `prisma.model.findMany()`: Retrieving Multiple Records
+#### `prisma.model.findMany()`: retrieving multiple records
 
 This is the most versatile method for querying multiple records. It returns an array of records that match your specified criteria.
 
@@ -647,7 +647,7 @@ console.log(
 );
 ```
 
-#### `where` Clause Operators: Advanced Filtering
+#### `where` clause operators: advanced filtering
 
 The `where` clause is incredibly powerful, allowing you to build complex queries with various operators.
 
@@ -780,11 +780,11 @@ console.log("Posts written by authors older than 25:", postsByAuthorAge);
 
 - **Case Sensitivity**: String operators like `contains`, `startsWith`, `endsWith` are case-sensitive by default. To make them case-insensitive, you can add `mode: 'insensitive'` to the operator's object.
 
-### 3. Updating Data
+### 3. updating data
 
 Prisma offers methods to update single or multiple records, along with atomic operations for numeric fields and capabilities to update related data.
 
-#### `prisma.model.update()`: Updating a Single Record
+#### `prisma.model.update()`: updating a single record
 
 This method updates a single record, identified by a unique `where` clause.
 
@@ -826,7 +826,7 @@ console.log("Updated user:", updatedUser);
 
 - The `where` clause in `update()` (like `delete()`) must refer to a unique field (primary key or `@unique`) to ensure only one record is targeted.
 
-#### `prisma.model.updateMany()`: Updating Multiple Records
+#### `prisma.model.updateMany()`: updating multiple records
 
 Use `updateMany()` to modify multiple records that match a given query.
 
@@ -847,11 +847,11 @@ console.log("Updated multiple users:", updatedManyUsers); // Returns { count: 3 
 
 - **Limitation**: Similar to `createMany`, `updateMany` does not support `select` or `include`. It returns an object indicating the `count` of affected records.
 
-### 4. Deleting Data
+### 4. deleting data
 
 Prisma provides methods for deleting single or multiple records from your database.
 
-#### `prisma.model.delete()`: Deleting a Single Record
+#### `prisma.model.delete()`: deleting a single record
 
 This method removes a single record identified by a unique `where` clause.
 
@@ -882,7 +882,7 @@ try {
 }
 ```
 
-#### `prisma.model.deleteMany()`: Deleting Multiple Records
+#### `prisma.model.deleteMany()`: deleting multiple records
 
 To remove multiple records that satisfy certain conditions, `deleteMany()` is the appropriate method.
 
@@ -907,7 +907,7 @@ console.log("Deleted users older than 20:", deletedUsersByAge); // Returns { cou
 
 ---
 
-## Pagination in Prisma
+## pagination in prisma
 
 Pagination is the process of breaking down a large dataset into smaller, more manageable chunks or "pages." This is essential for performance and user experience in applications that display lists of data (e.g., blog posts, products, users).
 
@@ -978,7 +978,7 @@ In this example:
 
 ---
 
-## Debugging and Performance: Gaining Visibility
+## debugging and performance: gaining visibility
 
 Understanding what Prisma is doing under the hood, particularly the SQL queries it generates, is invaluable for debugging, performance optimization, and learning.
 
