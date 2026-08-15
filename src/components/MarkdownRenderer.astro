@@ -18,14 +18,17 @@ import "../styles/markdown-theme.css";
 interface Props {
 	content?: string;
 	githubBaseUrl?: string;
+	githubProfileUrl?: string;
 	class?: string;
 }
 
-const { content, githubBaseUrl, class: className = "" } = Astro.props;
+const { content, githubBaseUrl, githubProfileUrl, class: className = "" } =
+	Astro.props;
 
 const html = content
 	? renderMarkdown(content, {
 			githubBaseUrl,
+			githubProfileUrl,
 			// `/images/blog/...` is served by this site, so root-relative URLs are
 			// left alone rather than rewritten onto raw.githubusercontent.
 			rootRelative: "site",

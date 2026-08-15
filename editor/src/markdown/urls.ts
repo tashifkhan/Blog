@@ -26,6 +26,12 @@ export type RootRelativeMode = 'site' | 'repo'
 export type UrlOptions = {
   /** Repository the Markdown lives in, e.g. `https://github.com/user/repo`. */
   githubBaseUrl?: string
+  /**
+   * GitHub profile the `gh:` scheme treats as `me`, e.g.
+   * `https://github.com/tashifkhan`. `gh:me` and `gh:me/repo` resolve against
+   * it; without it the `me` spelling falls back to the literal username.
+   */
+  githubProfileUrl?: string
   /** Docs project slug, used to serve bundled `images/…` from the site. */
   project?: string
   rootRelative?: RootRelativeMode
@@ -34,9 +40,166 @@ export type UrlOptions = {
    * Markdown whose assets are hosted by another.
    */
   assetBaseUrl?: string
+  /** Origin the `tc:` / `tashif:` schemes expand to (default tashif.codes). */
+  siteBaseUrl?: string
+  /** Origin the `blog:` scheme expands to (default blog.tashif.codes). */
+  blogBaseUrl?: string
 }
 
 const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i
+const SCHEME_REF = /^([a-z][a-z0-9+.-]*):(.*)$/i
+
+/**
+ * Sites whose bare `site.tld/…` URLs are upgraded to https.
+ *
+ * linkify-it's fuzzy matcher recognises common TLDs and prefixes a match with
+ * `http://`. Every site the shorthand schemes expand to is https-only, so a
+ * fuzzy-linked one is upgraded here — this is how a post that says
+ * `github.com/user/repo` renders a working https link rather than http.
+ */
+export const KNOWN_SITES = [
+  'github.com',
+  'youtube.com',
+  'youtu.be',
+  'x.com',
+  'twitter.com',
+  'linkedin.com',
+  'reddit.com',
+  'wikipedia.org',
+  'instagram.com',
+  'medium.com',
+  'stackoverflow.com',
+  'npmjs.com',
+  'discord.com',
+  'tashif.codes',
+  'codetrace.xyz',
+]
+
+const KNOWN_SITE_HTTP = new RegExp(
+  `^http://([A-Za-z0-9-]+\\.)*(${KNOWN_SITES.map((domain) =>
+    domain.replace(/\./g, '\\.'),
+  ).join('|')})([/:?#]|$)`,
+  'i',
+)
+
+/**
+ * Expand one short scheme (`yt:`, `tw:`, `wp:`, …) into a full URL.
+ *
+ * The map is the extension point for new sites: add an alias and a resolver
+ * here and it works for both explicit `[x](scheme:ref)` links and bare
+ * `scheme:ref` in prose, which `render.ts` registers with linkify-it. A
+ * resolver turns the tail after `scheme:` into a URL; the `options` argument
+ * lets it honour the configured profile or origin.
+ */
+export type SchemeResolver = (ref: string, options: UrlOptions) => string
+
+/**
+ * Expand the `gh:` shorthand into a GitHub URL.
+ *
+ * A single segment is a profile (`gh:user`), `owner/repo` a repository, and
+ * `me` aliases the configured profile so a site can point at its own repos as
+ * `gh:me/repo`. Deep links (`gh:owner/repo/tree/main`) survive. Trailing
+ * punctuation is dropped: GitHub names never end in a dot or hyphen, so the
+ * `.` a sentence would leave behind belongs to the prose, not the URL.
+ */
+export function resolveGithubRef(ref: string, githubProfileUrl?: string): string {
+  const target = ref.trim().replace(/[.-]+$/, '')
+  if (!target) return githubProfileUrl || 'https://github.com'
+  if (target === 'me') return githubProfileUrl || 'https://github.com/me'
+  if (target.startsWith('me/')) {
+    const profile = githubProfileUrl || 'https://github.com/me'
+    return `${profile.replace(/\/+$/, '')}/${target.slice(3)}`
+  }
+  return `https://github.com/${target}`
+}
+
+/** Path tail after `scheme:`, with any leading slashes trimmed. */
+function firstPath(ref: string): string {
+  return ref.replace(/^\/+/, '')
+}
+
+/** A bare handle/username, tolerating a leading `@`. */
+function handle(ref: string): string {
+  return ref.replace(/^\/+/, '').replace(/^@/, '')
+}
+
+function youtubeRef(ref: string): string {
+  const path = firstPath(ref)
+  if (path.startsWith('playlist/') || path.startsWith('list/')) {
+    return `https://www.youtube.com/playlist?list=${path.split('/').pop()}`
+  }
+  if (!path) return 'https://www.youtube.com'
+  return `https://www.youtube.com/watch?v=${path}`
+}
+
+function linkedinRef(ref: string): string {
+  const path = firstPath(ref)
+  if (/^(in|company|school|pub|groups)\//.test(path)) {
+    return `https://www.linkedin.com/${path}`
+  }
+  return `https://www.linkedin.com/in/${path}`
+}
+
+function wikipediaRef(ref: string): string {
+  // Spaces become underscores (`wp:Complex Article` is `Complex_Article`), and
+  // markdown-it percent-encodes a destination's spaces to `%20` first, so both
+  // spellings land on the canonical underscore form.
+  const path = firstPath(ref).replace(/\s+/g, '_').replace(/%20/g, '_')
+  const lang = path.match(/^([a-z]{2,3})\/(.+)$/)
+  if (lang) return `https://${lang[1]}.wikipedia.org/wiki/${lang[2]}`
+  return `https://en.wikipedia.org/wiki/${path}`
+}
+
+/** Root-origin scheme: `tc:path` -> `https://tashif.codes/path`. */
+function originRef(ref: string, base: string): string {
+  const root = base.replace(/\/+$/, '')
+  const path = firstPath(ref)
+  return path ? `${root}/${path}` : root
+}
+
+/**
+ * Short schemes for common sites, keyed by the spelling that appears in
+ * Markdown. Every alias maps to the same resolver, so `yt:` and `youtube:` are
+ * interchangeable.
+ */
+export const CUSTOM_SCHEMES: Record<string, SchemeResolver> = {
+  gh: (ref, options) => resolveGithubRef(ref, options.githubProfileUrl),
+  github: (ref, options) => resolveGithubRef(ref, options.githubProfileUrl),
+
+  yt: (ref) => youtubeRef(ref),
+  youtube: (ref) => youtubeRef(ref),
+
+  tw: (ref) => `https://x.com/${handle(ref)}`,
+  x: (ref) => `https://x.com/${handle(ref)}`,
+  twitter: (ref) => `https://twitter.com/${handle(ref)}`,
+
+  li: (ref) => linkedinRef(ref),
+  linkedin: (ref) => linkedinRef(ref),
+
+  rd: (ref) => `https://www.reddit.com/${firstPath(ref)}`,
+  reddit: (ref) => `https://www.reddit.com/${firstPath(ref)}`,
+
+  tc: (ref, options) =>
+    originRef(ref, options.siteBaseUrl ?? 'https://tashif.codes'),
+  tashif: (ref, options) =>
+    originRef(ref, options.siteBaseUrl ?? 'https://tashif.codes'),
+  blog: (ref, options) =>
+    originRef(ref, options.blogBaseUrl ?? 'https://blog.tashif.codes'),
+
+  wp: (ref) => wikipediaRef(ref),
+  wiki: (ref) => wikipediaRef(ref),
+  wikipedia: (ref) => wikipediaRef(ref),
+
+  ig: (ref) => `https://www.instagram.com/${handle(ref)}`,
+  instagram: (ref) => `https://www.instagram.com/${handle(ref)}`,
+  medium: (ref) => originRef(ref, 'https://medium.com'),
+  so: (ref) => originRef(ref, 'https://stackoverflow.com'),
+  stackoverflow: (ref) => originRef(ref, 'https://stackoverflow.com'),
+  npm: (ref) => `https://www.npmjs.com/package/${firstPath(ref)}`,
+  discord: (ref) => originRef(ref, 'https://discord.com'),
+}
+
+export const CUSTOM_SCHEME_NAMES = Object.keys(CUSTOM_SCHEMES)
 
 /** Repository URL to the raw-content host, so images resolve to bytes. */
 function rawBase(githubBaseUrl: string): string {
@@ -76,6 +239,21 @@ export function convertRelativeUrl(url: string, options: UrlOptions): string {
   if (url.startsWith('file://')) {
     if (!githubBaseUrl) return url
     return `${githubBaseUrl}/blob/HEAD/${url.slice('file://'.length)}`
+  }
+
+  // `yt:`, `tw:`, `wp:`, … are shorthand for common-site URLs, expanded before
+  // the generic scheme check which would otherwise pass them through unchanged.
+  const scheme = SCHEME_REF.exec(url)
+  if (scheme) {
+    const resolver = CUSTOM_SCHEMES[scheme[1].toLowerCase()]
+    if (resolver) return resolver(scheme[2], options)
+  }
+
+  // Fuzzy-linked bare site URLs (`github.com/user/repo`, `tashif.codes/x`)
+  // arrive as `http://`; the known sites are all https-only, so upgrade them.
+  // Explicit `https://` links fall through unchanged.
+  if (KNOWN_SITE_HTTP.test(url)) {
+    return url.replace(/^http:\/\//, 'https://')
   }
 
   if (HAS_SCHEME.test(url)) return url

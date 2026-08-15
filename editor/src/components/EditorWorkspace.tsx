@@ -307,6 +307,7 @@ export function EditorWorkspace({
     () =>
       renderMarkdown(draft.body, {
         mermaid: false,
+        githubProfileUrl: "https://github.com/tashifkhan",
         resolveImage: (src) => {
           if (src.startsWith('asset:')) {
             const filename = src.slice('asset:'.length)

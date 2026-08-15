@@ -178,6 +178,153 @@ describe('image and link URLs', () => {
     )
   })
 
+  it('expands gh: profile and repo links', () => {
+    const html = renderMarkdown(
+      '[me](gh:me)\n\n[profile](gh:someone)\n\n[repo](gh:someone/tool)',
+      { githubProfileUrl: 'https://github.com/tashifkhan' },
+    )
+    expect(html).toContain(
+      'href="https://github.com/tashifkhan" target="_blank"',
+    )
+    expect(html).toContain(
+      'href="https://github.com/someone" target="_blank"',
+    )
+    expect(html).toContain(
+      'href="https://github.com/someone/tool" target="_blank"',
+    )
+  })
+
+  it('resolves gh:me/repo against the configured profile', () => {
+    const html = renderMarkdown('[blog](gh:me/Blog)', {
+      githubProfileUrl: 'https://github.com/tashifkhan',
+    })
+    expect(html).toContain(
+      'href="https://github.com/tashifkhan/Blog" target="_blank"',
+    )
+  })
+
+  it('linkifies bare gh: references in prose', () => {
+    const html = renderMarkdown('See gh:someone and gh:someone/tool.', {
+      githubProfileUrl: 'https://github.com/tashifkhan',
+    })
+    expect(html).toContain(
+      '<a href="https://github.com/someone" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon"',
+    )
+    expect(html).toContain(
+      '<a href="https://github.com/someone/tool" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon"',
+    )
+    // The sentence period stays in the prose, not the link text.
+    expect(html).toContain('</a>.</p>')
+  })
+
+  it('drops trailing sentence punctuation from a gh: reference', () => {
+    const html = renderMarkdown('[repo](gh:someone/tool.)')
+    expect(html).toContain(
+      'href="https://github.com/someone/tool"',
+    )
+    expect(html).not.toContain('tool.')
+  })
+
+  it('expands youtube, x/twitter, and linkedin schemes', () => {
+    const html = renderMarkdown(
+      '[video](yt:dQw4w9WgXcQ)\n\n[tweet](tw:tashif)\n\n[in](li:tashifkhan)',
+    )
+    expect(html).toContain(
+      'href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank"',
+    )
+    expect(html).toContain(
+      'href="https://x.com/tashif" target="_blank"',
+    )
+    expect(html).toContain(
+      'href="https://www.linkedin.com/in/tashifkhan" target="_blank"',
+    )
+  })
+
+  it('expands reddit, wikipedia, and site schemes', () => {
+    const html = renderMarkdown(
+      '[sub](rd:r/programming)\n\n[page](wp:TypeScript)\n\n[de](wp:de/TypeScript)\n\n[project](tc:projects/paisa)',
+    )
+    expect(html).toContain(
+      'href="https://www.reddit.com/r/programming" target="_blank"',
+    )
+    expect(html).toContain(
+      'href="https://en.wikipedia.org/wiki/TypeScript" target="_blank"',
+    )
+    expect(html).toContain(
+      'href="https://de.wikipedia.org/wiki/TypeScript" target="_blank"',
+    )
+    expect(html).toContain(
+      'href="https://tashif.codes/projects/paisa" target="_blank"',
+    )
+  })
+
+  it('turns spaces in wikipedia titles into underscores', () => {
+    // Markdown stops a destination at a space, so the angle-bracket form is
+    // what delivers a spaced title here.
+    const html = renderMarkdown('[art](<wp:List of things>)')
+    expect(html).toContain(
+      'href="https://en.wikipedia.org/wiki/List_of_things" target="_blank"',
+    )
+  })
+
+  it('honours custom site and blog origins when configured', () => {
+    const html = renderMarkdown('[me](tc:GitUnderTheHood)', {
+      siteBaseUrl: 'https://example.dev',
+      blogBaseUrl: 'https://blog.example.dev',
+    })
+    expect(html).toContain(
+      'href="https://example.dev/GitUnderTheHood" target="_blank"',
+    )
+  })
+
+  it('linkifies bare site-scheme references in prose', () => {
+    const html = renderMarkdown('Watch yt:dQw4w9WgXcQ on tashif.codes.')
+    expect(html).toContain(
+      '<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand" data-md-yt="dQw4w9WgXcQ"><svg class="md-brand-icon"',
+    )
+  })
+
+  it('upgrades bare common-site URLs to https', () => {
+    const html = renderMarkdown(
+      'github.com/tashifkhan/CodeTrace and youtube.com/watch?v=dQw4w9WgXcQ and x.com/tashif',
+    )
+    expect(html).toContain(
+      '<a href="https://github.com/tashifkhan/CodeTrace" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon"',
+    )
+    expect(html).toContain(
+      '<a href="https://youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand" data-md-yt="dQw4w9WgXcQ"><svg class="md-brand-icon"',
+    )
+    expect(html).toContain(
+      '<a href="https://x.com/tashif" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon"',
+    )
+  })
+
+  it('linkifies bare URLs for registered TLDs', () => {
+    const html = renderMarkdown(
+      'see tashif.codes/projects/paisa and codetrace.xyz',
+    )
+    expect(html).toContain(
+      '<a href="https://tashif.codes/projects/paisa" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon"',
+    )
+    expect(html).toContain(
+      '<a href="https://codetrace.xyz" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon"',
+    )
+  })
+
+  it('upgrades subdomain bare URLs of known sites', () => {
+    const html = renderMarkdown('en.wikipedia.org/wiki/TypeScript')
+    expect(html).toContain(
+      'href="https://en.wikipedia.org/wiki/TypeScript"',
+    )
+  })
+
+  it('leaves explicit https links unchanged', () => {
+    const html = renderMarkdown('[x](https://github.com/tashifkhan/CodeTrace)')
+    expect(html).toContain(
+      'href="https://github.com/tashifkhan/CodeTrace"',
+    )
+  })
+
   it('reports a missing editor asset instead of a broken image', () => {
     const html = renderMarkdown('![cover](asset:cover.webp)', {
       resolveImage: (src) =>
