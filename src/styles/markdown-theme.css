@@ -140,8 +140,13 @@
   font-size: calc(var(--reader-font-scale, 1) * 0.875rem);
 }
 
+/*
+ * Code blocks are always dark (markdown.css), so the pre surface stays
+ * transparent and lets the block's own dark background show through in both
+ * themes — the old theme-tinted wash would go light-on-light in light mode.
+ */
 .markdown-body .md-code-pre {
-  background: color-mix(in oklab, var(--theme-secondary) 60%, transparent);
+  background: transparent;
   font-size: calc(var(--reader-font-scale, 1) * 0.875rem);
   line-height: var(--reader-line-height, 1.6);
 }

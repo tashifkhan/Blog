@@ -19,6 +19,17 @@
   --md-radius: 0.75rem;
   --md-gap: 1.5rem;
 
+  /*
+   * Code blocks are always dark, whatever the host theme. They carry their own
+   * fixed palette (one-dark tones) instead of the --md-surface tokens, so a
+   * light-mode reader still gets a dark surface with light text.
+   */
+  --md-code-bg: #282c34;
+  --md-code-bar-bg: #21252b;
+  --md-code-border: rgba(255, 255, 255, 0.1);
+  --md-code-fg: #abb2bf;
+  --md-code-fg-muted: #7f848e;
+
   --md-callout-note: #3b82f6;
   --md-callout-tip: #22c55e;
   --md-callout-important: #a855f7;
@@ -214,9 +225,9 @@
   position: relative;
   margin: var(--md-gap) 0;
   overflow: hidden;
-  border: 1px solid var(--md-border);
+  border: 1px solid var(--md-code-border);
   border-radius: var(--md-radius);
-  background: var(--md-surface);
+  background: var(--md-code-bg);
 }
 
 .md-code-bar {
@@ -225,8 +236,8 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--md-border);
-  background: var(--md-surface-muted);
+  border-bottom: 1px solid var(--md-code-border);
+  background: var(--md-code-bar-bg);
 }
 
 .md-code-meta {
@@ -234,7 +245,7 @@
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
-  color: var(--md-fg-muted);
+  color: var(--md-code-fg-muted);
 }
 
 .md-code-lang {
@@ -254,14 +265,14 @@
   border: 0;
   border-radius: 0.375rem;
   background: transparent;
-  color: var(--md-fg-muted);
+  color: var(--md-code-fg-muted);
   cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .md-code-copy:hover {
-  background: color-mix(in oklab, var(--md-fg) 8%, transparent);
-  color: var(--md-fg);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--md-code-fg);
 }
 
 .md-code-copy .md-check-icon {
@@ -290,6 +301,7 @@
   padding: 0;
   border: 0;
   background: none;
+  color: var(--md-code-fg);
   font-size: inherit;
   white-space: pre;
 }
