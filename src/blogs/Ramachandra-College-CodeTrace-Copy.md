@@ -66,13 +66,13 @@ PostHog is the product-analytics tool I use. Every CodeTrace pageview, every cli
 Here's the key that shipped in CodeTrace's bundle:
 
 ```text
-phc_xxpoU7jHjt4nKAb4ygdiNwheukaBi7QvoAT4AsrdBcZC
+phc_xxpoU7jHjt4nK…AsrdBcZC
 ```
 
 And here's the key sitting in `sptracker1.vercel.app`'s bundle:
 
 ```text
-phc_xxpoU7jHjt4nKAb4ygdiNwheukaBi7QvoAT4AsrdBcZC
+phc_xxpoU7jHjt4nK…AsrdBcZC
 ```
 
 Identical. Character for character.
