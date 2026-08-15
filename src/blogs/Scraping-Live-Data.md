@@ -1,5 +1,5 @@
 ---
-title: "How We Scraped Live Gold Rates: A Practical Guide to Hidden APIs, TLS Impersonation, and Not Fighting Cloudflare"
+title: "'This Website Has No API' — Yes It Does: Scraping Live Data the No-Browser Way"
 date: 2026-08-14
 author: "Tashif Ahmad Khan"
 socials:
@@ -10,7 +10,7 @@ socials:
   ]
 tags: ["Web Scraping", "Python"]
 excerpt: "My friend Amresh was building Pitaara, a live gold-rates app, and needed data from brands that really don't want to be scraped. I've done this dance before, so I helped. Here's the project walkthrough — and the general guide to scraping sites that swear they don't have APIs."
-coverImage: "/images/blog/Gold-Scrapers-curl-cffi/cover.svg"
+coverImage: "/images/blog/Scraping-Live-Data/cover.svg"
 ---
 
 <Lede>

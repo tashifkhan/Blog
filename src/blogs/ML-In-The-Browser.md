@@ -1,5 +1,5 @@
 ---
-title: "I Ran My .pkl Model in the Browser Two Ways — Pyodide vs ONNX, With Real Benchmarks"
+title: "Run Your ML Model in the Browser — No Server Required (Pyodide vs ONNX)"
 date: 2026-08-14
 author: "Tashif Ahmad Khan"
 socials:
@@ -10,7 +10,7 @@ socials:
   ]
 tags: ["Machine Learning", "Web"]
 excerpt: "I took a real XGBoost news-bias classifier and made it run entirely in the browser two different ways — Pyodide unpickling the original .pkl, and ONNX via onnxruntime-web. Same model, same task, wildly different perf. Here's what actually happened, with numbers, the trap that almost broke it, and which one I finally shipped across the whole site."
-coverImage: "/images/blog/Pickle-In-The-Browser/cover.svg"
+coverImage: "/images/blog/ML-In-The-Browser/cover.svg"
 ---
 
 <Lede>
