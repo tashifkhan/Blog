@@ -459,6 +459,27 @@
   }
 }
 
+/*
+ * `.md-steps` is a grid, so each `.md-step` inherits `min-width: auto` and
+ * refuses to shrink below the min-content width of whatever it wraps. A step
+ * containing a code block with one long unbreakable line therefore widens the
+ * whole page instead of letting the block scroll on its own.
+ */
+.markdown-body .md-step {
+  min-width: 0;
+}
+
+/*
+ * Inline code is a single unbreakable token as far as line breaking is
+ * concerned, so a long one (`AsyncSession(impersonate="chrome124")`) pushes
+ * past a phone-width column. Step bodies can hold literal `<code>` without the
+ * `md-code-inline` class, so match on the element and exclude `pre`, whose
+ * `white-space: pre` must survive for box-drawing diagrams to line up.
+ */
+.markdown-body :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
 /* Narrow windows: the bar chart's fixed label track squeezes the bars to
  * nothing, so the label moves onto its own line. */
 @container (max-width: 26rem) {
