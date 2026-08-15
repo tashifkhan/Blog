@@ -109,6 +109,18 @@ describe('lists', () => {
     expect(html).toContain('checked')
     expect(html).not.toContain('md-li-bullet')
   })
+
+  it('keeps task item content in the item, not a wrapper', () => {
+    // The checkbox and an inline link are siblings inside the li: the task
+    // item is laid out as a block with an absolutely positioned checkbox (see
+    // markdown.css), so nothing wraps the link and it cannot be blockified.
+    const html = renderMarkdown('- [ ] see github.com/tashifkhan/CodeTrace')
+    expect(html).toContain(
+      '<li class="md-li md-li--task"><input class="md-task-checkbox" type="checkbox" disabled> see <a href="https://github.com/tashifkhan/CodeTrace"',
+    )
+    expect(html).toContain('</svg>tashifkhan/CodeTrace</a></li>')
+    expect(html).not.toContain('md-li-body')
+  })
 })
 
 describe('links', () => {
@@ -121,6 +133,74 @@ describe('links', () => {
   it('keeps in-page anchors in the same tab', () => {
     const html = renderMarkdown('[jump](#usage)')
     expect(html).not.toContain('target="_blank"')
+  })
+
+  it('adds a brand mark to known-site links', () => {
+    const html = renderMarkdown(
+      '[repo](https://github.com/tashifkhan/CodeTrace)\n\n' +
+        '[wiki](https://en.wikipedia.org/wiki/TypeScript)',
+    )
+    // The mark is an inline SVG before the link text, and the href keeps its
+    // target/rel from the link rule.
+    expect(html).toContain(
+      '<a href="https://github.com/tashifkhan/CodeTrace" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon" viewBox="0 0 24 24" fill="currentColor"',
+    )
+    expect(html).toContain(
+      '<a href="https://en.wikipedia.org/wiki/TypeScript" target="_blank" rel="noopener noreferrer" class="md-link md-link--brand"><svg class="md-brand-icon"',
+    )
+  })
+
+  it('brands scheme and bare known-site links too', () => {
+    const html = renderMarkdown(
+      '[r](gh:tashifkhan/CodeTrace)\n\n' +
+        'see github.com/tashifkhan/CodeTrace',
+    )
+    expect(html).toContain('class="md-link md-link--brand"><svg class="md-brand-icon"')
+    // Both the scheme link and the bare URL carry the mark.
+    expect(html.match(/md-brand-icon/g)?.length).toBe(2)
+    // Both show the owner/repo label instead of the full URL.
+    expect(html).toContain('</svg>tashifkhan/CodeTrace</a>')
+  })
+
+  it('shows a short label with the brand mark', () => {
+    const html = renderMarkdown(
+      '[repo](https://github.com/tashifkhan/CodeTrace)\n\n' +
+        '[handle](https://x.com/tashif)\n\n' +
+        '[in](https://www.linkedin.com/in/tashifkhan)\n\n' +
+        '[sub](https://reddit.com/r/programming)\n\n' +
+        '[page](https://en.wikipedia.org/wiki/List_of_things)',
+    )
+    expect(html).toContain('</svg>tashifkhan/CodeTrace</a>')
+    expect(html).toContain('</svg>@tashif</a>')
+    expect(html).toContain('</svg>in/tashifkhan</a>')
+    expect(html).toContain('</svg>r/programming</a>')
+    // Wikipedia titles are decoded, with underscores back to spaces.
+    expect(html).toContain('</svg>List of things</a>')
+  })
+
+  it('labels youtube links with the video id for the client to upgrade', () => {
+    const html = renderMarkdown(
+      '[v](yt:dQw4w9WgXcQ)\n\n' + 'shorts: https://youtu.be/dQw4w9WgXcQ',
+    )
+    expect(html).toContain('data-md-yt="dQw4w9WgXcQ"')
+    expect(html).toContain('</svg>dQw4w9WgXcQ</a>')
+  })
+
+  it('keeps the label of a link to an unknown host', () => {
+    const html = renderMarkdown('[x](https://example.com/somewhere)')
+    expect(html).toContain('class="md-link">x</a>')
+    expect(html).not.toContain('md-brand-icon')
+  })
+
+  it('leaves links to unknown hosts unbranded', () => {
+    const html = renderMarkdown('[x](https://example.com/somewhere)')
+    expect(html).toContain('class="md-link">x</a>')
+    expect(html).not.toContain('md-brand-icon')
+  })
+
+  it('does not brand in-page anchors', () => {
+    const html = renderMarkdown('[jump](#usage)')
+    expect(html).not.toContain('md-brand-icon')
   })
 })
 

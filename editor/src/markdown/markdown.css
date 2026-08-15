@@ -434,17 +434,23 @@
   list-style: none;
 }
 
+/*
+ * A task item is a block, not a flex container: flex blockifies its direct
+ * inline children, which would push an inline link (say, a branded
+ * `github.com/user/repo` link) onto its own line. The checkbox is pulled out
+ * of flow so the text, links and nested lists lay out normally after it.
+ */
 .md-li--task {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  position: relative;
+  padding-left: 1.5rem;
 }
 
 .md-task-checkbox {
-  flex-shrink: 0;
+  position: absolute;
+  top: 0.25rem;
+  left: 0;
   width: 1rem;
   height: 1rem;
-  margin-top: 0.3rem;
   accent-color: var(--md-accent);
 }
 
@@ -1493,8 +1499,23 @@ div.md-hand {
   padding: 0 1rem 0.85rem;
 }
 
-.md-details-body > :first-child { margin-top: 0; }
-.md-details-body > :last-child { margin-bottom: 0; }
+ .md-details-body > :first-child { margin-top: 0; }
+ .md-details-body > :last-child { margin-bottom: 0; }
+
+/* ---------- Brand marks on known-site links ---------- */
+
+/*
+ * A link to a known site (github.com, x.com, …) carries a brand glyph before
+ * its text. Sized in `em` so it tracks the link's font size, and tinted
+ * `currentColor` so it inherits the link colour from the host theme.
+ */
+.md-brand-icon {
+  display: inline;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.3em;
+  vertical-align: -0.125em;
+}
 
 /* ---------- Motion ---------- */
 

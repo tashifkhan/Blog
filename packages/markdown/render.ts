@@ -22,12 +22,13 @@ import {
   resolveAttrs,
 } from './components'
 import { type DirectiveInfo, directivesPlugin } from './directives'
-import { CHECK_ICON, COPY_ICON, TERMINAL_ICON } from './icons'
+import { BRAND_ICONS, CHECK_ICON, COPY_ICON, TERMINAL_ICON } from './icons'
 import { jsxPlugin } from './jsx'
 import { parseImageAlt, sizeAttributes } from './images'
 import { taskListsPlugin } from './tasklists'
 import { cx, type MarkdownTheme } from './theme'
 import {
+  CUSTOM_SCHEME_NAMES,
   convertRelativeUrl,
   postProcessHtml,
   preProcessFileLinks,
@@ -192,6 +193,104 @@ function env(rawEnv: unknown): RenderEnv {
   return rawEnv as RenderEnv
 }
 
+export type BrandChip = {
+  /** Brand SVG emitted before the link text. */
+  icon: string
+  /** Short label that replaces the link text (the domain is the icon's job). */
+  label: string
+  /** YouTube video id, when the link points at a video. */
+  ytId?: string
+}
+
+/** Video id from a youtube.com / youtu.be path, or '' when not a video. */
+function youtubeId(path: string, href: string): string {
+  const segments = path.split('/').filter(Boolean)
+  const queryV = new URLSearchParams(href.split('?')[1] ?? '').get('v')
+  if (queryV) return queryV
+  if (
+    (segments[0] === 'watch' ||
+      segments[0] === 'shorts' ||
+      segments[0] === 'embed') &&
+    segments[1]
+  ) {
+    return segments[1]
+  }
+  return segments.length === 1 ? segments[0] : ''
+}
+
+/** Decode a path segment, tolerating malformed escapes. */
+function decodePath(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+/**
+ * Chip data for a known-site href, or null when the host is not recognised.
+ *
+ * The label is the human part of the URL — `owner/repo` for GitHub, the video
+ * id for YouTube, the handle for X — because the brand mark already says which
+ * site the link goes to. The id placeholder for a YouTube video is upgraded to
+ * the video's title by the client (`initYtTitles`).
+ */
+function brandChip(href: string): BrandChip | null {
+  if (!/^https?:\/\//i.test(href)) return null
+  const match = href.match(/^[a-z]+:\/\/([^/?#]+)([^?#]*)/i)
+  if (!match) return null
+  const host = match[1].toLowerCase()
+  const path = (match[2] || '').replace(/^\/+/, '')
+  const segments = path.split('/').filter(Boolean)
+
+  let icon = ''
+  let domain = ''
+  for (const [candidate, mark] of Object.entries(BRAND_ICONS)) {
+    if (host === candidate || host.endsWith(`.${candidate}`)) {
+      icon = mark
+      domain = candidate
+      break
+    }
+  }
+  if (!icon) return null
+
+  switch (domain) {
+    case 'github.com':
+      return { icon, label: segments.slice(0, 2).join('/') || host }
+    case 'x.com':
+    case 'twitter.com':
+      return { icon, label: segments.length ? `@${segments[0]}` : host }
+    case 'youtube.com':
+    case 'youtu.be': {
+      const id = youtubeId(path, href)
+      if (id) return { icon, label: id, ytId: id }
+      return {
+        icon,
+        label: segments[0] === 'playlist' ? 'playlist' : segments[0] || host,
+      }
+    }
+    case 'linkedin.com':
+      if (['in', 'company', 'school', 'pub', 'groups'].includes(segments[0])) {
+        return { icon, label: segments.slice(0, 2).join('/') || host }
+      }
+      return { icon, label: segments.length ? `in/${segments[0]}` : host }
+    case 'reddit.com':
+      return { icon, label: segments.slice(0, 2).join('/') || host }
+    case 'wikipedia.org':
+      return {
+        icon,
+        label:
+          decodePath(path.replace(/^wiki\//, '').replace(/_/g, ' ')) || host,
+      }
+    case 'instagram.com':
+      return { icon, label: segments.length ? `@${segments[0]}` : host }
+    case 'npmjs.com':
+      return { icon, label: segments[1] ? segments[1] : segments[0] || host }
+    default:
+      return { icon, label: segments.slice(0, 2).join('/') || host }
+  }
+}
+
 /**
  * Does this paragraph hold nothing but images?
  *
@@ -263,6 +362,23 @@ function createParser(): MarkdownIt {
   md.use(jsxPlugin)
   md.use(calloutsPlugin)
   md.use(taskListsPlugin)
+
+  // `gh:`, `yt:`, `tw:`, `wp:`, … are shorthand for common-site URLs. linkify-it
+  // does not know the schemes, so bare occurrences in prose are registered
+  // here; the href is rewritten to the full URL by the link_open rule, which
+  // can see the per-render options. Every segment must end in an alphanumeric
+  // (or `)`) so a trailing period belongs to the sentence, not the link.
+  const schemeValidate =
+    /^@?[A-Za-z0-9](?:[A-Za-z0-9._/()@-]*[A-Za-z0-9)])?/
+  for (const name of CUSTOM_SCHEME_NAMES) {
+    md.linkify.add(`${name}:`, { validate: schemeValidate })
+  }
+
+  // Fuzzy matching only recognises a fixed TLD list, so bare `tashif.codes/…`
+  // and `codetrace.xyz/…` URLs would not link at all. Register the TLDs this
+  // site uses; the link_open rule upgrades the resulting `http://` hrefs to
+  // `https://` for the known hosts.
+  md.linkify.tlds(['codes', 'xyz'], true)
 
   const rules = md.renderer.rules as Record<string, any>
 
@@ -508,6 +624,25 @@ function createParser(): MarkdownIt {
     }
 
     const existing = token.attrGet('class')
+    const chip = brandChip(href)
+    if (chip) {
+      token.attrSet(
+        'class',
+        cx('md-link md-link--brand', [theme.link, existing].filter(Boolean).join(' ')),
+      )
+      if (chip.ytId) token.attrSet('data-md-yt', chip.ytId)
+
+      // Swap the visible text for the short label. A plain text token is the
+      // whole content of a simple link, which is every form this rewrites —
+      // explicit `[x](url)` and linkified bare URLs alike. The brand mark sits
+      // inside the anchor, before the text, so the link reads as a chip.
+      const next = tokens[idx + 1]
+      if (next?.type === 'text' && next.content.trim()) {
+        next.content = chip.label
+      }
+      return `${self.renderToken(tokens, idx, opts)}${chip.icon}`
+    }
+
     token.attrSet('class', cx('md-link', [theme.link, existing].filter(Boolean).join(' ')))
     return self.renderToken(tokens, idx, opts)
   }
