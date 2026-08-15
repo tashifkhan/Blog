@@ -9,7 +9,7 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Machine Learning", "Web"]
-excerpt: "I took a real XGBoost news-bias classifier and made it run entirely in the browser two different ways — Pyodide unpickling the original .pkl, and ONNX via onnxruntime-web. Same model, same task, wildly different perf. Here's what actually happened, with numbers, including the trap that almost broke the whole thing."
+excerpt: "I took a real XGBoost news-bias classifier and made it run entirely in the browser two different ways — Pyodide unpickling the original .pkl, and ONNX via onnxruntime-web. Same model, same task, wildly different perf. Here's what actually happened, with numbers, the trap that almost broke it, and which one I finally shipped across the whole site."
 coverImage: "/images/blog/Pickle-In-The-Browser/cover.svg"
 ---
 
@@ -323,9 +323,23 @@ Serve over HTTP(S). Copy all onnxruntime-web <code>*.wasm</code> + <code>*.mjs</
 - [ ] Retrain/export recipe documented next to the artifact
 </Checklist>
 
+## what I actually shipped sitewide
+
+So which one won? **ONNX.** Not because the benchmark alone said so — because the site made the decision for me.
+
+Once the client-side classifier left the lab and had to run on the *whole news feed* — every article on the home page, the search results, and the category pages — the numbers stopped being academic:
+
+- The home page loads 9 articles and needs to badge them *as they appear*. At **12 ms** a prediction, ONNX is done before the next card renders. Pyodide at **1.3 s** each would hold the feed hostage.
+- ONNX has **no pickled Python objects**, so the model ships as static assets from the CDN. No runtime to install, no WordNet corpus to mount, no version-matrix ceremony on every deploy.
+- Preprocessing in JS means the *same* feature builder runs everywhere — feed, search, categories — one code path, no per-page Python round-trip.
+
+The final architecture is: **Next.js serves a lightweight paginated feed, the XGBoost graph runs as ONNX in the browser, and scraping moved to a scheduled GitHub Actions cron.** The Flask backend is gone from the request path entirely. Pyodide stays on the site as the [interactive comparison](https://bias-detector.tashif.codes/pyodide-classify) — proof the original `.pkl` still works — but it's not what powers the product.
+
+One honest caveat from shipping it for real: the first page of articles races the WASM warm-up. My first cut classified them *before* the model was ready and every badge came back "unknown" (the exact silent-failure mode this whole post is about). The fix was to render cards instantly with an "ANALYZING…" state and let each card classify in the background with retries once the runtime is warm. It's a reminder that "it works in a lab" and "it works when a real user's browser loads the page cold" are different problems.
+
 ## the honest bottom line
 
-I shipped the same news-bias model to the browser twice, and both work — you can try them at [bias-detector.tashif.codes/pyodide-classify](https://bias-detector.tashif.codes/pyodide-classify) and [bias-detector.tashif.codes/onnx-classify](https://bias-detector.tashif.codes/onnx-classify) (or start from the [client-ml hub](https://bias-detector.tashif.codes/client-ml)). If it's a demo and you already have the pkl, Pyodide is genuinely lovely: same API, no conversion, and the cold start is actually decent because the runtime comes from a fast CDN. If real users will run predictions more than a handful of times, ONNX wins by a mile on per-inference cost, asset size, and security — once you've survived the sparse-vs-dense retrain trap and moved your preprocessing into JS.
+I shipped the same news-bias model to the browser twice, and both work — you can try them at [bias-detector.tashif.codes/pyodide-classify](https://bias-detector.tashif.codes/pyodide-classify) and [bias-detector.tashif.codes/onnx-classify](https://bias-detector.tashif.codes/onnx-classify) (or start from the [client-ml hub](https://bias-detector.tashif.codes/client-ml)). If it's a demo and you already have the pkl, Pyodide is genuinely lovely: same API, no conversion, and the cold start is actually decent because the runtime comes from a fast CDN. If real users will run predictions more than a handful of times — or the whole feed at once — ONNX wins by a mile on per-inference cost, asset size, and security, once you've survived the sparse-vs-dense retrain trap and moved your preprocessing into JS.
 
 Never unpickle strangers, never float versions, never skip validating the ONNX output against sklearn on a golden set.
 
