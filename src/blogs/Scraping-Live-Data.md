@@ -44,13 +44,13 @@ flowchart TD
     API --> CAN
     API -.->|"dispatch,<br/>behind a kill-switch"| GHA
 
-    subgraph direct ["direct fetch · curl_cffi"]
+    subgraph direct ["direct · curl_cffi"]
         MAL["Malabar<br/>Magento GraphQL · getMetalRate"]
         SEN["Senco<br/>calculator API + Client-ID"]
         CAN["Candere → Kalyan<br/>selectolax on #goldPrice24k"]
     end
 
-    subgraph isolated ["Tanishq · hostile, so change who fetches"]
+    subgraph isolated ["Tanishq · off-box"]
         GHA["GitHub Actions runner<br/>its own IP pool"]
         JINA["r.jina.ai reader<br/>renders on Jina's infra"]
         GHA -->|"never hits tanishq.co.in<br/>first-hop"| JINA

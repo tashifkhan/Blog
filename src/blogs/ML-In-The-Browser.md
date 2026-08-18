@@ -49,8 +49,8 @@ flowchart TD
     PKL -->|"served as a static asset"| PYO
     ONNX -->|"served as a static asset"| ORT
 
-    subgraph browser ["the browser · no server round-trip"]
-        subgraph pathA ["Path A · heavy — aligning environments"]
+    subgraph browser ["the browser · no server"]
+        subgraph pathA ["Path A · heavy"]
             direction TB
             PYO["Pyodide WASM runtime<br/>+ numpy / scipy / sklearn / xgboost / nltk"]
             LOADA["pickle.loads() the artifacts"]
@@ -58,7 +58,7 @@ flowchart TD
             PYO --> LOADA --> RUNA
         end
 
-        subgraph pathB ["Path B · lean — converting formats"]
+        subgraph pathB ["Path B · lean"]
             direction TB
             ORT["onnxruntime-web<br/>wasm / webgpu backend"]
             PREB["preprocess + TF-IDF in JS<br/>against an exported vocab / idf table"]
