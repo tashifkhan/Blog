@@ -36,25 +36,39 @@ There is no magic "convert .pkl to browser binary" button. What you actually hav
 
 Path A is *aligning environments*. Path B is *converting formats*. That distinction drives every tradeoff below, and it's exactly where my model tried to kill me.
 
-<Ascii label="Two browser paths: heavy Pyodide runtime unpickling the model versus lean onnxruntime-web running a static graph">
-                    ┌─────────────────────────────────────────┐
-  train (laptop)    │  sklearn Pipeline.fit(...)              │
-                    │  dump → model.pkl   OR   export → .onnx │
-                    └───────────────┬─────────────────────────┘
-                                    │ serve as static asset
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│  Browser                                                             │
-│                                                                      │
-│  Path A (heavy)              Path B (lean)                           │
-│  ┌──────────────────┐        ┌────────────────────────────┐          │
-│  │ Pyodide WASM     │        │ onnxruntime-web            │          │
-│  │ + numpy/sklearn  │        │ (wasm / webgpu)            │          │
-│  │ pickle.loads()   │        │ InferenceSession.run()     │          │
-│  │ model.predict()  │        │ Float32Array tensors       │          │
-│  └──────────────────┘        └────────────────────────────┘          │
-└──────────────────────────────────────────────────────────────────────┘
-</Ascii>
+<Figure caption="Same trained pipeline, two shipping formats: Path A sends a Python runtime to the browser and unpickles the model, Path B sends a static graph and runs it on onnxruntime-web.">
+
+```mermaid
+flowchart TD
+    TRAIN["train on the laptop<br/>sklearn Pipeline.fit(...)"]
+    PKL["dump → preprocess.pkl + model.pkl<br/>pinned to the Pyodide stack"]
+    ONNX["export → model.onnx<br/>convert_xgboost / skl2onnx"]
+
+    TRAIN --> PKL
+    TRAIN --> ONNX
+    PKL -->|"served as a static asset"| PYO
+    ONNX -->|"served as a static asset"| ORT
+
+    subgraph browser ["the browser · no server round-trip"]
+        subgraph pathA ["Path A · heavy — aligning environments"]
+            direction TB
+            PYO["Pyodide WASM runtime<br/>+ numpy / scipy / sklearn / xgboost / nltk"]
+            LOADA["pickle.loads() the artifacts"]
+            RUNA["model.predict() — the same Python API"]
+            PYO --> LOADA --> RUNA
+        end
+
+        subgraph pathB ["Path B · lean — converting formats"]
+            direction TB
+            ORT["onnxruntime-web<br/>wasm / webgpu backend"]
+            PREB["preprocess + TF-IDF in JS<br/>against an exported vocab / idf table"]
+            RUNB["InferenceSession.run()<br/>Float32Array tensors in, scores out"]
+            ORT --> PREB --> RUNB
+        end
+    end
+```
+
+</Figure>
 
 ### the model, in one paragraph
 
