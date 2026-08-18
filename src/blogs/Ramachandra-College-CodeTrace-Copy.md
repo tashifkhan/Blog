@@ -87,6 +87,28 @@ Here it is in their page source, loaded straight off PostHog's CDN, on their RCE
 
 That's not a coincidence you stumble into. It means the analytics wiring in their production site still calls home to my PostHog project. Every student, every staff member, every placement officer who visits that portal is being tracked in my dashboard. I can see their traffic. I can see their routes. I never asked for any of that, and they never knew it was happening.
 
+<Figure caption="The two things they never changed: the head tag still points link previews and canonical SEO at my domain, and the PostHog snippet still reports their visitors into my dashboard.">
+
+```mermaid
+flowchart TD
+    REPO["github.com/tashifkhan/CodeTrace<br/>MIT licensed source"]
+    FORK["sptracker1.vercel.app<br/>rebuilt as an RCEE placement portal"]
+    VISITORS(["RCEE students, staff, placement officers"])
+    HEAD["head tag, shipped unchanged<br/>og:image · og:url · canonical"]
+    SNIP["PostHog snippet, shipped unchanged<br/>my project key still inside"]
+    CT["codetrace.xyz<br/>my domain"]
+    PH[("my PostHog dashboard")]
+
+    REPO -->|"forked and rebranded, no attribution"| FORK
+    VISITORS -->|"every visit"| FORK
+    FORK --> HEAD
+    FORK --> SNIP
+    HEAD -.->|"link previews and canonical SEO"| CT
+    SNIP ==>|"pageviews, routes, sessions"| PH
+```
+
+</Figure>
+
 Here's the PostHog dashboard, live, as I write this, with their visitors' sessions mixed in with mine:
 
 ![PostHog analytics showing the leaked traffic: student sessions from sptracker1.vercel.app reporting into my project|720](/images/blog/Ramachandra-College-CodeTrace-Copy/posthog-analytics.png)
