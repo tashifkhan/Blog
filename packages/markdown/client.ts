@@ -240,6 +240,21 @@ export function isDarkTheme(): boolean {
 }
 
 /**
+ * Record the diagram's own width on the wrapper as `--md-diagram-width`.
+ *
+ * `useMaxWidth` makes mermaid scale an SVG down to whatever box it lands in,
+ * which reads fine in an article column and turns into unreadable four-pixel
+ * type on a phone. Stylesheets use this custom property to hold the diagram at
+ * its natural size on narrow screens and scroll it instead.
+ */
+function publishDiagramWidth(target: HTMLElement): void {
+  const svg = target.querySelector('svg')
+  const width = svg?.viewBox?.baseVal?.width
+  if (!width) return
+  target.style.setProperty('--md-diagram-width', `${Math.round(width)}px`)
+}
+
+/**
  * Render every `.md-mermaid` block under `root`.
  *
  * Blocks are marked once drawn so this is safe to call repeatedly — the blog
@@ -265,6 +280,10 @@ export async function renderMermaidBlocks(
     theme: 'base',
     themeVariables: dark ? MERMAID_DARK : MERMAID_LIGHT,
     sequence: { useMaxWidth: false, diagramMarginX: 16, diagramMarginY: 16 },
+    // Keep subgraph titles under ~22 characters. mermaid hard-caps a cluster
+    // label at 200px and lays the cluster out as if the title were one line, so
+    // a title that wraps prints straight over the first node inside it — and
+    // neither `wrappingWidth` nor `subGraphTitleMargin` moves that box.
     flowchart: { useMaxWidth: true },
     er: { useMaxWidth: true, diagramPadding: 20 },
   })
@@ -281,6 +300,7 @@ export async function renderMermaidBlocks(
     try {
       const { svg } = await mermaid.render(id, source)
       target.innerHTML = svg
+      publishDiagramWidth(target)
     } catch {
       // mermaid leaves orphaned nodes behind when a parse fails.
       document.getElementById(id)?.remove()
