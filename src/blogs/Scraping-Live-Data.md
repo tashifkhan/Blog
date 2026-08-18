@@ -29,26 +29,42 @@ Scraping can violate a site's terms of service. The point of this post is unders
 
 First, what we built. [Pitaara](https://pitaara.vercel.app/) is a FastAPI + Next.js app that serves live gold rates (24K, 22K, 18K, 14K prices per brand) plus an offline-harvested product catalog for making-charge comparisons. The live path is basically three files: `api/live_rates.py`, `api/tanishq_fetcher.py`, `api/main.py`.
 
-<Ascii label="Pitaara architecture: Next.js frontend, FastAPI middle layer, four brand scrapers, Tanishq isolated through Jina and GitHub Actions">
-  ┌──────────── frontend (Next) ─────────────┐
-  │  /api/live-rates  →  stale-while-reval   │
-  └──────────────────┬───────────────────────┘
-                     │
-           ┌─────────▼─────────┐
-           │  FastAPI api/     │  Mongo Cron_live_rates (canonical doc)
-           │  chrome124 session│
-           └─────────┬─────────┘
-     ┌───────────────┼──────────────────┬────────────────────┐
-     ▼               ▼                  ▼                    ▼
- Malabar GraphQL  Senco calculator   Candere HTML         Tanishq
- metal rate API   + Client-ID key    #goldPrice24k        (isolated)
-     │               │                  │                    │
-     │               │                  │              r.jina.ai reader
-     │               │                  │              + GH Actions runner
-     │               │                  │              + callback webhook
-     └───────────────┴──────────────────┴────────────────────┘
-                              merge → Mongo → serve
-</Ascii>
+<Figure caption="Pitaara's live-rate path: FastAPI scrapes three brands directly with curl_cffi, Tanishq gets fetched off-box through GitHub Actions and Jina Reader, and everything merges into one canonical Mongo doc.">
+
+```mermaid
+flowchart TD
+    FE["Next.js frontend<br/>/api/live-rates · stale-while-revalidate"]
+    API["FastAPI api/<br/>session-wide impersonate=chrome124"]
+    MONGO[("Mongo · Cron_live_rates<br/>canonical doc")]
+    MERGE["merge partial failures<br/>keep the last good row per brand"]
+
+    FE -->|"reads the cached doc"| MONGO
+    API -->|"cron refresh"| MAL
+    API --> SEN
+    API --> CAN
+    API -.->|"dispatch,<br/>behind a kill-switch"| GHA
+
+    subgraph direct ["direct fetch · curl_cffi"]
+        MAL["Malabar<br/>Magento GraphQL · getMetalRate"]
+        SEN["Senco<br/>calculator API + Client-ID"]
+        CAN["Candere → Kalyan<br/>selectolax on #goldPrice24k"]
+    end
+
+    subgraph isolated ["Tanishq · hostile, so change who fetches"]
+        GHA["GitHub Actions runner<br/>its own IP pool"]
+        JINA["r.jina.ai reader<br/>renders on Jina's infra"]
+        GHA -->|"never hits tanishq.co.in<br/>first-hop"| JINA
+    end
+
+    MAL --> MERGE
+    SEN --> MERGE
+    CAN --> MERGE
+    JINA -->|"markdown table →<br/>regex today's IST row"| HOOK["callback webhook → /api"]
+    HOOK --> MERGE
+    MERGE --> MONGO
+```
+
+</Figure>
 
 Every row in this table was a "challenge faced → overcome" story, so consider it the trailer for the rest of the post:
 
