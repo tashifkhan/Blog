@@ -1,5 +1,5 @@
 ---
-title: "How Python Creates Classes: A Journey into Metaclasses and the Object Model"
+title: "How Python Actually Creates Classes: type, Metaclasses, and the Object Model"
 date: 2025-08-19
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,32 +9,28 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Python", "OOPs", "Low Level"]
-excerpt: "Everything in Python is an object - even classes themselves. Let's explore how Python creates classes internally and the fascinating role of metaclasses."
+excerpt: "I built a plugin loader that was supposed to auto-register every class dropped in a folder, reached for a metaclass instead of a decorator because it felt like the 'proper' way, and then couldn't explain why it worked. So I went and figured out what actually happens when Python hits a class statement, and what type really is underneath it all."
 coverImage: "/images/blog/Python-Class-Creation/cover.svg"
 ---
 
 <Lede>
-You've probably heard the phrase "everything in Python is an object." It's not just a catchy slogan - it's a fundamental truth about how Python works. Numbers are objects. Strings are objects. Functions are objects. But here's where it gets really interesting: **classes themselves are objects too**.
+I was building a small plugin loader, drop a class file in a folder and have it register itself without any extra wiring. A decorator would've done the job fine, but I'd read somewhere that metaclasses were the "real" way to do this kind of thing, so I used one. It worked on the first try, which was almost annoying, because I couldn't actually explain why. That sent me down a rabbit hole into how Python builds classes in the first place, and it turns out "everything in Python is an object" isn't just a slogan people repeat at meetups. It applies to classes too, which means something has to build them.
 </Lede>
+
+If classes are objects, something creates them, the same way a class creates its instances. That something is called a metaclass, and once you see how it works, a bunch of Python internals stop being magic.
 
 <Toc />
 
-If classes are objects, then something must create them, right? Just like a class creates its instances, something creates the class itself. That "something" is called a **metaclass**, and understanding this concept opens up a whole new level of Python mastery.
+## the trick question: is `type` a function or a class
 
-## the `type` enigma: function or class?
-
-Let's start with `type` - one of the most fundamental yet confusing elements in Python. You've probably used it to check an object's type:
+Start with `type`, which you've probably used a hundred times without thinking about it:
 
 ```python
 x = 5
 print(type(x))  # <class 'int'>
 ```
 
-But here's the twist: `type` is both a function AND a class. Mind-bending? Let's unpack it.
-
-### `type` as a function
-
-When you call `type()` with one argument, it acts like a function that returns the type of an object:
+Called with one argument, `type` behaves like a function that hands back an object's type:
 
 ```python
 >>> type(42)
@@ -45,15 +41,7 @@ When you call `type()` with one argument, it acts like a function that returns t
 <class 'list'>
 ```
 
-### `type` as a metaclass
-
-But `type` has a secret identity. It's actually the default **metaclass** - the class that creates other classes. Every class you define in Python is, by default, an instance of `type`.
-
-Think about this hierarchy:
-
-- A specific car (my Honda) is an instance of the Car class
-- The Car class is an instance of `type`
-- `type` is the "class of classes"
+But `type` has a second job. It's also the default metaclass, the class that creates other classes. Every class you define is, by default, an instance of `type`:
 
 ```python
 class MyClass:
@@ -67,11 +55,30 @@ my_instance = MyClass()
 print(type(my_instance))  # <class '__main__.MyClass'>
 ```
 
-So `type` is to `MyClass` what `MyClass` is to `my_instance`. It's turtles all the way down!
+`type` is to `MyClass` what `MyClass` is to `my_instance`. A specific car is an instance of the `Car` class, and `Car` itself is an instance of `type`. It's the same relationship, one level up.
 
-## the class creation process: behind the scenes
+## what actually happens when python hits `class`
 
-When Python encounters a `class` definition, it doesn't just magically create a class object. There's an elegant choreography happening behind the scenes. Let's break it down step by step.
+When Python sees a `class` block, it doesn't just conjure a class object out of nowhere. There's an actual sequence of steps, and it's the same sequence every time, whether you notice it or not.
+
+<Figure caption="Five steps between the class statement you write and the class object you get back.">
+
+```mermaid
+flowchart TD
+    DEF["class MyClass: ...<br/>the class statement"]
+    META["find the metaclass<br/>default: type"]
+    PREP["metaclass.__prepare__()<br/>returns the namespace dict"]
+    EXEC["run the class body<br/>into that namespace"]
+    NEW["metaclass.__new__()<br/>builds the class object"]
+    INIT["metaclass.__init__()<br/>finishes setup"]
+    DONE["MyClass<br/>an instance of type"]
+
+    DEF --> META --> PREP --> EXEC --> NEW --> INIT --> DONE
+```
+
+</Figure>
+
+Take this class:
 
 ```python
 class MyClass:
@@ -84,12 +91,10 @@ class MyClass:
         print(f"Value: {self.value}")
 ```
 
-When Python reads this, here's what actually happens:
-
 <Steps>
 <Step title="Determine the metaclass">
 
-Python first figures out which metaclass will be responsible for creating this class. Unless you explicitly specify otherwise, it defaults to `type`.
+Python figures out which metaclass builds this class. Unless told otherwise, that's `type`.
 
 ```python
 # Explicitly specifying a metaclass
@@ -102,12 +107,11 @@ class MyClass(metaclass=CustomMetaclass):
 ```
 
 </Step>
-<Step title="Prepare the class namespace">
+<Step title="Prepare the namespace">
 
-The metaclass's `__prepare__` method is called to create a dictionary that will hold the class's attributes. For `type`, this just returns an empty dictionary, but custom metaclasses can return specialized containers.
+The metaclass's `__prepare__` gets called to create the dict that will hold the class's attributes. `type` just returns an empty dict here; custom metaclasses can hand back something fancier, like an ordered or validating container.
 
 ```python
-# What happens internally (simplified)
 namespace = type.__prepare__('MyClass', (), {})
 # Returns: {}
 ```
@@ -115,28 +119,22 @@ namespace = type.__prepare__('MyClass', (), {})
 </Step>
 <Step title="Execute the class body">
 
-Python executes all the code inside the `class` block. Each method definition, class variable, and nested class gets added to the namespace dictionary.
+Python runs everything inside the `class` block. Each method and class variable lands in that namespace dict as it's defined.
 
 ```python
-# Conceptually, this is what happens:
 namespace['class_variable'] = 10
 namespace['__init__'] = <function __init__ at 0x...>
 namespace['display'] = <function display at 0x...>
 ```
 
-At this point, the class doesn't exist yet - we just have a dictionary full of its would-be attributes.
+At this point there's still no class, just a dict full of what will become its attributes.
 
 </Step>
 <Step title="Create the class object">
 
-Now comes the magic! The metaclass's `__new__` method is called with:
-
-- The class name ("MyClass")
-- A tuple of base classes (empty if there are none, or `(object,)`)
-- The namespace dictionary we just built
+Now the metaclass's `__new__` gets called with the name, the base classes, and that namespace dict:
 
 ```python
-# Internally, something like this happens:
 MyClass = type.__new__(
     type,                    # The metaclass
     'MyClass',               # The name
@@ -145,27 +143,27 @@ MyClass = type.__new__(
 )
 ```
 
-This creates the actual class object and allocates memory for it.
+This is the step that actually allocates the class object.
 
 </Step>
-<Step title="Initialize the class object">
+<Step title="Initialize it">
 
-Finally, the metaclass's `__init__` method is called to perform any additional initialization:
+Finally `__init__` runs on the freshly created class for any extra setup:
 
 ```python
 type.__init__(MyClass, 'MyClass', (), namespace)
 ```
 
-After this, `MyClass` is ready to use! It's a fully-formed class object that can create instances.
+After this, `MyClass` is a real, usable class.
 
 </Step>
 </Steps>
 
-## creating classes dynamically with `type()`
+None of this is exotic. It's just the same object-construction pattern Python uses everywhere else, applied one level up.
 
-Here's where things get really cool. Since `type` is what creates classes, you can call it directly to create classes programmatically, without using the `class` statement at all!
+## creating a class without the `class` keyword
 
-The syntax is: `type(name, bases, dict)`
+Here's the part that made the whole thing click for me: since `type` is what builds classes, you can call it directly and skip the `class` statement entirely.
 
 ```python
 # Creating a class the traditional way
@@ -197,19 +195,11 @@ print(fido.bark())  # Fido says woof!
 print(fido.species)  # Canis familiaris
 ```
 
-This is incredibly powerful for metaprogramming - creating classes on the fly based on configuration, data, or other runtime conditions.
+Both `Dog`s behave identically, because they went through the exact same five steps, one via source code, one via a direct call. This is the whole trick behind ORMs that build model classes from a schema, or any tool that generates classes from configuration at runtime.
 
 ## custom metaclasses: taking control
 
-Sometimes you want to customize how classes are created. This is where custom metaclasses shine. They allow you to:
-
-- Automatically add methods or attributes to classes
-- Validate class definitions
-- Register classes automatically
-- Implement design patterns like Singleton
-- Add debugging or logging capabilities
-
-Here's a practical example - a metaclass that automatically adds a `describe()` method to every class:
+This is what my plugin loader was actually doing. A custom metaclass lets you hook into that `__new__` step and change what comes out the other end, for every class that uses it. Here's a small one that stamps a `describe()` method onto anything built with it:
 
 ```python
 class DescriptiveMeta(type):
@@ -239,9 +229,11 @@ print(person.describe())  # I am an instance of Person
 print(dog.describe())      # I am an instance of Dog
 ```
 
-## real-world example: a singleton metaclass
+`Person` and `Dog` never mention `describe` themselves. It just shows up, because the metaclass injected it at step 4, before the class object was even finished being built.
 
-One of the most popular uses of metaclasses is implementing the Singleton pattern - ensuring only one instance of a class can exist:
+## the singleton: the metaclass trick everyone eventually meets
+
+Sooner or later you'll bump into a metaclass implementing Singleton, and it's worth understanding once you know `__new__` isn't the only hook available. This one overrides `__call__` instead, the method that runs when you write `MyClass()`:
 
 ```python
 class SingletonMeta(type):
@@ -267,47 +259,11 @@ db2 = Database()  # (no output - returns existing instance)
 print(db1 is db2)  # True - same object!
 ```
 
-## the object model hierarchy
+First call actually builds a `Database`. Every call after that hands back the same object from `_instances`. No global variable, no manual guard clause, the metaclass just intercepts instantiation itself.
 
-Let's visualize the complete picture:
+## the circular foundation underneath it all
 
-<Cols>
-<Col>
-
-<Ascii label="Instantiation chain: type creates MyClass, which creates my_instance">
-     type (the root metaclass)
-       ↑
-       | is an instance of
-       |
-  MyClass (a class)
-       ↑
-       | is an instance of
-       |
-my_instance (an object)
-</Ascii>
-
-</Col>
-<Col>
-
-<Ascii label="Inheritance chain: MyClass inherits from object; instances instantiate rather than inherit">
-   object (the root base class)
-       ↑
-       | inherits from
-       |
-  MyClass
-       ↑
-       | inherits from
-       |
-(instances don't inherit,
- they instantiate)
-</Ascii>
-
-</Col>
-</Cols>
-
-<Note title="Fun fact">
-`type` itself inherits from `object`, and `object` is an instance of `type`. It's a beautiful circular relationship that forms the foundation of Python's object model!
-</Note>
+Here's the part that's genuinely a little strange: `type` inherits from `object`, and `object` is an instance of `type`.
 
 ```python
 >>> isinstance(type, object)
@@ -318,40 +274,36 @@ True
 True
 ```
 
-## when should you use metaclasses?
+`type` is a subclass of `object`, but `object` is itself built by `type`. It's a two-node loop sitting at the bottom of the whole object model, and it's not a bug, it's the thing that lets "everything is an object" actually be true without infinite regress.
+
+<Note title="Fun fact">
+This circularity isn't something the interpreter special-cases at runtime for your classes, it's baked in once at startup. Every class you write still goes through the same five-step dance from `type` on down.
+</Note>
+
+## should you ever write one of these
 
 <Caution title="Honest truth">
-**Most of the time, you shouldn't.** As Python core developer Tim Peters famously said:
+Most of the time, no. Tim Peters, one of Python's core developers, put it better than I could:
 </Caution>
 
 > "Metaclasses are deeper magic than 99% of users should ever worry about. If you wonder whether you need them, you don't."
 
-Metaclasses are powerful but complex. They're most useful for:
+I didn't need one for that plugin loader, a decorator that appends to a registry list would've been five lines and obvious to anyone reading it later. Metaclasses earn their keep in framework code: Django's ORM uses one to turn model class bodies into database table definitions, and anything building a small DSL inside Python leans on the same trick. For everyday application code, a decorator, a classmethod, or plain inheritance covers nearly everything a metaclass would, with a fraction of the surprise.
 
-- **Framework development** (like Django's ORM, which uses metaclasses to create database models)
-- **Enforcing coding standards** across large codebases
-- **Creating domain-specific languages** within Python
-- **Advanced design patterns** that need class-level behavior modification
+## the short version
 
-For everyday programming, simpler alternatives usually suffice:
+<Panel title="what actually matters here" tone="accent">
 
-- Decorators for modifying classes
-- Class methods and properties for class-level behavior
-- Regular inheritance for sharing functionality
-
-## key takeaways
-
-<Panel title="Key takeaways" tone="accent">
-
-1. **Everything in Python is an object** - including classes themselves
-2. **`type` is the default metaclass** that creates classes
-3. **Class creation is a multi-step process** involving `__prepare__`, `__new__`, and `__init__`
-4. **You can create classes dynamically** using `type()` directly
-5. **Custom metaclasses let you control class creation** for advanced use cases
-6. **Use metaclasses sparingly** - they're powerful but add complexity
+- Classes are objects too, and `type` is the metaclass that builds them by default.
+- Creating a class is a five-step sequence: pick the metaclass, prepare the namespace, run the body into it, call `__new__`, call `__init__`.
+- `type(name, bases, dict)` does all five steps directly, no `class` statement required, which is how dynamic class generation works.
+- Custom metaclasses hook `__new__` (shape the class as it's built) or `__call__` (control what happens when it's instantiated).
+- Reach for one only when you're building a framework or a DSL. Everywhere else, a decorator or a classmethod does the same job with less magic.
 
 </Panel>
 
-Understanding how Python creates classes deepens your knowledge of the language's internals and opens up powerful metaprogramming capabilities. Even if you never write a custom metaclass, knowing how they work helps you understand Python's elegant object model.
+**Bottom line:** every class you've ever written passed through `type.__new__` and `type.__init__` whether you saw it happen or not, and that's the whole trick behind dynamic class creation, ORMs, and Singleton metaclasses alike. Knowing the mechanism doesn't mean you should reach for it. My plugin loader works fine now, but if I rebuilt it today, I'd rip out the metaclass and use a decorator instead. The magic was never necessary, I just didn't know that yet.
 
-Now when someone asks you "how are classes created in Python?", you can confidently say: "By metaclasses! And by default, that metaclass is `type`." You might just blow their mind a little. 😊
+<Hand>
+if you ever catch yourself reaching for a metaclass, ask once more whether a decorator would've done it.
+</Hand>

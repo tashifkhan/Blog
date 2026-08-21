@@ -1,5 +1,5 @@
 ---
-title: "Unpacking Git: A Journey Under the Hood of Version Control"
+title: "Git Doesn't Delete Anything: What's Actually Inside .git"
 date: 2025-06-23
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,81 +9,75 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Git"]
-excerpt: "A deep dive into the core components that make Git possible."
+excerpt: "A rebase gone wrong taught me that git never really deletes anything, it just moves pointers around. Here's what blobs, trees, commits, refs, merges and rebases actually are under the hood."
 coverImage: "/images/blog/GitUnderTheHood/cover.svg"
 ---
 
 <Lede>
-Git. For many, it's the indispensable tool that orchestrates our code, tracks our progress, and saves us from countless headaches. We use `git add`, `git commit`, `git push`, and `git pull` almost instinctively. But have you ever stopped to wonder what's truly happening when you type those commands? How does Git manage to track every change, enable seamless collaboration, and allow us to travel through time in our codebase?
+A few months back I was cleaning up commits before opening a PR. Ran `git rebase -i HEAD~12`, fat-fingered a `drop` on the wrong line, and watched an entire feature vanish from `git log`. My stomach actually dropped for a second. Then I remembered something: git doesn't delete anything the moment you think it does. `git reflog`, find the orphaned commit, `git cherry-pick` it back into existence, done. Five minutes, no data lost. That's the moment git internals stopped being trivia for me and started being the thing that saves my ass.
 </Lede>
 
-The magic of Git lies in its elegant simplicity and robust underlying data structures. Unlike older version control systems that focused on storing diffs (differences between file versions), Git's core philosophy is that of a **content-addressable filesystem**. It sees your project not as a series of changes, but as a series of **snapshots**. Every time you commit, Git takes a picture of your entire project and stores it efficiently.
+The reason reflog could save me is the same reason git is cheap to branch on and mostly safe to experiment with: it never edits anything in place. It writes new immutable objects and moves lightweight pointers around. Everything else, branches, merges, rebases, is a variation on that one trick. Here's the whole shape of it:
 
-Let's dive deeper into the core components that make this possible.
+<Figure caption="Git's object pipeline: files become blobs, directories become trees, commits point at a tree plus their parent(s), and refs (branches, HEAD) are just movable pointers into this graph.">
+
+```mermaid
+flowchart TD
+    WD["working directory<br/>the files you're editing"]
+    IDX["index / staging area<br/>.git/index"]
+    BLOB["blob object<br/>raw file contents, SHA-1 addressed"]
+    TREE["tree object<br/>directory listing: names + modes + hashes"]
+    COMMIT["commit object<br/>tree + parent(s) + author + message"]
+    REF["refs · branches & HEAD<br/>.git/refs/heads/*, .git/HEAD"]
+
+    WD -->|"git add"| IDX
+    IDX -->|"git commit"| COMMIT
+    COMMIT --> TREE
+    TREE --> BLOB
+    TREE -->|"nested directory"| TREE
+    REF -->|"points at"| COMMIT
+```
+
+</Figure>
 
 <Toc />
 
-### the immutable building blocks: git objects
+## objects: the immutable building blocks
 
-At its heart, Git is a database of four primary object types, each identified by a unique SHA-1 hash of its content. This cryptographic hashing is what gives Git its incredible integrity – if even a single bit of an object changes, its hash changes, making tampering immediately detectable.
+Under the hood, git is a content-addressable database of four object types, each named by the SHA-1 hash of its own content. Change one bit anywhere in an object and its hash changes, which is exactly why tampering or corruption shows up immediately instead of quietly.
 
-<Panel title="Blob — binary large object" tone="accent">
-
-- **What it stores:** The exact content of a file. It doesn't store file names or paths, just the raw data.
-- **Analogy:** Think of it as a pure text file or an image file, completely devoid of context beyond its content.
-
+<Panel title="blob" tone="accent">
+A blob is the exact bytes of one file, nothing else. No filename, no path, no permissions, just content. Two files with identical contents anywhere in your repo, even in totally different directories, are the same blob. Git only ever stores that content once.
 </Panel>
 
-<Panel title="Tree object" tone="accent">
-
-- **What it stores:** Represents a directory. It contains a list of pointers to other Git objects (blobs and/or other tree objects) along with their file names, file modes (permissions), and object types.
-- **Analogy:** A directory listing. It tells you "this directory contains a file named 'main.py' (which is this blob) and a subdirectory named 'src' (which is this other tree)."
-
+<Panel title="tree" tone="accent">
+A tree is a directory listing. It points at a set of blobs and other trees, each with a name, a file mode, and a hash. When git nests a subdirectory, that's just a tree pointing at another tree. Walk a commit's tree recursively and you've reconstructed the entire project at that snapshot.
 </Panel>
 
-<Panel title="Commit object" tone="accent">
-
-- **What it stores:** This is the most crucial object for understanding your project's history. A commit object points to a single **tree object** (representing the complete snapshot of your project's files at that moment), the author's name and email, the committer's name and email, the commit message, and most importantly, one or more **parent commit(s)**.
-- **Analogy:** A historical record. "At this specific point in time, the project looked exactly like this (points to a tree), these are the people who made the change, this is why they made it, and this change builds upon this previous change (points to parent commits)."
-
+<Panel title="commit" tone="accent">
+A commit points at exactly one tree, the complete state of the project at that moment, plus the author, the committer, a message, and one or more parent commits. That last part is what makes history a graph rather than a list: a normal commit has one parent, the first commit in a repo has zero, and a merge commit has two.
 </Panel>
 
-<Panel title="Tag object — annotated tags" tone="accent">
-
-- **What it stores:** A permanent pointer to a specific commit. Unlike lightweight tags (which are just references), annotated tags are full Git objects themselves. They store the tagger's name, email, date, and a tagging message, along with a pointer to the commit they reference.
-- **Analogy:** A permanent bookmark or release marker. "This specific commit marks version 1.0 of our software, and here's who tagged it and why."
-
+<Panel title="tag (annotated)" tone="accent">
+A lightweight tag is nothing more than a ref, a name pointing at a commit. An annotated tag is an actual object: it stores the tagger, a date, a message, and a pointer to the commit it marks. That's the difference between "someone typed a label" and "there's a signed, dated record of a release."
 </Panel>
 
-### references (refs): your navigational pointers
+## refs: pointers into that graph
 
-While objects are the immutable data, **references (refs)** are the mutable pointers that help you navigate your project's history. They are essentially files in the `.git/refs` directory that contain the SHA-1 hash of a commit object.
+Objects are immutable, but you need something that moves. That's what refs are: plain files under `.git/refs` holding a commit's SHA-1.
 
-- **Branches:** A branch (e.g., `master`, `main`, `feature-x`) is simply a lightweight, movable pointer to a commit. When you create a new commit on a branch, that branch's pointer automatically moves forward to point to the new commit.
-- **Tags:** As mentioned, lightweight tags are just references to commits. Annotated tags are Git objects that _then_ point to a commit.
-- **HEAD:** This is the most important reference. `HEAD` is a symbolic reference that points to the branch you are currently working on. When you `git checkout feature-x`, `HEAD` now points to `refs/heads/feature-x`. When you commit, the branch that `HEAD` points to moves forward.
+A branch, `main`, `feature-x`, whatever, is a lightweight, movable pointer to a commit. Commit on that branch and the pointer walks forward to the new commit automatically. `HEAD` is the special one: it's a symbolic ref pointing at whichever branch you currently have checked out. Run `git checkout feature-x` and `HEAD` now points at `refs/heads/feature-x`; commit, and the branch `HEAD` points to moves forward with it.
 
-### branching: a simple pointer game
+## branching is just a pointer copy
 
-Given Git's object model and ref system, branching becomes incredibly simple and cheap.
-
-When you run `git branch new-feature`:
+Given that model, branching is almost embarrassingly cheap. When you run `git branch new-feature`:
 
 <Steps>
-<Step>Git finds the commit that your current `HEAD` points to.</Step>
-<Step>It creates a new reference, `refs/heads/new-feature`, and makes it point to the exact same commit.</Step>
+<Step>Git looks at the commit your current `HEAD` points to.</Step>
+<Step>It writes a new file, `refs/heads/new-feature`, holding that exact same commit hash.</Step>
 </Steps>
 
-That's it! No copying of files, no complex operations. A new branch is just a new, lightweight pointer.
-
-When you `git checkout new-feature`:
-
-<Steps>
-<Step>Git updates `HEAD` to point to `refs/heads/new-feature`.</Step>
-<Step>It updates your working directory to match the snapshot of the commit that `new-feature` points to.</Step>
-</Steps>
-
-As you make commits on `new-feature`, the `new-feature` pointer moves forward, while your `main` (or `master`) branch pointer remains unchanged, pointing to its last commit. This is how development can diverge independently.
+That's the entire operation. No file copying, no snapshotting a second time, just a new pointer sitting next to an existing one. When you then `git checkout new-feature`, git moves `HEAD` to point at that ref and rewrites your working directory to match the commit it names.
 
 <Ascii label="Commit graph with main at C and new-feature diverging at D and E, with HEAD on new-feature">
       A -- B -- C (main)
@@ -95,14 +89,15 @@ As you make commits on `new-feature`, the `new-feature` pointer moves forward, w
           HEAD (after checkout new-feature)
 </Ascii>
 
-### merging: weaving histories together
+As you keep committing on `new-feature`, its pointer keeps moving forward while `main` sits still at its last commit. That's the whole mechanism behind branches diverging: two pointers walking away from each other over the same object graph.
 
-When separate lines of development need to be brought together, Git offers merging.
+## merging: joining two histories
 
-#### fast-forward merge
+Eventually those diverged lines need to come back together, and git handles that one of two ways depending on shape.
 
-- **When it happens:** If the branch you're merging _into_ (e.g., `main`) is an ancestor of the branch you're merging _from_ (e.g., `feature-x`). This means `main` hasn't had any new commits since `feature-x` branched off.
-- **How it works:** Git simply moves the pointer of the target branch (`main`) forward to the latest commit of the source branch (`feature-x`). No new commit is created.
+### fast-forward merge
+
+If `main` hasn't moved since `feature-x` branched off it, `main` is literally an ancestor of `feature-x`. There's nothing to reconcile. Git just slides the `main` pointer forward to wherever `feature-x` is. No new commit gets created, because none is needed.
 
 <Ascii label="Fast-forward merge: main moves from B forward to D, the tip of feature-x">
       A -- B (main)
@@ -115,17 +110,16 @@ When separate lines of development need to be brought together, Git offers mergi
       A -- B -- C -- D (main, feature-x)
 </Ascii>
 
-#### three-way merge (recursive merge)
+### three-way merge
 
-- **When it happens:** If the target branch has new commits that are _not_ on the source branch, and the source branch has new commits _not_ on the target branch. The histories have diverged.
-- **How it works:**
+If both branches have moved since they diverged, git can't just slide a pointer. It has to actually reconcile two different sets of changes.
 
 <Steps>
-<Step>Git finds the **common ancestor** commit between the two branches.</Step>
-<Step>It identifies the changes made on the target branch since the common ancestor.</Step>
-<Step>It identifies the changes made on the source branch since the common ancestor.</Step>
-<Step>Git attempts to combine these changes.</Step>
-<Step>A new **merge commit** is created. This special commit has _two_ parent commits: the tip of the target branch and the tip of the source branch. Its tree object represents the combined state of the project.</Step>
+<Step>Find the common ancestor commit of the two branches.</Step>
+<Step>Work out what changed on the target branch since that ancestor.</Step>
+<Step>Work out what changed on the source branch since that ancestor.</Step>
+<Step>Try to combine both sets of changes.</Step>
+<Step>Write a new merge commit with two parents, the tips of both branches, and a tree representing the combined result.</Step>
 </Steps>
 
 <Ascii label="Three-way merge: diverged histories on main and feature-x joined by a new merge commit M with two parents">
@@ -139,22 +133,22 @@ When separate lines of development need to be brought together, Git offers mergi
       # git merge feature-x
 </Ascii>
 
-<Warning title="Conflict resolution">
-If Git cannot automatically combine changes (e.g., the same line was modified differently in both branches), it marks a **merge conflict**. You then manually resolve these conflicts in your files, add them, and commit the merge.
+<Warning title="conflict resolution">
+When git can't automatically combine two changes to the same lines, it stops and marks a merge conflict instead of guessing. You resolve it by hand in the affected files, `git add` the result, and commit. There's no silent "pick one side" behavior, which is exactly what you want from something managing your entire history.
 </Warning>
 
-### rebasing: rewriting history for a linear path
+## rebasing: replaying commits instead of merging them
 
-Rebasing is an alternative to merging that allows you to integrate changes from one branch onto another by **replaying** commits. Instead of creating a merge commit, it rewrites the history of your branch to appear as if it branched off at a later point.
+Rebase solves the same problem, diverged branches, differently. Instead of creating a merge commit that records both parents, it rewrites your branch's history so it looks like it started later than it did.
 
-When you `git rebase main` from your `feature-x` branch:
+Running `git rebase main` from `feature-x` does this:
 
 <Steps>
-<Step>Git identifies the common ancestor between `feature-x` and `main`.</Step>
-<Step>It finds all commits on `feature-x` that are _not_ on `main`. These are temporarily stored.</Step>
-<Step>`feature-x` is "rewound" back to the common ancestor.</Step>
-<Step>The `feature-x` branch pointer is then moved to the tip of the `main` branch.</Step>
-<Step>Git then reapplies (or "replays") each of the temporarily stored commits from `feature-x` one by one on top of the new base (`main`). For each replayed commit, a **new commit object** is created with a new SHA-1 hash.</Step>
+<Step>Find the common ancestor of `feature-x` and `main`.</Step>
+<Step>Collect every commit on `feature-x` that isn't on `main` yet, and set them aside.</Step>
+<Step>Rewind `feature-x` back to that common ancestor.</Step>
+<Step>Move the `feature-x` pointer to the tip of `main`.</Step>
+<Step>Replay the saved commits one by one on top of that new base. Each replayed commit is a brand-new commit object with a new SHA-1.</Step>
 </Steps>
 
 <Ascii label="Rebase: commits D and E are replayed onto C as new commits D-prime and E-prime">
@@ -171,31 +165,46 @@ When you `git rebase main` from your `feature-x` branch:
                  (main)
 </Ascii>
 
-Notice `D'` and `E'` are new commits. Their content is identical to `D` and `E`, but their parent is now `C`, not `B`, and thus their SHA-1 hashes are different.
+`D'` and `E'` carry the same diffs as `D` and `E`, but their parent is now `C` instead of `B`. Different parent means different hash, full stop, even though nothing about the actual code changed.
 
-**Key Differences & When to Use:**
+That's exactly the mechanism that ate my feature branch at the start of this post. `drop` in an interactive rebase just means "don't replay this one," and the original commit object doesn't stop existing, it just stops being reachable from any ref. `git reflog` still remembers where `HEAD` pointed a moment ago, which is how I got it back.
 
-<Cols>
+<Cols cols={2}>
 <Col>
 
-**Merge**
+**merge**
 
-Preserves history exactly as it happened. Creates a merge commit, showing the divergence and convergence. Ideal for integrating feature branches into shared branches (`main`/`develop`) to maintain an accurate, non-linear history.
+Preserves history exactly as it happened. Creates a merge commit that shows the divergence and the join. Good default for landing feature branches into a shared branch you don't control alone.
 
 </Col>
 <Col>
 
-**Rebase**
+**rebase**
 
-Creates a linear history by rewriting commits. Useful for cleaning up your local feature branch before merging it into a shared branch. It avoids "noisy" merge commits.
+Rewrites commits onto a new base so history reads as a straight line. Good for tidying up your own branch before it's ever shared. No merge-commit noise, but the commits are literally different objects afterward.
 
 </Col>
 </Cols>
 
-<Danger title="Never rebase shared history">
-**Never rebase commits that have already been pushed to a shared remote repository and other people might have pulled!** Because rebase rewrites history (creates new commit objects), it can cause significant problems for collaborators who have based their work on the "old" commits. This leads to conflicting histories and messy merges down the line. Rebase only on local, unpushed branches, or branches where you are absolutely certain no one else has based their work on.
+<Danger title="never rebase shared history">
+Don't rebase commits that have already been pushed and that someone else might have pulled. Rebase creates new commit objects, so anyone whose work is based on the old ones now has a branch that's diverged from a history that technically no longer exists upstream. Their next pull turns into a mess of duplicate-looking commits and manual reconciliation. Rebase local, unpushed work, or branches you're certain nobody else has touched. That's it.
 </Danger>
 
-### conclusion
+## the mental model, compressed
 
-Git's power comes from its elegant and efficient design, rooted in its object model and content-addressable nature. Understanding how blobs, trees, and commits form snapshots, how references like branches and `HEAD` navigate these snapshots, and how merging and rebasing manipulate this history empowers you to wield Git with greater confidence and control. The next time you type a Git command, remember the fascinating ballet of pointers and immutable objects happening silently beneath the surface, ensuring the integrity and flexibility of your codebase.
+<Checklist title="what to remember when you're about to touch history">
+- [ ] Everything git stores is immutable and content-addressed: same content, same hash, same object, forever
+- [ ] Branches and HEAD are just files holding a commit hash, not copies of anything
+- [ ] A fast-forward merge moves a pointer; a three-way merge writes a new commit with two parents
+- [ ] Rebase replays commits as new objects with new hashes, same diffs, different parent
+- [ ] Never rebase a branch other people have already pulled from
+- [ ] If something disappears that shouldn't have, check `git reflog` before you panic
+</Checklist>
+
+<InkBand title="bottom line">
+Git feels intimidating until you see that it's really just two things stacked on top of each other: an immutable, hash-addressed object store (blobs, trees, commits, tags), and a thin layer of mutable pointers (branches, HEAD, tags) that point into it. Branching is cheap because it's one pointer. Merging and rebasing are both just different ways of building new commits on top of that graph. Nothing gets destroyed until you explicitly garbage-collect unreachable objects, which is why `reflog` exists as a safety net for exactly the kind of mistake I made.
+</InkBand>
+
+<Hand>
+next time a rebase goes sideways, don't panic, just go check reflog first.
+</Hand>

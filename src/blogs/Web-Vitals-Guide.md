@@ -1,5 +1,5 @@
 ---
-title: "Mastering Core Web Vitals: A Full-Stack Developer's Guide to Performance Excellence"
+title: "It Ran Fine on My Machine: Chasing Core Web Vitals Across the Full Stack"
 date: 2025-09-21
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,127 +9,112 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Web", "Next.js", "Astro", "React"]
-excerpt: "A comprehensive guide to understanding and optimizing Core Web Vitals from a full-stack perspective, with practical examples using modern frameworks."
+excerpt: "I pushed a new build of my portfolio, tested it on my laptop over wifi, and it felt instant. Then I ran it through PageSpeed Insights on a throttled connection and watched the largest-contentful-paint number come back embarrassing. This is the walkthrough of fixing FCP, LCP, INP and CLS across a FastAPI backend and Next.js/Astro frontends, with the code that actually moved each number."
 coverImage: "/images/blog/Web-Vitals-Guide/cover.svg"
 ---
 
 <Lede>
-We've all been there. You build a beautiful application, test it locally, everything feels snappy and responsive. Then you deploy it to production, check it on your phone over a 4G connection, and... it crawls. Users bounce. Your client isn't happy. Google penalizes your rankings.
+I redeployed my portfolio after a redesign, opened it on my laptop over wifi, and it felt snappy, so I moved on. A few days later I ran it through PageSpeed Insights out of habit, the kind of check you do right before you forget to, and the largest-contentful-paint number came back somewhere north of 4 seconds on simulated mobile. Same site. My machine had lied to me, the way a fast dev connection always does. That sent me down a real audit of Core Web Vitals across the stack I actually build with: FastAPI on the backend, Next.js and Astro on the frontend, plain React components in between.
 </Lede>
+
+This is that audit, written up properly: what each metric measures, where it actually breaks in a full-stack app, and the code that fixed it, not the theory.
 
 <Toc />
 
-After years of building with everything from Flask and FastAPI backends to Next.js, React, and Astro frontends, I've learned that understanding Core Web Vitals isn't just about appeasing Google's algorithms - it's about delivering genuinely exceptional user experiences. And honestly? It's become one of the most important skills in modern web development.
+## the whole shape of a page load
 
-## what are core web vitals, really?
+Before the metric-by-metric walkthrough, here's where each one sits on the timeline of a single page load, and where the failure modes creep in:
 
-Core Web Vitals are Google's attempt to quantify user experience through measurable metrics. Think of them as the vital signs of your web application - like a doctor checking your pulse, blood pressure, and temperature. These metrics capture the most critical aspects of how users perceive performance.
+<Figure caption="One page load, four checkpoints. LCP and hydration are also the two places a late-arriving element can shove everything else around and rack up CLS.">
 
-The three main Core Web Vitals are:
+```mermaid
+flowchart TD
+    REQ["browser requests the page"]
+    TTFB["server responds<br/>Time To First Byte"]
+    FCP["first pixel renders<br/>FCP · good ≤ 1.8s"]
+    LCP["largest element paints<br/>LCP · good ≤ 2.5s"]
+    HYD["JS hydrates,<br/>page becomes interactive"]
+    INP["every click / tap / keypress<br/>INP · good ≤ 200ms"]
+    SHIFT["late images, ads, web fonts<br/>CLS · good ≤ 0.1"]
 
-<Phases>
-<Phase title="Largest Contentful Paint" tag="LCP" tone="accent">
-Measures loading performance. Specifically, when the largest visible content element renders on the screen.
-</Phase>
-<Phase title="Interaction to Next Paint" tag="INP" tone="warn">
-Measures responsiveness. How quickly your site responds to user interactions throughout the entire page lifecycle. (This recently replaced First Input Delay)
-</Phase>
-<Phase title="Cumulative Layout Shift" tag="CLS" tone="ok">
-Measures visual stability. How much your content unexpectedly moves around while loading.
-</Phase>
-</Phases>
+    REQ --> TTFB --> FCP --> LCP --> HYD --> INP
+    LCP -.->|"no reserved dimensions"| SHIFT
+    HYD -.->|"content injects above the fold"| SHIFT
+```
 
-But the story doesn't end there. To truly understand performance, we also need to look at:
+</Figure>
 
-- **First Contentful Paint (FCP)** - When the first piece of content appears
-- **Time to Interactive (TTI)** - When the page becomes fully interactive
-- **Total Blocking Time (TBT)** - How long the main thread is blocked
+Three of those checkpoints are the official Core Web Vitals: LCP for loading, INP for responsiveness, CLS for stability. FCP and TTFB aren't official Vitals anymore, but they're upstream of LCP, so ignoring them just means guessing at why LCP is slow.
 
-Let's dive deep into each one.
+## first contentful paint: proving something's happening
 
-## first contentful paint: the moment your users know something's happening
-
-FCP marks when users first see _something_ meaningful on their screens. For a site like `tashif.codes`, this might be the header text, the navigation bar, or the beginning of a hero section.
-
-Google's guideline is sub-1.8 seconds, but if you want to truly impress, aim for under 1 second.
-
-### optimizing FCP with fastapi
-
-On the backend, you want to send critical content as quickly as possible:
+FCP is the moment a user sees *anything*, not the final layout, just proof the page isn't dead. Google's guideline is under 1.8 seconds for "good," and the fix is almost entirely a backend problem: get bytes to the browser fast, and don't make the first paint wait on anything it doesn't need.
 
 ```python
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
-import asyncio
 
 app = FastAPI()
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    # Send the shell immediately with critical CSS inlined
-    html_shell = """
+    # send the shell immediately, critical CSS inlined, everything else deferred
+    return """
     <!DOCTYPE html>
     <html>
     <head>
         <style>
-            /* Critical CSS inlined */
             .hero { font-size: 2rem; padding: 2rem; }
         </style>
     </head>
     <body>
         <div class="hero">Welcome to tashif.codes</div>
-        <!-- Defer non-critical resources -->
         <link rel="stylesheet" href="/styles.css" media="print"
               onload="this.media='all'">
     </body>
     </html>
     """
-    return html_shell
 ```
 
-<Tip title="The key">
-**Prioritize above-the-fold content and inline critical CSS**. Everything else can wait.
+<Tip title="The one rule that matters here">
+Inline the critical CSS for the above-the-fold content, and load everything else as if it's optional, because for this specific measurement it is.
 </Tip>
 
-## largest contentful paint: the heavy hitter
+## largest contentful paint: the one that actually gates rankings
 
-LCP is usually the hero image, a large text block, or a video thumbnail. On `tashif.codes`, if your portfolio hero image takes 4 seconds to load, that's your LCP - and you're failing Google's 2.5-second threshold.
+LCP is usually a hero image, a big headline, or a video poster frame. On my portfolio it's the hero image, and if that takes 4 seconds to show up, that's the number PageSpeed reports, full stop, well past Google's 2.5-second "good" threshold.
 
 <Tabs>
 <Tab title="Next.js">
-
-Next.js makes LCP optimization almost trivial with its Image component:
 
 ```tsx
 import Image from "next/image";
 
 export default function Hero() {
-	return (
-		<section className="hero">
-			<Image
-				src="/portfolio-hero.webp"
-				alt="Tashif's Portfolio"
-				width={1200}
-				height={600}
-				priority // This is crucial for LCP!
-				placeholder="blur"
-				blurDataURL="data:image/jpeg;base64,..."
-				sizes="100vw"
-			/>
-			<h1>Welcome to tashif.codes</h1>
-		</section>
-	);
+  return (
+    <section className="hero">
+      <Image
+        src="/portfolio-hero.webp"
+        alt="Tashif's Portfolio"
+        width={1200}
+        height={600}
+        priority // preload this, it's the LCP candidate
+        placeholder="blur"
+        blurDataURL="data:image/jpeg;base64,..."
+        sizes="100vw"
+      />
+      <h1>Welcome to tashif.codes</h1>
+    </section>
+  );
 }
 ```
 
-The `priority` prop tells Next.js to preload this image. The blur placeholder gives users something to see immediately.
+`priority` tells Next.js to preload the image instead of lazy-loading it, which matters because the default lazy behavior is exactly wrong for whatever renders as your LCP element. The blur placeholder gives the browser something to paint while the real file streams in.
 
 </Tab>
 <Tab title="Astro">
-
-Astro takes a different angle with its image optimization:
 
 ```astro
 ---
@@ -152,322 +137,258 @@ import heroImage from '../assets/hero.webp';
 
 <style>
   .hero {
-    /* Using CSS containment for better rendering */
     contain: layout style paint;
   }
 </style>
 ```
 
-Astro automatically optimizes images at build time, converting them to modern formats and generating multiple sizes.
+Astro optimizes images at build time and generates the right formats and sizes without a runtime image service. `loading="eager"` is the equivalent of Next's `priority`: don't lazy-load the thing the metric is measuring.
 
 </Tab>
 </Tabs>
 
-## interaction to next paint: the responsiveness reality check
+The pattern is identical across frameworks even though the API differs: find the actual LCP element with DevTools' Performance panel, then make sure that one specific element is exempt from every lazy-loading default you've set up for everything else.
 
-INP is the newest Core Web Vital, and it's tough. It measures the latency of _every_ user interaction throughout the page's entire lifecycle - not just the first one like the old FID metric.
+## interaction to next paint: every click counts now
 
-Think about it: users don't just interact once. They click, type, scroll, hover. INP captures all of that.
-
-### optimizing INP in react
+INP replaced First Input Delay as the responsiveness metric a while back, and the difference matters: FID only measured the *first* interaction. INP measures the worst one across the entire page lifecycle, clicks, taps, keypresses, all of it. Good is under 200ms.
 
 ```javascript
 import { useCallback, useMemo, startTransition } from "react";
 
 function ProjectGallery({ projects }) {
-	const [filter, setFilter] = useState("all");
-	const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-	// Memoize expensive computations
-	const filteredProjects = useMemo(() => {
-		return projects.filter((p) => {
-			const matchesFilter = filter === "all" || p.category === filter;
-			const matchesSearch = p.title.toLowerCase().includes(searchTerm);
-			return matchesFilter && matchesSearch;
-		});
-	}, [projects, filter, searchTerm]);
+  const filteredProjects = useMemo(() => {
+    return projects.filter((p) => {
+      const matchesFilter = filter === "all" || p.category === filter;
+      const matchesSearch = p.title.toLowerCase().includes(searchTerm);
+      return matchesFilter && matchesSearch;
+    });
+  }, [projects, filter, searchTerm]);
 
-	// Use startTransition for non-urgent updates
-	const handleFilter = useCallback((newFilter) => {
-		startTransition(() => {
-			setFilter(newFilter);
-		});
-	}, []);
+  // non-urgent update: let React deprioritize this behind anything more urgent
+  const handleFilter = useCallback((newFilter) => {
+    startTransition(() => {
+      setFilter(newFilter);
+    });
+  }, []);
 
-	// Debounce search to avoid blocking
-	const debouncedSearch = useMemo(
-		() => debounce((term) => setSearchTerm(term), 300),
-		[]
-	);
+  const debouncedSearch = useMemo(
+    () => debounce((term) => setSearchTerm(term), 300),
+    []
+  );
 
-	return (
-		<div>
-			<input
-				onChange={(e) => debouncedSearch(e.target.value)}
-				placeholder="Search projects..."
-			/>
-			<div className="filters">
-				{["all", "web", "mobile", "design"].map((cat) => (
-					<button key={cat} onClick={() => handleFilter(cat)}>
-						{cat}
-					</button>
-				))}
-			</div>
-			<div className="grid">
-				{filteredProjects.map((project) => (
-					<ProjectCard key={project.id} {...project} />
-				))}
-			</div>
-		</div>
-	);
+  return (
+    <div>
+      <input
+        onChange={(e) => debouncedSearch(e.target.value)}
+        placeholder="Search projects..."
+      />
+      <div className="filters">
+        {["all", "web", "mobile", "design"].map((cat) => (
+          <button key={cat} onClick={() => handleFilter(cat)}>
+            {cat}
+          </button>
+        ))}
+      </div>
+      <div className="grid">
+        {filteredProjects.map((project) => (
+          <ProjectCard key={project.id} {...project} />
+        ))}
+      </div>
+    </div>
+  );
 }
 ```
 
-The key techniques:
+`useMemo` keeps the filter from re-running the whole list on every render, `startTransition` tells React the filter update can wait behind anything the user is actually mid-typing, and the debounce keeps a fast typist from triggering a re-filter on every keystroke. None of this is exotic; it's just the three things that actually show up in a Performance trace when a click feels laggy.
 
-- **useMemo** for expensive calculations
-- **startTransition** to deprioritize non-urgent updates
-- **Debouncing** to avoid thrashing on rapid input
-- **Code splitting** to reduce bundle size
+## cumulative layout shift: the rage-inducing one
 
-## cumulative layout shift: the stability champion
-
-CLS is perhaps the most user-facing metric. You know that moment when you're about to click a button and an ad loads, shifting everything down, and you end up clicking something else? That's CLS, and it's infuriating.
-
-### preventing CLS with CSS
+CLS is the metric everyone recognizes before they know its name: you're about to tap something, an ad or an image finishes loading above it, and you tap the wrong thing. Good is under 0.1.
 
 ```css
-/* Reserve space for images using aspect ratio */
 .image-container {
-	aspect-ratio: 16 / 9;
-	background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-	background-size: 200% 100%;
-	animation: shimmer 1.5s infinite;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
-	0% {
-		background-position: 200% 0;
-	}
-	100% {
-		background-position: -200% 0;
-	}
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
-/* Reserve space for dynamic content */
 .dynamic-content {
-	min-height: 300px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Always specify dimensions */
 img,
 video {
-	width: 100%;
-	height: auto;
+  width: 100%;
+  height: auto;
 }
 
-/* Prevent font loading shifts */
 @font-face {
-	font-family: "MyFont";
-	src: url("/fonts/myfont.woff2") format("woff2");
-	font-display: swap;
-	/* Use size-adjust to prevent layout shift */
-	size-adjust: 100%;
+  font-family: "MyFont";
+  src: url("/fonts/myfont.woff2") format("woff2");
+  font-display: swap;
+  size-adjust: 100%;
 }
 ```
 
-<Panel title="The golden rules for preventing CLS" tone="ok">
-
-1. **Always specify dimensions** for images and videos
-2. **Reserve space** for dynamically loaded content
-3. **Use placeholders** or skeleton loaders
-4. **Be careful with fonts** - use `font-display: swap` wisely
-5. **Don't insert content** above existing content (unless user-initiated)
-
+<Panel title="What actually prevents CLS" tone="ok">
+Specify width and height (or `aspect-ratio`) on every image and video. Reserve space for anything that loads in dynamically, with a real min-height, not a hope. Use a skeleton or shimmer placeholder instead of nothing. Set `font-display: swap` and tune `size-adjust` so a webfont swap doesn't reflow the line height. And don't insert content above what the user is already looking at unless they asked for it.
 </Panel>
 
-## framework-specific strategies
+## what actually moved the needle across frameworks
 
 <Tabs>
 <Tab title="Next.js">
 
-**Leveraging built-in optimization.**
-
 ```javascript
 // next.config.js
 module.exports = {
-	images: {
-		domains: ["tashif.codes"],
-		formats: ["image/webp", "image/avif"],
-		deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-	},
-	experimental: {
-		optimizeCss: true,
-	},
-	compiler: {
-		removeConsole: process.env.NODE_ENV === "production",
-	},
-	swcMinify: true,
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "tashif.codes" }],
+    formats: ["image/webp", "image/avif"],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+  },
+  experimental: {
+    optimizeCss: true,
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
 };
 ```
 
-Next.js gives you:
-
-- Automatic code splitting
-- Image optimization out of the box
-- Font optimization with `next/font`
-- Automatic static optimization
+Automatic code splitting, image optimization, `next/font` for webfont loading without a layout shift, and static optimization where the page allows it. Most of the win here is just not turning any of it off.
 
 </Tab>
 <Tab title="Astro">
 
-**Island architecture FTW.** Astro's "island architecture" is brilliant for Core Web Vitals:
-
 ```astro
 ---
-// Only ship JavaScript for interactive components
 import HeavyChart from '../components/HeavyChart';
 import ContactForm from '../components/ContactForm';
 ---
 
 <Layout title="Dashboard">
-  <!-- Static content - zero JavaScript -->
   <header>
     <h1>Performance Dashboard</h1>
   </header>
 
-  <!-- Hydrate only when visible -->
   <HeavyChart client:visible />
-
-  <!-- Hydrate when browser is idle -->
   <ContactForm client:idle />
-
-  <!-- Hydrate on user interaction -->
   <InteractiveDemo client:click />
 </Layout>
 ```
 
-You get **zero JavaScript by default**, only hydrating interactive components when needed. It's a Core Web Vitals dream.
+The part I actually like about Astro's island model: zero JavaScript ships by default, and each interactive component picks its own hydration trigger. A chart below the fold doesn't cost you anything until it's visible. A contact form doesn't cost you anything until the browser is idle. That's a direct lever on INP and on total bytes shipped, not a side effect of some other optimization.
 
 </Tab>
-<Tab title="Flask / FastAPI">
-
-**Server-side performance.**
+<Tab title="FastAPI">
 
 ```python
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-import asyncio
+from functools import lru_cache
+import json
 
 app = FastAPI()
 
 @app.get("/api/portfolio")
-async def portfolio_data(background_tasks: BackgroundTasks):
-    # Stream data progressively
+async def portfolio_data():
     async def generate():
-        # Critical data first
         critical = await get_critical_projects()
         yield f"data: {json.dumps({'critical': critical})}\n\n"
-
-        # Additional data in background
         additional = await get_additional_projects()
         yield f"data: {json.dumps({'additional': additional})}\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
-
-# Implement caching
-from functools import lru_cache
 
 @lru_cache(maxsize=128)
 async def get_cached_projects(category: str):
     return await db.fetch_projects(category)
 ```
 
+Streaming the critical data first and the rest after means the frontend can paint something real before the whole payload is ready, which is the same principle as inlining critical CSS, just applied to an API response instead of HTML.
+
 </Tab>
 </Tabs>
 
-## measuring core web vitals
+## measuring it for real
 
-You can't optimize what you don't measure. Here's how I monitor `tashif.codes`:
+None of the above matters if you can't tell whether it worked, so here's what actually ships to the browser on my site:
 
 ```javascript
 // web-vitals.js
-import { getCLS, getFID, getFCP, getLCP, getTTFB, onINP } from "web-vitals";
+import { onCLS, onINP, onFCP, onLCP, onTTFB } from "web-vitals";
 
 function sendToAnalytics(metric) {
-	const body = JSON.stringify({
-		name: metric.name,
-		value: metric.value,
-		rating: metric.rating,
-		delta: metric.delta,
-		id: metric.id,
-		navigationType: metric.navigationType,
-	});
+  const body = JSON.stringify({
+    name: metric.name,
+    value: metric.value,
+    rating: metric.rating,
+    delta: metric.delta,
+    id: metric.id,
+    navigationType: metric.navigationType,
+  });
 
-	// Use sendBeacon if available
-	if (navigator.sendBeacon) {
-		navigator.sendBeacon("/api/vitals", body);
-	} else {
-		fetch("/api/vitals", { method: "POST", body, keepalive: true });
-	}
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon("/api/vitals", body);
+  } else {
+    fetch("/api/vitals", { method: "POST", body, keepalive: true });
+  }
 }
 
-// Measure everything
-getCLS(sendToAnalytics);
+onCLS(sendToAnalytics);
 onINP(sendToAnalytics);
-getFCP(sendToAnalytics);
-getLCP(sendToAnalytics);
-getTTFB(sendToAnalytics);
+onFCP(sendToAnalytics);
+onLCP(sendToAnalytics);
+onTTFB(sendToAnalytics);
 ```
 
-Tools I use:
+That's real user monitoring, not a lab test, and it's the only way to catch the gap between "fast on my wifi" and "fast on someone's phone on a train." Alongside it I still run Lighthouse locally and PageSpeed Insights on the deployed URL, because lab data catches regressions before a single real user hits them, and field data catches the ones lab data misses entirely.
 
-- **Lighthouse** (Chrome DevTools)
-- **PageSpeed Insights**
-- **Chrome User Experience Report**
-- **Search Console** (Core Web Vitals report)
-- **Real User Monitoring** (via web-vitals.js)
+## the business case, in one well-worn stat
 
-## the business impact
+The reason this is worth the afternoon it costs to fix: Google's often-cited mobile speed research put load-time delay directly against bounce probability, and the curve is steep.
 
-Let's talk numbers. Google's research shows:
-
-<Bars title="Increase in bounce probability, by load time">
-<Bar label="1–3 seconds" value={32} max={123} display="+32%" tone="ok" />
-<Bar label="1–5 seconds" value={90} max={123} display="+90%" tone="warn" />
-<Bar label="1–10 seconds" value={123} max={123} display="+123%" tone="danger" />
+<Bars title="Increase in bounce probability, by page load time">
+<Bar label="1 to 3 seconds" value={32} max={123} display="+32%" tone="ok" />
+<Bar label="1 to 5 seconds" value={90} max={123} display="+90%" tone="warn" />
+<Bar label="1 to 10 seconds" value={123} max={123} display="+123%" tone="danger" />
 </Bars>
 
-For `tashif.codes` or any portfolio/business site, poor Core Web Vitals mean:
+For a portfolio site that's the difference between a recruiter finishing the scroll or bouncing before the second project loads. For anything with a checkout or a signup form behind it, the same curve is the difference in revenue.
 
-- Lost client opportunities
-- Lower search rankings
-- Reduced credibility
-- Worse conversion rates
+## the checklist
 
-Performance isn't just technical - it's a business imperative.
+<Checklist title="before you ship the next build">
+- [ ] Run Lighthouse locally, then PageSpeed Insights on the actual deployed URL, not localhost
+- [ ] Find the real LCP element in DevTools and exempt it from any lazy-loading default
+- [ ] Inline critical CSS, defer the rest, don't block first paint on anything optional
+- [ ] Profile the worst interaction, not the first one, useMemo/startTransition/debounce where it's actually slow
+- [ ] Every image and video has width/height or aspect-ratio, no exceptions
+- [ ] Reserve space for anything that loads in late, with a real min-height
+- [ ] Ship web-vitals.js to production and actually look at the field data
+- [ ] Re-check on a throttled connection, not the wifi you built it on
+</Checklist>
 
-## your action plan
+**Bottom line:** Core Web Vitals aren't one team's problem. FCP and LCP are mostly a backend and asset-delivery question, INP is mostly a frontend rendering question, and CLS is a discipline question that touches both. The fix for each one is small and specific once you've found the actual offending element, the hard part is that your own dev machine will never show you the problem, because it's never the bottleneck. Test on the connection your users actually have.
 
-<Steps>
-<Step title="Audit now">Run Lighthouse on your site today.</Step>
-<Step title="Prioritize">Focus on the worst-performing pages first.</Step>
-<Step title="Optimize images">Use modern formats, appropriate sizing, lazy loading.</Step>
-<Step title="Reduce JavaScript">Code split, tree shake, defer non-critical scripts.</Step>
-<Step title="Fix layout shifts">Reserve space for dynamic content.</Step>
-<Step title="Monitor continuously">Set up real user monitoring.</Step>
-<Step title="Iterate">Performance is a journey, not a destination.</Step>
-</Steps>
-
-## wrapping up
-
-Core Web Vitals represent the future of web development - where user experience is quantified, measured, and optimized. As full-stack developers, we have unique leverage: we control both the frontend rendering and backend delivery.
-
-The frameworks we choose matter. Next.js gives us optimization out of the box. Astro gives us zero-JS by default. FastAPI gives us async performance. But frameworks alone aren't enough - we need to understand the fundamentals and apply them thoughtfully.
-
-Remember: every millisecond matters. Every layout shift frustrates. Every smooth interaction delights. In the attention economy, performance is the ultimate differentiator.
-
-Now go make your sites blazingly fast. Your users (and your business) will thank you.
+<Hand>
+run Lighthouse on whatever you shipped today, not the one from last sprint.
+</Hand>

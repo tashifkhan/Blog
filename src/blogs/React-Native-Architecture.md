@@ -1,5 +1,5 @@
 ---
-title: "Old Bridge vs New Architecture in React Native: A Deep Dive"
+title: "Old bridge vs new architecture: why my React Native chat list kept dropping frames"
 date: 2025-09-24
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,126 +9,120 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["React Native", "Low Level"]
-excerpt: "Understanding the fundamental shift from React Native's old bridge architecture to the new JSI-based system and why it matters."
+excerpt: "A chat screen with a typing indicator and a fast scroll was enough to make an old-architecture React Native app visibly stutter. The cause wasn't my code, it was JSON crossing a bridge sixty times a second. Here's what the new JSI-based architecture actually replaces, and why the old one had to go."
 coverImage: "/images/blog/React-Native-Architecture/cover.svg"
 ---
 
 <Lede>
-If you've been working with React Native or following its evolution, you've probably heard about the "New Architecture." But what exactly changed, and why does it matter? Let's break down the fundamental differences between React Native's old bridge system and the new architecture that's revolutionizing mobile development.
+I had a chat screen: message list, a typing indicator that pulsed while someone was composing, nothing exotic. Scroll fast while that indicator was animating, and the whole thing juddered, dropped frames, occasionally froze for a beat. I profiled it expecting to find my own bad code. Instead I found the bridge: every animation tick and every scroll event was getting serialized to JSON, queued, and shipped across an async channel to native code and back. The fix wasn't a better `FlatList` config. It was understanding that React Native's whole old communication model was built for occasional calls, not sixty-times-a-second traffic, and that the New Architecture exists specifically to remove that bottleneck.
 </Lede>
+
+<Figure caption="Old path: everything crosses the bridge as serialized JSON, queued and asynchronous. New path: JSI lets JavaScript and native C++ call each other directly, synchronously, no bridge in between.">
+
+```mermaid
+flowchart TD
+    JS["JavaScript thread<br/>React components, state, your logic"]
+
+    subgraph OLD["old bridge · async, JSON"]
+        direction TB
+        SER["serialize to JSON"]
+        BRIDGE["the bridge<br/>queued, async, one at a time"]
+        DESER["deserialize JSON"]
+        SER --> BRIDGE --> DESER
+    end
+
+    subgraph NEW["new architecture · sync, direct"]
+        direction TB
+        JSI["JSI<br/>C++ references, no serialization"]
+        FABRIC["Fabric<br/>C++ rendering layer"]
+        JSI --> FABRIC
+    end
+
+    NATIVE["native UI thread<br/>UIView / TextView, on screen"]
+
+    JS -->|"old"| SER
+    DESER --> NATIVE
+    JS -->|"new"| JSI
+    FABRIC --> NATIVE
+```
+
+</Figure>
 
 <Toc />
 
-## the old bridge architecture: how it all began
+## the old bridge, and why it existed
 
-When React Native first launched, it introduced a clever solution to run JavaScript code alongside native iOS and Android code. At its core was the "bridge" - a communication layer that allowed JavaScript and native code to talk to each other.
+When React Native first shipped, it had to solve a genuinely hard problem: let JavaScript drive real iOS and Android UI without JavaScript ever touching the native side directly. The bridge was the answer, a communication layer sitting between your JS thread and the native UI thread, and for a long time it was good enough.
 
-### how the old bridge worked
+Three pieces to know:
 
-Imagine you're building a React Native app. Your code lives in three main spaces:
+1. **The JavaScript thread.** Your React components, your state, your Virtual DOM diffing, all here.
+2. **The bridge.** When JS needed to update the UI or call something native, it converted the data to JSON, queued it as a message, and waited for native to get around to it, asynchronously.
+3. **The native UI thread.** Where the actual `UIView` or `TextView` lives and renders.
 
-1. **JavaScript Thread**: This is where your React components, business logic, and state management run. When React determines the UI needs updating, it calculates changes in its Virtual DOM here.
-
-2. **The Bridge**: Think of this as a messenger service. When JavaScript needed to update the UI or call a native feature (like the camera), it would:
-
-   - Convert the data into JSON format
-   - Send it as a message across the bridge
-   - Wait for the native side to process it asynchronously
-
-3. **Native UI Thread**: This is where your actual native components (like iOS's `UIView` or Android's `TextView`) get rendered and displayed on screen.
-
-Here's what a typical interaction looked like:
+A typical call looked like this:
 
 ```javascript
 // JavaScript side
 const updateButtonColor = (color) => {
-	// This gets serialized to JSON and sent across the bridge
+	// serialized to JSON, then sent across the bridge
 	NativeModules.UIManager.updateView(buttonId, {
 		backgroundColor: color,
 	});
 };
 ```
 
-The data would travel:
+That's the whole model: JSON out, queue, JSON back. Fine for a button tap. Not fine for a typing indicator animating at 60fps while a list scrolls underneath it.
 
-<Ascii label="Old bridge data path: JavaScript, JSON serialization, the bridge, JSON deserialization, then native code">
-  JavaScript ──▶ JSON serialize ──▶ ┌────────┐
-                                    │ BRIDGE │  (async, queued)
-  Native code ◀── JSON deserialize ─└────────┘
-</Ascii>
+## where it actually broke down
 
-### the problems that emerged
+The bridge wasn't buggy, it was just built for the wrong traffic pattern, and that mismatch shows up in a few specific ways.
 
-While this architecture worked, it had some serious limitations:
+**Serialization was the tax on every single call.** Converting data to JSON and back is cheap once. It is not cheap sixty times a second, and that's exactly the rate my typing indicator and scroll events were generating.
 
-**1. The Serialization Bottleneck**
+**Everything asynchronous meant nothing could just... wait.** JS couldn't block for a native result, so calls that felt like they should be instant went through a queue instead. On a busy bridge, messages backed up, and my animation frames backed up with them.
 
-Every piece of data had to be converted to JSON and back. For simple operations, this wasn't a big deal. But for complex animations, rapid gestures, or large data transfers, this serialization overhead became a performance killer. Imagine trying to animate 60 frames per second while constantly converting data to JSON and back!
+**One JS thread did three jobs at once.** App logic, state management, and every bit of bridge traffic all fought for the same thread. Let the JS thread get busy for a moment, and UI updates queued behind it, which is the exact "janky" feeling I was chasing.
 
-**2. Asynchronous Communication**
+**Nothing checked that JS and native agreed on types.** If JavaScript sent a shape native didn't expect, you found out at runtime, not before.
 
-Since all communication was asynchronous, JavaScript couldn't directly wait for native operations to complete. This made certain operations clunky and led to "bridge traffic jams" where messages would queue up, causing UI lag and dropped frames.
+**Startup paid for modules you hadn't used yet.** Native modules loaded eagerly at launch whether your first screen touched them or not, which is dead weight on every cold start.
 
-**3. Single JavaScript Thread**
+None of these are exotic edge cases. My typing indicator was hitting the first three at once, which is exactly why it was the thing that stuttered instead of, say, a static settings screen.
 
-Your JavaScript thread was doing triple duty: running your app logic, managing state, AND handling all bridge communication. When the JS thread got busy with heavy computations, UI updates would get delayed, leading to that dreaded "janky" feeling.
+## the new architecture: cutting the bridge out entirely
 
-**4. Limited Type Safety**
+The New Architecture, sometimes called Fabric or the JSI-based architecture, isn't a patch on the bridge. It removes it. JavaScript and native code talk directly now, and that one change is what fixes the traffic problem above.
 
-There was no automatic way to ensure that the data JavaScript sent matched what the native side expected. This led to runtime errors that could have been caught earlier.
+### JSI: the part that actually changes everything
 
-**5. Slow Startup Times**
-
-All native modules typically had to be loaded and initialized when your app started, even if you weren't using them right away. This bloated app startup times and memory usage.
-
-## the new architecture: a complete reimagining
-
-The New Architecture (sometimes called the "Fabric" architecture or "JSI-based" architecture) isn't just an incremental improvement - it's a fundamental rethinking of how React Native works. The key innovation? **Eliminating the bridge entirely** and replacing it with direct communication between JavaScript and native code.
-
-### the core components
-
-Let's break down the four pillars of the new system:
-
-### 1. javascript interface (JSI): the game changer
-
-JSI is the foundation of everything. It's a lightweight C++ layer that allows JavaScript to directly hold references to native C++ objects and call their methods - and vice versa.
-
-Think about what this means: Instead of serializing data to JSON, sending it across a bridge, and deserializing it, JavaScript can now **directly call native functions**. It's like upgrading from sending letters to having a direct phone line.
+JSI is a thin C++ layer that lets JavaScript hold a real reference to a native C++ object and call its methods, and lets native code call back into JS the same way. No JSON. No queue.
 
 ```javascript
-// With JSI, this is a direct synchronous call
+// with JSI, this is a direct, synchronous call
 const result = nativeModule.someFunction(arg1, arg2);
-// No JSON, no bridge, just a direct C++ function call
+// no serialization, no bridge, just a C++ function call
 ```
 
-### 2. fabric: the new rendering engine
+That's the whole upgrade in one line: instead of writing a letter, sealing it, and waiting for a reply, you're just talking. For something like an animation driver that needs a value every frame, that difference is the entire performance story.
 
-Fabric replaces the old UI Manager and Shadow Tree system. It's a C++ rendering layer that manages UI components across both platforms.
+### Fabric: the renderer built for that
 
-Key improvements:
+Fabric replaces the old UI Manager and Shadow Tree. It's a C++ layer that manages components on both platforms, and it brings a few things the old renderer couldn't:
 
-- **Synchronous Layout**: Layout calculations happen synchronously, dramatically reducing UI lag
-- **Better React Integration**: Built specifically to work with React's Fiber reconciliation algorithm
-- **Concurrent Rendering**: Supports React's Concurrent Mode, allowing the renderer to prioritize and interrupt rendering tasks
-- **Unified Native Views**: Creates a more consistent native view hierarchy that feels more like a true native app
+- layout calculations happen synchronously, so there's no async gap for a frame to slip through
+- it's built against React's Fiber reconciler on purpose, not bolted onto it after the fact
+- it supports Concurrent Mode, so rendering work can be paused and reprioritized instead of running to completion no matter what
+- native views come out of a more unified hierarchy across iOS and Android
 
-When you update your UI now, the path is:
+### TurboModules: native modules that don't wait
 
-<Ascii label="New architecture data path: JavaScript through JSI to Fabric in C++ and straight to native UI, synchronously">
-  JavaScript ──▶ JSI ──▶ Fabric (C++) ──▶ Native UI
-                 └──────── synchronous ────────┘
-</Ascii>
-
-### 3. turbomodules: smarter native modules
-
-TurboModules are the new generation of Native Modules, built on top of JSI. They bring three major improvements:
-
-**Direct Synchronous Calls**: No more asynchronous bridge crossing. If you need the battery level, you get it immediately.
+TurboModules are the JSI-era replacement for Native Modules, and the difference you feel immediately is synchronous calls:
 
 <Cols>
 <Col>
 
-Old way — asynchronous
+old way, asynchronous
 
 ```javascript
 NativeModules.BatteryModule.getBatteryLevel().then((level) =>
@@ -139,7 +133,7 @@ NativeModules.BatteryModule.getBatteryLevel().then((level) =>
 </Col>
 <Col>
 
-New way — synchronous with TurboModules
+new way, synchronous via TurboModules
 
 ```javascript
 const level = TurboModuleRegistry.get("BatteryModule").getBatteryLevel();
@@ -149,78 +143,55 @@ console.log(level);
 </Col>
 </Cols>
 
-**Lazy Loading**: Modules are only loaded when you actually use them. This dramatically improves app startup time and reduces memory usage.
+They're also lazy-loaded, so a module you never touch never gets initialized, which is where the startup-time win comes from. And they're generated against a typed spec, so JS and native can't quietly disagree about the shape of a call.
 
-**Type Safety**: TurboModules work with Codegen to ensure type consistency between JavaScript and native code.
+### Codegen: the part that makes the types actually match
 
-### 4. codegen: automatic type safety
+Codegen is a build-time tool that reads your module or component definitions and generates the matching interface code on both sides, TypeScript for JS, Objective-C++ for iOS, Java or Kotlin for Android. The point isn't convenience, it's catching a mismatched type at build time instead of watching it blow up at runtime three screens deep in your app.
 
-Codegen is a build-time tool that automatically generates interface code for both JavaScript and native platforms. It reads your component or module definitions and creates:
+## the two architectures, side by side
 
-- TypeScript definitions for JavaScript
-- Objective-C++ headers for iOS
-- Java/Kotlin code for Android
+| | old bridge | new architecture |
+| --- | --- | --- |
+| communication | async JSON messages | sync C++ calls via JSI |
+| performance | serialization + bridge queue overhead | direct calls, minimal overhead |
+| native modules | eager loading, async only | lazy TurboModules, sync when needed |
+| rendering | async UI Manager + Yoga | synchronous Fabric |
+| type safety | manual, easy to get wrong | generated by Codegen |
+| concurrency | limited | full Concurrent Mode support |
+| debugging | stack traces span an async boundary | synchronous calls, easier to trace |
 
-This ensures that your JavaScript code and native code always agree on data types and function signatures, catching errors at build time rather than runtime.
+## what this actually bought me
 
-## the key differences at a glance
+Back to the chat screen. After the app moved onto the New Architecture, the typing indicator stopped competing with scroll events for bridge time, because there was no bridge left to compete over. Concretely:
 
-| Aspect             | Old Bridge                                 | New Architecture                       |
-| ------------------ | ------------------------------------------ | -------------------------------------- |
-| **Communication**  | Asynchronous JSON messages                 | Synchronous C++ function calls via JSI |
-| **Performance**    | Serialization overhead, bridge bottlenecks | Direct calls, minimal overhead         |
-| **Native Modules** | Eager loading, async calls                 | Lazy loaded TurboModules, sync calls   |
-| **UI Rendering**   | Async UI Manager + Yoga                    | Synchronous Fabric renderer            |
-| **Type Safety**    | Manual, error-prone                        | Auto-generated with Codegen            |
-| **Concurrency**    | Limited                                    | Full React Concurrent Mode support     |
-| **Debugging**      | Complex across async boundaries            | Easier with synchronous calls          |
+- animations that used to skip frames under load held steady, because layout and native calls weren't queued behind JSON serialization anymore
+- scroll felt noticeably less laggy under the same list size
+- cold start was faster, since TurboModules only initialize what a screen actually uses
+- fewer "why did this native call return the wrong shape" bugs, because Codegen catches that mismatch before the app ships
 
-## real-world impact: what this means for you
+None of that required touching my chat component. The architecture change was structural, and my code got faster for free.
 
-So what does all this technical jargon actually mean for your app?
+## why "fabric" and why "fiber" both show up
 
-### performance gains
-
-- **Smoother Animations**: Complex animations that used to drop frames now run at a consistent 60fps
-- **Faster Interactions**: Touch gestures and scrolling feel more responsive
-- **Quicker Startup**: Apps launch faster thanks to lazy-loaded modules
-- **Better Memory Usage**: Only load what you actually need
-
-### developer experience
-
-- **Fewer Runtime Errors**: Type safety catches issues at build time
-- **Easier Debugging**: Synchronous calls make stack traces more meaningful
-- **Modern React Features**: Access to Concurrent Mode, Suspense, and other cutting-edge React capabilities
-
-### future-proofing
-
-The New Architecture aligns React Native more closely with React's core principles and with native development practices. This means:
-
-- Better long-term maintainability
-- Easier adoption of new React features
-- More predictable behavior
-- Stronger community support going forward
-
-## why "fiber" architecture?
-
-You might wonder why it's called the "Fiber" architecture. React Fiber is React's reconciliation algorithm that allows for interruptible rendering and work prioritization. The New Architecture in React Native is specifically designed to fully leverage these Fiber capabilities.
-
-Fabric (the rendering engine) works hand-in-hand with React Fiber to translate React's rendering output into native UI commands efficiently. So while the technical components are JSI, Fabric, TurboModules, and Codegen, they all work together to support and enhance what React Fiber brings to the table.
+Fabric is the rendering engine name. Fiber is React's own reconciliation algorithm, the thing that makes rendering interruptible and prioritizable in the first place. Fabric is built specifically to feed React's Fiber output into native UI commands efficiently, so when you see both names mentioned together, they're not competing projects, Fabric is just the native-side partner that lets Fiber's capabilities actually reach the screen.
 
 ## should you migrate?
 
-<Tip title="Short answer: yes">
-If you're working on a new React Native project, the New Architecture is the way to go. For existing apps, the migration might require some work, especially if you have custom native modules, but the performance and developer experience improvements make it worthwhile.
+<Tip title="short answer: yes">
+New project, there's no real debate, start on the New Architecture. Existing app, the migration cost is real if you're carrying custom native modules, but the performance and type-safety wins are worth the work, especially if your app has anything like my chat screen: frequent native calls competing with animation or scroll.
 </Tip>
 
-The React Native team has put significant effort into making the migration path as smooth as possible, with extensive documentation and tools to help you through the process.
+The migration tooling has gotten better over time, and most of the pain now lives in third-party libraries that haven't updated their native modules yet, not in your own application code.
 
-## wrapping up
+## the checklist
 
-The shift from the old bridge to the New Architecture represents one of the most significant improvements in React Native's history. By replacing asynchronous message passing with direct synchronous communication, React Native has addressed its fundamental performance limitations while maintaining the developer-friendly experience that made it popular in the first place.
+- if your JS thread is busy and animations or gestures stutter under it, that's bridge congestion, not necessarily your component logic
+- reach for the New Architecture by default on anything new
+- audit custom native modules before migrating an existing app, that's where the actual work is
+- expect fewer runtime type mismatches once Codegen is generating both sides
+- don't expect a rewrite, expect the same JS code to run faster underneath
 
-The result? Apps that feel faster, more responsive, and more "native" - all while keeping the productivity benefits of React development. That's a win for everyone.
+**Bottom line:** the old bridge did its job for years, but it was built for occasional async calls, not the sixty-times-a-second traffic real interactions produce. JSI removes the serialization step entirely, Fabric renders synchronously on top of it, TurboModules load lazily and call directly, and Codegen keeps both sides honest about types. My chat screen didn't get smoother because I wrote better code, it got smoother because the thing underneath my code stopped standing in its own way.
 
----
-
-_Have questions about migrating to the New Architecture or implementing TurboModules? Feel free to reach out - I'd love to hear about your experiences!_
+If you've ever profiled a stutter and found nothing wrong in your own component, check which architecture you're on before you keep digging.

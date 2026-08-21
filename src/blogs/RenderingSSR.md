@@ -1,5 +1,5 @@
 ---
-title: "Various Rendering Strategies of Web Frameworks"
+title: "The Rendering Spectrum: MPA, SPA, SSR, RSC, and Islands, in the Order You'd Actually Hit Them"
 date: 2025-06-23
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,249 +9,106 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Web", "Low Level"]
-excerpt: "A deep dive into the various rendering strategies of web frameworks."
+excerpt: "A client's marketing site scored terribly on Lighthouse and painted a blank screen for three seconds. It was a plain React SPA with no server rendering at all. That one bug tour is basically the whole history of web rendering, so here it is end to end: MPA, SPA, SSR, RSC, and islands."
 coverImage: "/images/blog/RenderingSSR/cover.svg"
 ---
 
 <Lede>
-The world of web development is a constantly evolving landscape, and one of its most dynamic areas is how web applications are rendered. Gone are the days when the choice was simply "send HTML" or "send JavaScript." Today, we live in an era where techniques are blended, offering a spectrum of benefits and trade-offs. Understanding these different approaches is crucial for any modern web developer.
+A while back I got handed a marketing site to "just fix the performance." Lighthouse gave it a 31. The homepage was a blank white rectangle for close to three seconds before a single word of copy showed up, and it was, of course, mostly copy: a headline, some pricing cards, a contact form. Nothing that needed a client-side JavaScript framework to exist. It was a plain Create-React-App-era SPA, shipping an empty <code>&lt;div id="root"&gt;</code> and a JS bundle that had to load, parse, and run before the page became anything at all. Fixing it meant explaining, to a team that had never questioned the default, that "send JavaScript and let it build the page" is <em>one</em> way to render a website, not the only one. This post is that explanation, expanded to the whole spectrum: what each rendering strategy actually does on the wire, why the next one was invented to fix the last one's specific pain, and which one you should reach for.
 </Lede>
-
-Let's dive into the core strategies and how various popular frameworks implement them.
 
 <Toc />
 
-## 1. classic multi-page apps (MPA): the HTML foundation
+<Figure caption="The same request, five different ways of turning it into pixels. Read top to bottom: who does the work, and when the browser gets to paint.">
 
-At its heart, the web was built on the Multi-Page Application (MPA) model. When a user requests a page, the server generates and sends back a complete HTML document. If the user clicks a link, the browser makes another request to the server, which then responds with an entirely new HTML page.
+```mermaid
+flowchart TD
+    REQ["browser requests /page"]
 
-**How it works:**
+    subgraph mpa["MPA · full reload"]
+        direction TB
+        MPA1["server renders complete HTML per route"] --> MPA2["browser paints, done"]
+    end
 
-- **User navigates to `example.com`:**
-  - Browser requests page from server.
-  - Server (e.g., running Flask with Jinja2 templates, or simply serving static HTML files) processes the request.
-  - Server generates or retrieves the full HTML for `index.html` (potentially embedding dynamic data like a username).
-  - Server sends the complete HTML document to the browser.
-  - Browser renders the HTML.
-- **User clicks a link to `example.com/about`:**
-  - Browser makes a new request to the server.
-  - Server processes, generates, or retrieves the full HTML for `about.html`.
-  - Server sends the complete HTML.
-  - Browser completely reloads the page with the new HTML.
+    subgraph spa["classic SPA"]
+        direction TB
+        SPA1["server sends an empty shell + script tag"] --> SPA2["browser downloads the JS bundle"] --> SPA3["JS fetches JSON, builds the whole DOM"]
+    end
 
-**Examples:**
+    subgraph ssr["SSR + hydration"]
+        direction TB
+        SSR1["server executes the UI code, renders full HTML"] --> SSR2["browser paints immediately"] --> SSR3["JS re-runs the same code, attaches listeners"]
+    end
 
-- Vanilla HTML pages
-- Server-side templating engines like **Flask (Jinja2)**, PHP, Ruby on Rails, Django.
+    subgraph rsc["RSC streaming"]
+        direction TB
+        RSC1["server components render, never ship their JS"] --> RSC2["HTML streams in, Suspense fills the gaps"] --> RSC3["only client components hydrate"]
+    end
 
-<Cols>
-<Col>
+    subgraph islands["islands"]
+        direction TB
+        ISL1["CDN serves static HTML with placeholders"] --> ISL2["a tiny runtime scans for islands"] --> ISL3["each island fetches and hydrates on its own"]
+    end
 
-**Pros**
+    REQ --> mpa
+    REQ --> spa
+    REQ --> ssr
+    REQ --> rsc
+    REQ --> islands
+```
 
-- **Excellent for SEO:** Search engine crawlers get full, pre-rendered HTML immediately.
-- **Fast initial load (for static content):** No JavaScript execution required to display content.
-- **Simple architecture:** Less complexity in the client-side.
+</Figure>
 
-</Col>
-<Col>
+## the plain HTML era, and why it never actually died
 
-**Cons**
+Start at the bottom, because that's where the web started. In a Multi-Page Application, every navigation is a full round trip: the browser asks for `/about`, the server (Flask with Jinja2, PHP, Rails, whatever) builds a complete HTML document and sends the whole thing back, and the browser throws away the old page and paints the new one from scratch.
 
-- **"Janky" navigation:** Every click results in a full page reload, leading to a blank screen or a visible loading bar.
-- **No persistent UI elements:** Elements like a media player or a chat window cannot persist across navigations without complex server-side state management.
+This is not a legacy pattern you tolerate. For content-heavy pages, it's close to optimal. Crawlers get full HTML on the first request, there's no JavaScript required to see anything, and the architecture is boring in the good way: one request in, one document out. The cost is the one everyone feels immediately, the full-page reload. Click a link and the whole screen goes white for a beat before the new page draws. No persistent audio player, no chat widget that survives navigation, because the browser genuinely reloads everything, every time.
 
-</Col>
-</Cols>
+**HTMX** is the interesting rebuttal to "so MPAs feel dated." Instead of a full reload, an element on the page fires an AJAX request that gets back an HTML *fragment*, not JSON, and swaps it into the DOM. You get SPA-flavored partial updates without shipping a client-side framework or a virtual DOM. It's the same MPA philosophy, just with a scalpel instead of a full page swap.
 
-### HTMX: modernizing the MPA
+## the SPA swing, and the waterfall it hides
 
-**HTMX** takes the MPA concept and supercharges it. Instead of full page reloads, HTMX allows specific elements on the page to trigger AJAX requests that return _HTML fragments_ (not JSON). This HTML fragment then replaces a specified part of the current page. This gives a "SPA-like" feel without needing a large client-side JavaScript framework.
+The rise of capable client-side JavaScript pushed things the other direction, hard. In a Single-Page Application, the server's job shrinks to almost nothing: send a near-empty HTML skeleton with a `<script>` tag, and let the browser do the rest. React, Vue, Angular, all without server rendering, work this way by default.
 
-## 2. classic single-page apps (SPA): client-side dominance
+Here's the part that bit my client. The browser has to download the HTML shell, then fetch the JS bundle, then execute it, and only *then* does the app start fetching the JSON data it needs to render anything. That's a genuine waterfall: HTML → JS → data → paint, each stage blocked on the last. Once it's loaded, an SPA feels fantastic, instant client-side navigation, no reload jank, easy to keep a video player or a chat window alive across routes. But that first load is the SPA's whole tax bill, paid up front, and it shows up exactly where mine did: a blank screen while a several-hundred-kilobyte bundle does its thing, and historically, awful SEO, because crawlers used to just see an empty div.
 
-The rise of powerful client-side JavaScript introduced the Single-Page Application (SPA) model. In an SPA, the server initially sends a minimal HTML scaffold, often just an empty `<body>` tag and a `<script>` tag. The vast majority of the application's UI is then rendered, managed, and navigated client-side using JavaScript.
+## bridging back: SSR pays down the blank-screen debt, but not for free
 
-**How it works:**
+Server-Side Rendering exists specifically to kill that blank screen. The trick: run the *same* application code on a server-side JS runtime (Node, via Next.js's older Pages router, Nuxt, SvelteKit) for the initial request, so the server produces full HTML immediately, the same way an MPA would. The browser paints real content right away. Then, once the JS bundle arrives, it "hydrates": re-runs the identical component code against the HTML that's already sitting there, attaching event listeners so the page becomes interactive.
 
-- **User navigates to `example.com`:**
-  - Browser requests page from server.
-  - Server sends a minimal HTML file (a "skeleton") containing a `<script>` tag referencing the main JavaScript bundle.
-  - Browser downloads and parses this initial HTML.
-  - Browser then fetches the JavaScript bundle(s) (e.g., `app.js`).
-  - Once the JavaScript loads, it starts executing, making API calls (e.g., to `api.example.com/data`) to fetch necessary data (usually JSON).
-  - Client-side JavaScript (e.g., React) uses this data to dynamically build and insert the full UI into the DOM.
-  - Finally, the page is "loaded" and visible.
-- **User clicks a link to `example.com/about`:**
-  - Client-side JavaScript (e.g., React Router) intercepts the navigation.
-  - It updates the browser's URL (without a full page reload).
-  - It then renders the appropriate UI components for the `/about` path, potentially making new API calls for data specific to that page. The user sees an "instant" UI change, perhaps with loading spinners for dynamic content.
+That word "hydrates" is doing a lot of work, and it's where the real cost of SSR lives. The content gets sent *twice*: once as rendered HTML, and again as the data or logic the client needs to re-derive that same UI so it can attach behavior to it. That's the double-data problem, and it's why an SSR page can look ready instantly but not actually respond to a click for another second or two, if you tap a button before hydration finishes, nothing happens. You've traded "blank screen" for "uncanny valley screen." Better trade, still a trade. And you now need a Node server running your app code in production, not just a folder of static files, which is its own operational line item.
 
-**Example:**
+<Note title="what changes on navigation, specifically">
+With the Next.js Pages router, clicking a link doesn't reload the page, but it does trigger an API call back to the server for a JSON data blob for the new route. The client renders from that. It's faster than a full MPA reload, but it can still visibly block on that round trip.
+</Note>
 
-- **React** (without server-side rendering setup), Vue, Angular.
+## the modern hybrid: server components stop shipping their own JS
 
-<Cols>
-<Col>
+React Server Components, as adopted by Next.js's App directory, are the answer to "why are we hydrating things that never needed to be interactive in the first place." An RSC renders *only* on the server, produces HTML, and its JavaScript never ships to the client at all. Full stop. If a component just displays data, there's no reason its code needs to exist in the browser, and now it doesn't.
 
-**Pros**
+The other half of this is streaming. Components wrapped in `Suspense` can arrive later, so the server sends the parts of the page that are ready immediately and fills in the slow parts (a data-heavy widget, say) as they finish, instead of holding the entire response hostage to the slowest query. On navigation, instead of a full reload or even a JSON round trip, the client shows a Suspense loading state instantly and fetches just the HTML chunks that changed, streaming them in as they're ready.
 
-- **Fluid user experience:** Instantaneous navigations and smooth transitions after the initial load.
-- **Persistent UI elements:** Easy to maintain elements like video players or global chat widgets across navigations.
-- **Rich interactivity:** Ideal for complex, highly interactive applications.
+I like this one a lot, for what it's worth. It's the first strategy in the list that actually reduces the amount of JavaScript shipped, rather than just moving around *when* it arrives. The cost is real too: your app now runs across two genuinely different execution environments, and debugging "why did this component render twice, once on the server and once somewhere I didn't expect" is a new category of bug that MPA-era developers never had to think about. You also need infrastructure sophisticated enough to handle streaming and edge caching, which is why this pattern is basically synonymous with deploying to Vercel or a similar edge platform.
 
-</Col>
-<Col>
+## the other answer: islands, or don't hydrate what doesn't move
 
-**Cons**
+Islands architecture, the Astro model, comes at the same problem from the opposite direction. Instead of asking "how do we make the server smarter," it asks "why are we hydrating the whole page when 90% of it is static text?" A CDN serves a page that's almost entirely plain, pre-rendered HTML. Scattered through it are a handful of placeholders, the "islands", for the bits that actually need interactivity: a cart widget, a carousel, a like button. A small runtime script scans for these islands and fetches and hydrates *only* those, each independently.
 
-- **Slow initial load:** A "waterfall" of requests (HTML -> JS -> Data) means the user sees a blank or incomplete page until all assets and data are fetched and processed.
-- **Poor SEO (historically):** Search engine crawlers struggled to index content that required JavaScript execution.
-- **Large JavaScript bundles:** The entire application's logic and often a lot of its data fetching logic must be sent to the client. This increases initial download size.
-- **Client-side burden:** Heavy reliance on the client's CPU and memory to parse and render the application.
+The initial load is about as fast as a static site gets, because most of the page really is a static site. JavaScript ships only for the parts that need it, which sidesteps the "over-hydration" problem SSR has, where a fully interactive React tree gets rehydrated even for the paragraphs that will never do anything. The tradeoff is a genuine mental shift: you have to think about your UI as static regions and interactive islands from the start, not as one uniform component tree, and an island's content won't appear until its own small fetch completes, so you'll see a beat of loading state exactly where the island sits.
 
-</Col>
-</Cols>
+## picking one: a decision guide, not a ranking
 
-## 3. server-side rendered (SSR) SPAs: bridging the gap
+None of these five replaced the one before it. They coexist because they solve different problems.
 
-To address the SEO and initial load performance issues of classic SPAs, Server-Side Rendering (SSR) emerged. With SSR, the initial request for a page is handled by a server-side JavaScript runtime (like Node.js) that executes the same application code that would normally run in the browser. This generates the complete HTML on the server and sends it to the client. Once on the client, the JavaScript then "hydrates" the already-rendered HTML, making it interactive.
+<Checklist title="use this rendering strategy when...">
+- [ ] Content-heavy, low-interactivity, SEO matters most → **MPA** (Flask/Jinja2, plain HTML), reach for **HTMX** the moment you want partial updates without a full framework
+- [ ] Internal tool or dashboard where the first load doesn't matter but every subsequent interaction should feel instant → **classic SPA**
+- [ ] Public-facing app that needs good SEO and a fast first paint, and you're fine running a Node server → **SSR** (Next.js Pages, Nuxt, SvelteKit)
+- [ ] Same needs as SSR, but you also want to cut client JS and stream slow data in piecemeal → **RSC** (Next.js App Router, Remix), if you're already committed to an edge-capable host
+- [ ] Mostly static content with a few genuinely interactive widgets sprinkled in → **islands** (Astro), when you want the smallest possible JS payload
+</Checklist>
 
-**How it works:**
+**Bottom line:** every one of these strategies is a different answer to the same question, who does the rendering work and when does the browser get to paint, and the "right" one is whichever one matches how much of your page is actually static versus actually interactive. The client site I opened with didn't need SSR, RSC, or islands. It needed someone to notice that a brochure page with a contact form doesn't need a client-side JavaScript framework rendering it from an empty div, and switching it to plain server-rendered HTML took the Lighthouse score from 31 to the 90s in an afternoon.
 
-- **User navigates to `example.com`:**
-  - Browser requests page from server.
-  - Server (e.g., **Next.js** running a Node.js server) executes the React application code, fetches data, and generates the _full HTML_ for the initial view.
-  - Server sends this complete HTML (with embedded data, often in a `__NEXT_DATA__` script tag) to the browser.
-  - Browser immediately displays the content because it's full HTML.
-  - In parallel, the browser downloads the JavaScript bundle.
-  - Once JS loads, it "hydrates" the existing HTML: it re-runs the same React code on the client, attaching event listeners and making the UI interactive. If a button is clicked _before_ hydration, it won't work.
-- **User clicks a link to `example.com/about`:**
-  - **Next.js (Pages Directory)**: The framework often makes an API call to the server to get a JSON "data blob" for the new page. The server processes the request (similar to the initial render, but just returning data). Once the JSON is received, the client-side JavaScript updates the UI. This can still block navigation until the data arrives.
-
-**Example:**
-
-- **Next.js (using the "Pages" directory router)**, Gatsby (for static SSR), Nuxt.js, SvelteKit.
-
-<Cols>
-<Col>
-
-**Pros**
-
-- **Better SEO:** Crawlers get full HTML upfront.
-- **Improved initial performance:** Users see content immediately; time-to-first-byte (TTFB) is good.
-- **Interactive content:** Pages become interactive after hydration.
-
-</Col>
-<Col>
-
-**Cons**
-
-- **"Double data" problem:** The content is sent twice: once as HTML, and again embedded in JavaScript (or fetched by JS) so the client can hydrate. This increases bundle sizes.
-- **Time to interactivity:** While the user sees content quickly, they might not be able to interact with it until the JavaScript has loaded and hydrated.
-- **Server-side dependency:** Requires a Node.js server to run the application code, which adds operational complexity compared to serving pure static files.
-- **Next.js Bundles:** SSR applications, especially using frameworks like Next.js, still ship substantial JavaScript bundles to the client. While better than a pure SPA, the _total_ amount of data (HTML + JS) can be significant, particularly due to the "hydration" step that requires re-running the same UI logic on the client.
-
-</Col>
-</Cols>
-
-## 4. isomorphic rendering & server components: the modern hybrid (next.js app directory)
-
-Isomorphic (or Universal) applications are those where the _same codebase_ can run on both the server and the client, but critically, it can behave _differently_ in each environment. This concept has been refined with **React Server Components (RSC)**, heavily adopted by **Next.js in its "App" directory**.
-
-**How it works:**
-
-- **User navigates to `example.com`:**
-  - Browser requests page from server.
-  - Server (e.g., Next.js with the App Router) runs React Server Components. These components are rendered _only_ on the server and never send their JavaScript to the client. They produce HTML and metadata.
-  - The server streams down the initial HTML. Components wrapped in `Suspense` boundaries can stream their content later, allowing the rest of the page to render quickly with loading states.
-  - Client Components (which _do_ send their JS to the client) are identified, their HTML is included, and their corresponding JavaScript is sent down for hydration, similar to traditional SSR.
-  - The browser displays the initial HTML and progressively updates as more streamed HTML or hydrated client components become ready.
-- **User clicks a link to `example.com/about`:**
-  - Instead of a full page reload, the client (using React's router) immediately shows a loading state for the dynamic parts of the new page (thanks to `Suspense`).
-  - In parallel, the client makes an API request to the server, asking for the _changed_ parts of the page.
-  - The server again renders Server Components for the new route, generates only the necessary HTML chunks (or data for client components), and streams them back.
-  - The browser receives these HTML chunks and inserts them, replacing the loading states with actual content.
-  - Persistent elements (like a video player) are easily maintained because the browser is not doing a full page navigation.
-
-**Examples:**
-
-- **Next.js (with "App" directory router and Server Components)**, Remix.
-
-<Cols>
-<Col>
-
-**Pros**
-
-- **Optimal initial load:** Static HTML is delivered fast, and dynamic parts can stream with loading states.
-- **Reduced client-side JavaScript:** Server Components mean that logic and data fetching for parts of your UI _never_ leave the server, significantly cutting down JS bundle sizes sent to the client.
-- **Immediate navigation experience:** Users see a new loading state instantly upon clicking, and content fills in as it arrives.
-- **Improved SEO:** Full content is available in the initial HTML.
-- **Enhanced developer experience:** Write components that decide where they run.
-
-</Col>
-<Col>
-
-**Cons**
-
-- **Complex infrastructure:** Requires a sophisticated server-side runtime, often requiring platforms like Vercel or Netlify that provide an "Edge Worker" to handle initial static content caching and dynamic content streaming. This can be a barrier for teams managing their own backend infrastructure.
-- **Debugging complexity:** Debugging can be more challenging due to code running in different environments.
-
-</Col>
-</Cols>
-
-## 5. MPA-influenced split execution: the "islands" architecture
-
-The "Islands" architecture aims to blend the best of both worlds without the full server-side React runtime overhead across the entire application. It leverages the traditional MPA's ability to serve static HTML from a CDN very quickly, while selectively "hydrating" or making interactive only small, isolated parts ("islands") of the page.
-
-**How it works:**
-
-- **User navigates to `amazon.com/cart`:**
-  - Browser requests page from server.
-  - Server (or a CDN) sends a largely static HTML file. This file contains placeholders (the "islands") for dynamic or interactive components, e.g., a shopping cart widget.
-  - Browser immediately displays the static HTML content.
-  - A tiny bit of client-side JavaScript (the "island" runtime) embedded in the initial HTML scans the page for these "islands."
-  - For each island, this embedded JS makes a _separate_ network request to an API endpoint to fetch the specific HTML or data needed for that island.
-  - The server processes this request (e.g., Astro's server runtime), generates only the HTML fragment for that island (potentially fetching user-specific data like cart items), and sends it back.
-  - The client-side JavaScript injects this HTML into its placeholder, and if the island is interactive, its minimal JavaScript is loaded and hydrated.
-
-**Example:**
-
-- **Astro**, Marko, Eleventy (with islands).
-
-<Cols>
-<Col>
-
-**Pros**
-
-- **Extremely fast initial page load:** Pure HTML from a CDN is nearly instantaneous.
-- **Minimal JavaScript by default:** Only the JS needed for specific interactive islands is sent, not the entire application's JS. This significantly reduces overall bundle size.
-- **Simplified deployment:** The core application can be hosted on a static CDN, with dynamic islands hitting separate API endpoints.
-- **Targeted hydration:** Only interactive islands are hydrated, avoiding the "over-hydration" problem of full SSR.
-
-</Col>
-<Col>
-
-**Cons**
-
-- **Slight delay for island content:** While the static page loads instantly, the dynamic content within an island won't appear until its specific API request and rendering process is complete.
-- **Mental model shift:** Requires thinking about components as distinct, independent units (static vs. dynamic).
-
-</Col>
-</Cols>
-
-## conclusion: the blended future
-
-The journey through web rendering strategies reveals a clear trend: the industry is striving for a harmonious blend of server-side power and client-side fluidity.
-
-<Important>
-There is no single "best" strategy; the optimal choice depends on your application's specific needs, budget, and development team's expertise.
-</Important>
-
-<Strips>
-- For content-heavy sites needing top-tier SEO and minimal interactivity, **MPA (Flask, Vanilla HTML, HTMX)** still offers compelling simplicity and performance.
-- For highly interactive, internal dashboards or complex UIs where initial load isn't paramount, a pure **SPA (React)** can offer a fantastic developer and user experience.
-- For most modern web applications, the hybrid approaches of **SSR SPAs (Next.js Pages directory)**, **Isomorphic Rendering with Server Components (Next.js App directory)**, and **Island Architectures (Astro)** offer powerful ways to deliver fast, SEO-friendly, and interactive experiences by intelligently offloading work to the server and minimizing client-side burdens.
-</Strips>
-
-The future of web development lies in leveraging these advanced techniques to deliver user experiences that feel instantaneous and responsive, without compromising on efficiency or scalability.
+Pick based on what your page actually is, not what's trendy this year, and you'll rarely be wrong.

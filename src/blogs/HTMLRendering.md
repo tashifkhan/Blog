@@ -1,5 +1,5 @@
 ---
-title: "How a Webpage Magically Changes the Pixels on Your Screen: The Browser's Secret Journey"
+title: "From HTML Bytes to Pixels: How the Browser Actually Renders a Page"
 date: 2025-06-23
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,129 +9,101 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Web", "JS"]
-excerpt: "A deep dive into the browser's rendering process."
+excerpt: "A scroll-linked animation once pegged a phone's CPU at 100% and dropped it to 12fps. The bug was one line reading offsetHeight inside a loop that also wrote style.top. Here's the full pipeline that made that line so expensive, from HTML bytes to painted pixels."
 coverImage: "/images/blog/HTMLRendering/cover.svg"
 ---
 
 <Lede>
-Ever stopped to ponder the sheer magic that happens when you type a URL into your browser? One moment, it's just raw HTML, CSS, and perhaps a sprinkle of JavaScript; the next, it's a dynamic, interactive masterpiece gracing your display. It's not just a flicker of light; it's a meticulously choreographed dance performed by your browser, involving powerful data structures and crucial concepts like **Reflow** and **Repaint**.
+I once had a scroll-linked animation that pegged a mid-range Android phone's CPU at 100% and dragged it down to about 12fps. I spent a whole afternoon changing colors and shadows before I found the actual line: I was reading `element.offsetHeight` inside the same loop where I was writing `element.style.top`, forcing the browser to recompute layout synchronously on every single iteration. Forty times a frame, sometimes more. Fixing it took one line. Understanding *why* it was so expensive took actually learning what the browser does between "here's some HTML" and "here are pixels."
 </Lede>
 
-As an Electronics and Computer Science student with a keen eye for customization and a passion for understanding how things work, I find this deep dive into browser rendering endlessly fascinating. It’s not just about what you see, but the intricate systems and optimizations humming beneath the surface. For any aspiring web developer, understanding this "behind-the-scenes" drama is less of a suggestion and more of a superpower!
+Here's the whole pipeline, the same one that was quietly getting hammered forty times a frame in my bug:
 
-Let's embark on this journey and unveil the browser's hidden process, revealing how it turns abstract code into tangible pixels.
+<Figure caption="The browser's rendering pipeline: HTML and CSS become two separate trees, those merge into a render tree, layout figures out geometry, paint fills in pixels, and compositing lets the GPU handle some of that work independently.">
 
-<Ascii label="Browser rendering pipeline: HTML becomes the DOM and CSS becomes the CSSOM, which merge into the render tree, then layout, then paint">
-  HTML ──▶ DOM  ┐
-                ├──▶ Render Tree ──▶ Layout ──▶ Paint ──▶ pixels
-  CSS  ──▶ CSSOM┘                    (reflow)   (repaint)
-</Ascii>
+```mermaid
+flowchart TD
+    HTMLB["HTML bytes"] --> TOK["tokenizer"]
+    TOK --> DOM["DOM tree<br/>content + structure"]
+    CSSB["CSS bytes<br/>external, inline, UA styles"] --> CSSOM["CSSOM tree<br/>cascade + specificity resolved"]
+
+    DOM --> RENDER["render tree<br/>visible nodes + computed style"]
+    CSSOM --> RENDER
+
+    RENDER --> LAYOUT["layout / reflow<br/>position + size of every node"]
+    LAYOUT --> PAINT["paint<br/>fill in colors, text, borders"]
+    PAINT --> COMPOSITE["composite<br/>GPU merges layers"]
+    COMPOSITE --> SCREEN["pixels on screen"]
+```
+
+</Figure>
 
 <Toc />
 
-## the genesis: from raw code to rendered glory
+## the DOM: parsing bytes into a tree
 
-When you hit Enter after typing a URL, or when a webpage first loads, your browser isn't just mindlessly throwing content onto the screen. Oh no, it's meticulously following a multi-stage pipeline, processing information and building complex internal representations before anything becomes visible.
+The browser doesn't wait for the whole HTML file before it starts working. It reads bytes, turns them into characters, turns those into tokens, and builds the **Document Object Model** as it goes: every tag becomes a node, every node is an object with properties and methods JavaScript can touch.
 
-### phase 1: the blueprint – constructing the DOM (document object model)
+The DOM is purely structural at this point. `<div class="hero">` is a node with a class attribute, full stop. Nothing about how it looks has been decided yet.
 
-Imagine your HTML document as the architectural blueprint of a building. It defines the structure: where the walls are, where the windows go, the foundational elements. The browser's first task is to read this blueprint.
+## the CSSOM: the same idea, for styles
 
-It begins by parsing the HTML byte by byte, converting it into a sequence of characters, then into tokens, and finally, building the hierarchical **Document Object Model (DOM)**. The DOM is essentially a tree-like representation of your HTML document, where every HTML tag (like `<body>`, `<div>`, `<p>`, `<a>`) becomes a "node" in this tree. Each node represents an object with properties and methods, making the entire document structure accessible and manipulable by JavaScript.
+While the DOM is being built, the browser is doing the equivalent thing with CSS: pulling in external stylesheets, inline styles, embedded `<style>` blocks, and the browser's own default styles, then parsing all of it into the **CSS Object Model**. This is also a tree, but it represents rules, not content.
 
-<Hand>
-**Think of it:** The DOM is the browser's internal map of your webpage's _content_ and _structure_. It's purely logical, without any visual styling applied yet.
-</Hand>
+This is also where the cascade actually happens. Specificity, inheritance, `!important`, source order, all of it gets resolved here, producing one final computed style per element rather than a pile of competing rules.
 
-### phase 2: the style guide – crafting the CSSOM (CSS object model)
+## the render tree: where the two meet
 
-While the DOM is being constructed, the browser is simultaneously doing something similar with your CSS. It fetches all CSS files (or processes inline styles), parses them, and builds the **CSS Object Model (CSSOM)**. This is another tree structure, but instead of representing the document's content hierarchy, it represents all the style rules that apply to your page.
+DOM and CSSOM are still two separate trees at this point, and neither one alone tells the browser what to draw. Merging them produces the **render tree**: the DOM's visible nodes, each carrying its resolved computed style.
 
-The CSSOM accounts for all CSS sources: external stylesheets, inline styles, embedded styles, and even user-agent stylesheets (the browser's default styles). It's here that the browser resolves the "cascading" aspect of CSS, applying inheritance and specificity rules to determine the final computed style for every element.
-
-<Hand>
-**Think of it:** The CSSOM is the browser's comprehensive style guide, dictating the _visual appearance_ of every element.
-</Hand>
-
-### phase 3: the master plan – merging into the render tree
-
-Now, here's where things get interesting! The DOM (the content structure) and the CSSOM (the style rules) are two separate entities. To actually _see_ something, the browser needs to combine them. This fusion results in the creation of the **Render Tree** (sometimes called the Layout Tree or Frame Tree).
-
-The Render Tree is a conceptual tree, not directly a copy, but a representation of the DOM's visible nodes, each with its computed styles attached. It essentially describes the visual constructs that will be painted on the screen.
-
-<Important title="The render tree excludes invisible elements">
-Elements like `<head>` or those with `display: none` in their CSS are not part of the Render Tree because they don't occupy any visual space. This optimization is key for performance. Each node in this tree is a "render object" (or "renderer"), which knows its corresponding DOM node and its calculated styles (color, font-size, background, etc.).
+<Important title="the render tree skips invisible nodes">
+`<head>`, anything with `display: none`, script tags, none of that takes up visual space, so none of it gets a render tree node. This isn't an afterthought, it's a real optimization: work never gets spent laying out or painting something nobody will see. `visibility: hidden`, by contrast, still reserves its spot and still gets a node, it's just not drawn.
 </Important>
 
-<Hand>
-**Think of it:** The Render Tree is the browser's distilled, visual representation of what actually needs to be drawn. It's the pre-production storyboard, ready for action.
-</Hand>
+## layout, aka reflow: figuring out where everything goes
 
-### phase 4: the blueprint in action – layout (reflow)
+The render tree says what needs to appear. It says nothing about where. That's layout's job, and it's also called reflow, because it's the same computation whether it's happening for the first time or the fortieth.
 
-With the Render Tree constructed, the browser now knows _what_ to draw. But it doesn't yet know _where_ to draw it. This critical phase is called **Layout**, and it's often referred to as **Reflow**.
+The browser walks the render tree and works out exact position and size for every node, applying the box model (content, padding, border, margin) and however the relevant layout mode, block flow, flexbox, grid, table, decides to arrange siblings. Browsers try to do this in one pass over the tree where they can. They don't always get that: a table with intrinsic sizing, or a flex container whose children's sizes depend on each other, can force multiple passes before everything settles.
 
-During Reflow, the browser traverses the Render Tree and calculates the precise geometric positions and dimensions of every single render object on the page. It determines how much space each element occupies, where it's positioned relative to its siblings and parents, and how they flow within the overall document. This is where concepts like the CSS Box Model (content, padding, border, margin) are applied rigorously.
+This is also exactly the operation that reading `offsetHeight`, `offsetWidth`, `scrollTop`, `getComputedStyle()`, or `getBoundingClientRect()` from JavaScript forces to run immediately, on demand, instead of on the browser's own schedule. If layout is already stale because you just wrote a style change, the browser has no choice: it must reflow right there before it can hand you a correct number. Do that write-then-read in a loop and you get **layout thrashing**, which is precisely what my animation bug was.
 
-The transcript notes that "browsers generally use an optimized approach where single operation often positions all elements almost as if it was done in a flow." This highlights the efficiency; browsers try to minimize layout passes. However, complex elements, such as intricate tables or flexbox/grid layouts with dynamic content, might require multiple passes to ensure everything aligns perfectly.
+## paint and compositing: turning boxes into pixels
 
-<Hand>
-**Think of it:** Reflow is like the choreographer on a stage, determining every dancer's exact spot, size, and relationship to the others before the curtain rises. It's all about geometry.
-</Hand>
+Once every node has a position and a size, paint fills them in: background, text, borders, shadows, whatever the computed style says should be visible. This doesn't happen onto one flat surface. The browser paints onto separate layers, which is what lets it repaint one part of the page without touching the rest.
 
-### phase 5: the grand reveal – painting
+Those layers get merged by the compositor, and this is the part that matters most for animation performance: some properties, `transform` and `opacity` chief among them, can be handled almost entirely on the compositor thread, on the GPU, without going back through layout or even paint. That's why animating `transform: translate()` stays smooth even on weak hardware, while animating `top` or `width` does not: one of them skips two expensive stages, the other one triggers both, every frame.
 
-Finally, after all the meticulous calculations of position and size are done, we arrive at the **Painting** phase. This is where the browser actually draws the pixels onto the screen. Using the information from the Render Tree (the "what") and the Layout phase (the "where"), the browser renders the visible content, applying colors, background images, borders, text, shadows, and all other visual properties.
+## reflow vs repaint: why one freezes the page and the other doesn't
 
-The content is painted onto various "layers" which can then be composited together. This layering is a significant performance optimization, especially for animations, as it allows parts of the page to be re-painted independently without affecting others.
+**Reflow** recalculates geometry: position and size. Because elements affect their neighbors, changing one node's dimensions can cascade into recalculating a large chunk of the page, sometimes all of it. Add a large image above a paragraph and everything below has to shift down; resize that image and the whole downstream layout has to be redone. That cascading is what makes reflow the expensive one.
 
-<Hand>
-**Think of it:** Painting is the actual artist, taking the perfectly positioned elements and filling them with color, texture, and detail, bringing the webpage to life on your monitor.
-</Hand>
+Common things that trigger it:
 
-So, when a webpage first appears on your screen, it's gone through at least one full cycle of DOM parsing, CSSOM construction, Render Tree generation, Reflow, and Painting. But what happens when the page changes _after_ this initial load? That's where the real performance considerations come into play.
+- Changing `width`, `height`, `padding`, `margin`, `border`, `font-size`, or `line-height`
+- Inserting or removing DOM elements
+- Toggling `display` between `none` and anything else
+- Resizing the browser window
+- Reading a layout-dependent property (`offsetHeight`, `getBoundingClientRect()`, and the like) right after a write, forcing a synchronous reflow
+- A `:hover` rule that changes something layout-affecting, like `width`
 
-## the dynamic dance: reflow vs. repaint in action
+The fix that would have saved me an afternoon is simple: batch the writes. Instead of touching layout-affecting styles one at a time, change a class once and let the browser compute the result in a single pass.
 
-Webpages aren't static images; they're dynamic. User interactions, data updates, and animations constantly alter their state. When these changes occur, the browser needs to update the display. This is where Reflow and Repaint truly shine – or stumble – in terms of performance.
-
-### reflow (layout): the heavyweight operation
-
-As we've learned, Reflow is about recalculating the _geometric properties_ of elements. When the structure or layout of even a single element changes in a way that affects its size or position, the browser might need to re-run the layout process for a significant portion, or even the entirety, of the page. This means re-evaluating the positions and dimensions of potentially many elements, accounting for their relationships.
-
-<Warning title="Why is reflow so computationally expensive?">
-The transcript accurately states, "Reflow is a computationally intensive task and can have a significant impact on the performance of a web page. Each Reflow can trigger a chain reaction, causing multiple subsequent reflows as element adjust to the changes." Imagine you add a large image to the top of a document. Every single element below it needs to shift downwards. If that image then resizes, the entire layout downstream needs to be re-evaluated. This cascading effect is what makes Reflow so costly in terms of CPU cycles and time.
-</Warning>
-
-**Common Triggers for Reflow:**
-
-- **Modifying element dimensions:** Changing `width`, `height`, `padding`, `margin`, `border`, `font-size`, `line-height`.
-- **Adding or removing elements:** Manipulating the DOM by inserting new elements or deleting existing ones.
-- **Changing `display` property:** Toggling between `display: none` and `display: block` (or other values) fundamentally changes an element's participation in the layout.
-- **Browser window resizing:** The entire viewport's dimensions change, necessitating a full page Reflow.
-- **Reading certain computed style properties:** If JavaScript requests layout-dependent values like `offsetHeight`, `offsetWidth`, `scrollTop`, `scrollLeft`, `getComputedStyle()`, `getBoundingClientRect()`, or `clientTop`/`clientLeft`, the browser is forced to perform a Reflow immediately to provide the correct, up-to-date value. This is known as **"layout thrashing"** if done repeatedly in a loop.
-- **Activating pseudo-classes** that change layout properties (e.g., `:hover` that increases an element's `width`).
-
-**Optimizing Reflow: The Developer's Superpower:**
-Minimizing the frequency and scope of Reflows is absolutely crucial for smooth performance, especially during animations.
-
-- **Batch DOM Changes:** Instead of making many individual style changes that trigger multiple Reflows, make all changes to an element or a group of elements in memory (e.g., by adding a CSS class) and then apply them to the live DOM once.
-
-<Cols>
+<Cols cols={2}>
 <Col>
 
-❌ Multiple reflows
+Multiple reflows, one per line:
 
 ```javascript
-element.style.width = "100px"; // Triggers Reflow
-element.style.height = "50px"; // Triggers Reflow
-element.style.margin = "10px"; // Triggers Reflow
+element.style.width = "100px";
+element.style.height = "50px";
+element.style.margin = "10px";
 ```
 
 </Col>
 <Col>
 
-✅ One reflow
+One reflow, via a class swap:
 
 ```javascript
 element.classList.add("new-dimensions");
@@ -141,34 +113,31 @@ element.classList.add("new-dimensions");
 </Col>
 </Cols>
 
-- **Utilize `transform` for Animations:** As the transcript highlights, "using CSS techniques like utilizing the transform property for animations... doesn't trigger a Reflow." Properties like `transform: translate()`, `scale()`, and `rotate()` are often handled by the GPU on a separate "compositing layer," meaning they don't affect the document's layout and thus bypass the Reflow stage entirely, leading to buttery-smooth animations.
-- **Avoid Layout Thrashing:** Be mindful of repeatedly reading layout properties _and then_ writing layout-affecting properties in a loop. This forces the browser to Reflow on each iteration. Batch your reads and writes.
+And if you actually need to read layout values, read all of them first, then write. Interleaving reads and writes in a loop is what turns a cheap operation into layout thrashing.
 
-### repaint: the visual freshener
+## repaint: cheaper, but not free
 
-**Repaint** refers to updating the visual appearance of elements _without changing their layout_. It involves redrawing pixels on the screen to reflect changes in visual properties that don't impact the document flow or geometry.
+**Repaint** is what happens when a visual property changes without touching geometry at all: same position, same size, different pixels. Because it skips layout entirely, it's less costly than reflow, but the browser still has to redraw whatever changed, and large areas or heavy effects (gradients, shadows) still cost real CPU time on weaker devices.
 
-**Why is Repaint less expensive than Reflow, but still matters?**
-Repaint is generally less computationally intensive because it bypasses the layout calculation stage. The browser already knows where everything is; it just needs to change the color of the pixels. However, it still requires CPU cycles to render the updated visual information, especially for large areas or complex visual effects (like gradients or shadows). "Excessive repaints can still affect performance," particularly on lower-powered devices.
+Things that trigger a repaint without a reflow: `background-color`, `background-image`, text `color`, `visibility` (since it still reserves layout space unlike `display: none`), `box-shadow`, `text-shadow`, `outline`, `border-radius` when it doesn't change the border's width, and `opacity`.
 
-**Common Triggers for Repaint:**
+The properties worth actually animating are the ones that skip both stages: `transform` and `opacity`. Both can get their own compositor layer, handed to the GPU, moved or faded independently of everything underneath. Everything else you animate is either a reflow or a repaint on the main thread, competing with whatever else the page is doing that frame.
 
-- Changing `background-color` or `background-image`.
-- Modifying `color` (text color).
-- Adjusting `visibility` (if `visibility: hidden` which reserves space, unlike `display: none`).
-- Applying or animating `box-shadow`, `text-shadow`, `outline`, `border-radius` (if it doesn't change border width).
-- Changing `opacity`.
+## the mental model, compressed
 
-**Optimizing Repaint: Smart Visual Updates:**
-While less impactful than Reflows, it's still good practice to optimize Repaints:
+<Checklist title="before you write another animation or DOM-heavy loop">
+- [ ] Know which stage a property change triggers: reflow, repaint, or neither
+- [ ] Batch layout-affecting style changes into one class toggle instead of many property writes
+- [ ] Never interleave a layout read (`offsetHeight`, `getBoundingClientRect()`) with a layout write inside a loop
+- [ ] Prefer animating `transform` and `opacity` over `top`/`left`/`width`/`height`
+- [ ] Remember `display: none` removes a node from the render tree; `visibility: hidden` doesn't
+- [ ] When something feels janky, check whether it's forcing synchronous layout before touching anything else
+</Checklist>
 
-- **Minimize Animated Properties:** If you're animating a property that only causes a Repaint, consider if it's strictly necessary to animate.
-- **Leverage Hardware-Accelerated CSS Properties:** The transcript correctly notes, "utilize Hardware accelerated CSS properties." Properties like `opacity` and `transform` are excellent candidates. When these properties are animated, the browser can often create a new "compositing layer" for the element, which is then rendered by the GPU directly. This offloads work from the main CPU thread, leading to significantly smoother animations. Think of it like a separate transparent sheet that the GPU can move or fade independently without touching the underlying content or layout.
+<InkBand title="bottom line">
+Everything you see on a page is the output of one pipeline: HTML and CSS get parsed into two trees, those merge into a render tree, layout works out geometry, paint fills in pixels, and compositing lets the GPU take some of that off the main thread. Reflow is expensive because it cascades through the tree; repaint is cheaper because it skips geometry entirely; `transform` and `opacity` are cheapest of all because they can skip both. My afternoon of debugging came down to one loop doing a layout read and a layout write back to back, forcing the expensive path on every iteration. Knowing the pipeline is what made that line visible instead of invisible.
+</InkBand>
 
-## the developer's advantage: understanding the undercurrents
-
-As someone interested in Computer Science, customisation, and efficiency, you can appreciate that understanding these fundamental browser operations is more than just trivia. It's a foundational pillar for building highly performant and user-friendly web experiences. A fast, responsive website isn't just a nicety; it's a critical component of user satisfaction and conversion rates.
-
-By grasping the intricate journey from raw HTML and CSS to the vibrant pixels on your screen, and by distinguishing between the "structural recalculation" of Reflow and the "visual update" of Repaint, you gain the knowledge to write more efficient code, debug performance bottlenecks, and craft truly outstanding web applications. This understanding empowers you to design not just beautiful UIs, but also robust and lightning-fast UIs that delight users.
-
-So, the next time you see a webpage load or an animation gracefully unfold, remember the unseen dance of the DOM, CSSOM, Render Tree, Reflow, and Repaint working in harmony to bring that digital world to life. It's truly a marvel of engineering!
+<Hand>
+next time an animation janks on you, check what you're reading and writing in the same loop before you touch anything else.
+</Hand>

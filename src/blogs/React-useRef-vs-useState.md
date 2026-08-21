@@ -1,5 +1,5 @@
 ---
-title: "useRef vs useState in React: Understanding the Fundamental Difference"
+title: "useRef vs useState: why my countdown timer redrew the whole page every second"
 date: 2025-09-24
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,37 +9,45 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["React", "React Native", "Low Level"]
-excerpt: "Confused about when to use useRef versus useState? Let's break down these two fundamental React hooks and when to use each one."
+excerpt: "I stashed a setInterval handle in useState and watched a simple countdown widget stutter every tick. The fix is one hook swap, but understanding why it works is the actual lesson: which of your values need to repaint the screen, and which are just bookkeeping."
 coverImage: "/images/blog/React-useRef-vs-useState/cover.svg"
 ---
 
 <Lede>
-If you're working with React or React Native, you've probably encountered both `useState` and `useRef`. At first glance, they might seem similar - both let you store values in your components. But use them interchangeably, and you'll quickly run into confusing bugs or performance issues.
+I was bolting a countdown timer onto a side project, nothing fancy, just digits ticking down and a start/stop/reset button. First pass, I stored the `setInterval` handle in `useState` right next to the seconds counter, because they're both "state," right? The timer worked. It also repainted the entire component tree every single second, for no reason anyone asked for, and a completely unrelated input field two levels down would occasionally lose focus mid-type. Turns out I'd been storing two very different kinds of value in the same box.
 </Lede>
 
-<Important title="The key difference">
-**`useState` triggers re-renders, `useRef` doesn't.** But there's much more to the story. Let's dive deep into both hooks and understand when to use each one.
+<Important title="the actual difference">
+`useState` tells React "the screen needs to change." `useRef` tells React "keep this around, but mind your own business." Mixing them up doesn't crash anything, it just makes your component do more work than it should, or forget things it needed to remember.
 </Important>
+
+<Figure caption="The one question that decides which hook you reach for: does this value need to show up on screen right now?">
+
+```mermaid
+flowchart TD
+    Q["a value changes.<br/>does the screen need to update because of it?"]
+    YES["useState<br/>setValue() schedules a re-render"]
+    NO["useRef<br/>ref.current = value, nothing re-renders"]
+    UI["shows up in JSX:<br/>form input, counter, toggle, fetched data"]
+    BOOK["bookkeeping:<br/>timer id, DOM node, previous value, mount flag"]
+
+    Q -->|"yes"| YES --> UI
+    Q -->|"no"| NO --> BOOK
+```
+
+</Figure>
 
 <Toc />
 
-## usestate: the reactive state manager
+## useState: the box that repaints the screen
 
-`useState` is probably the first hook you learned in React. It's the go-to solution for managing data that affects what users see on screen.
-
-### how usestate works
-
-When you call `useState`, you get back an array with two elements:
+`useState` is the one you learn first, and for good reason: it's the hook that actually makes the UI move.
 
 ```javascript
 const [value, setValue] = useState(initialValue);
 ```
 
-- `value` - The current state
-- `setValue` - A function to update that state
-- `initialValue` - What the state starts as
-
-Here's a classic example:
+Call `setValue`, and React schedules a re-render. Simple counter, same one everybody's written a hundred times:
 
 ```javascript
 import React, { useState } from "react";
@@ -56,43 +64,21 @@ function Counter() {
 }
 ```
 
-### the magic of re-rendering
+Click the button, `setCount` fires, React re-runs the component function, the new number shows up. That's the whole contract. It's also the part people forget when they reach for `useRef` "because I don't need a re-render right now" and then wonder why the number on screen never moves.
 
-The crucial thing about `useState`: **calling `setValue` triggers a re-render**. This is exactly what you want when data changes and the UI needs to update.
+`useState` is the right call whenever the value is something the user is actually looking at: form fields, a modal's open/closed flag, whatever a fetch just handed you, a list you're rendering. If it's in the JSX, it almost certainly belongs in `useState`.
 
-When you click the button:
+## useRef: the box React doesn't watch
 
-1. `setCount(count + 1)` is called
-2. React schedules a re-render
-3. The component function runs again
-4. The new `count` value is displayed
-
-This reactive behavior is what makes React... well, React!
-
-### common usestate use cases
-
-<Strips>
-- **Form inputs**: Text fields, checkboxes, radio buttons
-- **Toggle states**: Modal open/closed, menu expanded/collapsed
-- **API data**: Results from fetch requests
-- **Counters and timers**: Any number that updates visually
-- **Lists**: Dynamic arrays of items to display
-- **Visibility flags**: Showing/hiding components
-</Strips>
-
-## useref: the silent value keeper
-
-`useRef` is quite different. It returns a mutable object that persists for the component's entire lifetime:
+`useRef` returns an object with exactly one property, `current`, and React genuinely does not care when you change it.
 
 ```javascript
 const myRef = useRef(initialValue);
 ```
 
-You get back an object with a single property: `current`. You can read from and write to `myRef.current` freely, and React won't bat an eye - no re-renders triggered.
+Read `myRef.current`, write to it, mutate it in a loop if you want, none of that triggers a render. That's not a limitation, it's the entire point.
 
-### accessing DOM elements
-
-The most common use case is getting direct access to DOM elements:
+The most common use is grabbing a DOM node directly:
 
 ```javascript
 import React, { useRef } from "react";
@@ -101,7 +87,6 @@ function TextInputWithFocusButton() {
 	const inputRef = useRef(null);
 
 	const handleClick = () => {
-		// Directly access the input element
 		inputRef.current.focus();
 	};
 
@@ -114,11 +99,9 @@ function TextInputWithFocusButton() {
 }
 ```
 
-When you attach a ref to a React element with `ref={inputRef}`, React sets `inputRef.current` to point to the actual DOM node.
+Attach `ref={inputRef}` to an element, and React quietly sets `inputRef.current` to the real DOM node once it's mounted. No re-render involved, because nothing on screen changed, you just got a handle to something that already exists.
 
-### storing values between renders
-
-You can also use `useRef` to store any value that needs to persist but shouldn't trigger re-renders:
+Here's the version that actually matches my timer bug, cleaned up:
 
 ```javascript
 import React, { useState, useRef, useEffect } from "react";
@@ -128,7 +111,7 @@ function Stopwatch() {
 	const intervalRef = useRef(null);
 
 	const start = () => {
-		if (intervalRef.current !== null) return; // Already running
+		if (intervalRef.current !== null) return; // already running
 
 		intervalRef.current = setInterval(() => {
 			setSeconds((s) => s + 1);
@@ -145,7 +128,6 @@ function Stopwatch() {
 		setSeconds(0);
 	};
 
-	// Cleanup on unmount
 	useEffect(() => {
 		return () => {
 			if (intervalRef.current) clearInterval(intervalRef.current);
@@ -163,24 +145,22 @@ function Stopwatch() {
 }
 ```
 
-Notice how `intervalRef` stores the interval ID. We need this value to persist between renders, but we don't want changing it to cause a re-render - that would be wasteful!
+`intervalRef` holds the interval ID. Nobody ever needs to see an interval ID on screen, so there's no reason writing to it should repaint anything. `seconds` is the opposite: it's the one number the whole component exists to show, so it lives in `useState` and every tick legitimately re-renders. That split is the fix for my original bug. I had both values in `useState`, and every tick was re-rendering the interval ID along with the seconds, doubling the work for a value nothing ever reads from the render output.
 
-## the key differences
+## the two side by side
 
-Let's put them side-by-side:
+| | useState | useRef |
+| --- | --- | --- |
+| purpose | reactive state the UI depends on | mutable storage the UI doesn't depend on |
+| returns | `[value, setter]` | `{ current: value }` |
+| triggers re-render | yes | no |
+| how you change it | call the setter | write `.current` directly |
+| persists across renders | yes | yes |
+| typical use | form data, API results, toggles | DOM refs, timer ids, previous values |
 
-| Feature                      | useState                         | useRef                                    |
-| ---------------------------- | -------------------------------- | ----------------------------------------- |
-| **Purpose**                  | Manage reactive state            | Store mutable values without re-rendering |
-| **Returns**                  | `[value, setter]`                | `{ current: value }`                      |
-| **Triggers re-render?**      | ✅ Yes                           | ❌ No                                     |
-| **Mutability**               | Immutable (use setter)           | Mutable (change `.current` directly)      |
-| **Persists across renders?** | ✅ Yes                           | ✅ Yes                                    |
-| **Typical use cases**        | UI state, form data, API results | DOM access, timer IDs, previous values    |
+## react native: same rules, different targets
 
-## react native: same concepts, different elements
-
-The good news? Everything works the same way in React Native!
+Good news, none of this changes when you cross into React Native. `useState` still drives what's on screen, `useRef` still grabs handles to native components instead of DOM nodes.
 
 <Tabs>
 <Tab title="useState">
@@ -211,8 +191,6 @@ function LoginForm() {
 </Tab>
 <Tab title="useRef">
 
-In React Native, you use refs to access native component methods:
-
 ```javascript
 import React, { useRef } from "react";
 import { View, TextInput, Button } from "react-native";
@@ -221,7 +199,7 @@ function FocusableInput() {
 	const inputRef = useRef(null);
 
 	const focusInput = () => {
-		inputRef.current?.focus(); // Call native focus method
+		inputRef.current?.focus(); // native focus method
 	};
 
 	return (
@@ -250,7 +228,6 @@ function ScrollableContent() {
 	return (
 		<View>
 			<ScrollView ref={scrollRef}>
-				{/* Your content here */}
 				<Text>Lots of content...</Text>
 			</ScrollView>
 			<Button title="Scroll to Bottom" onPress={scrollToBottom} />
@@ -262,41 +239,14 @@ function ScrollableContent() {
 </Tab>
 </Tabs>
 
-## when to use each
+## the mistake I actually see people make
+
+Not my interval bug this time, the other direction: reaching for `useRef` because "I don't want a re-render" when the value is literally the thing being displayed.
 
 <Cols>
 <Col>
 
-**Choose `useState` when:**
-
-- The value affects what users see
-- You want automatic UI updates when data changes
-- You're managing form inputs
-- You're storing data from API calls
-- You need toggle states (open/closed, visible/hidden)
-
-</Col>
-<Col>
-
-**Choose `useRef` when:**
-
-- You need to access a DOM element or native component directly
-- You're storing values that shouldn't trigger re-renders (like timer IDs)
-- You want to track previous values of props or state
-- You need a mutable value that persists across renders
-- You're implementing imperative animations or measurements
-
-</Col>
-</Cols>
-
-## common pitfall: using useref when you need usestate
-
-A mistake I see often:
-
-<Cols>
-<Col>
-
-❌ **Bad** — this won't update the UI
+bad, the UI never moves
 
 ```javascript
 function BrokenCounter() {
@@ -304,8 +254,8 @@ function BrokenCounter() {
 
 	const increment = () => {
 		countRef.current += 1;
-		console.log(countRef.current); // This logs correctly
-		// But the UI won't update!
+		console.log(countRef.current); // logs fine
+		// but nothing on screen updates
 	};
 
 	return (
@@ -320,7 +270,7 @@ function BrokenCounter() {
 </Col>
 <Col>
 
-✅ **Good** — this updates the UI
+correct, this repaints
 
 ```javascript
 function WorkingCounter() {
@@ -338,9 +288,11 @@ function WorkingCounter() {
 </Col>
 </Cols>
 
-## advanced pattern: combining both
+`countRef.current` really does hold the right number. React just never finds out it changed, because nothing told it to re-render. The value being "correct" and the UI being correct are two separate claims, and `useRef` only ever promises you the first one.
 
-Sometimes you need both! Here's a real-world example - tracking whether a component has mounted:
+## when you actually need both
+
+Sometimes a single component legitimately needs a reactive value and a silent one at the same time. Tracking whether a component is still mounted before setting state from an async fetch is the case I hit most:
 
 ```javascript
 import React, { useState, useRef, useEffect } from "react";
@@ -357,7 +309,6 @@ function DataFetcher() {
 				const response = await fetch("https://api.example.com/data");
 				const result = await response.json();
 
-				// Only update state if component is still mounted
 				if (isMountedRef.current) {
 					setData(result);
 				}
@@ -370,7 +321,6 @@ function DataFetcher() {
 
 		fetchData();
 
-		// Cleanup function
 		return () => {
 			isMountedRef.current = false;
 		};
@@ -381,38 +331,35 @@ function DataFetcher() {
 }
 ```
 
-Here, `isMountedRef` prevents state updates after unmounting (which causes warnings), while `data` and `loading` manage the UI.
+`isMountedRef` never needs to be seen, it just needs to be checked before a state update that would otherwise fire on an unmounted component and print that warning you've definitely seen. `data` and `loading` are exactly what the JSX depends on, so they stay reactive.
 
-## performance considerations
+## a couple of things worth optimizing
 
-### usestate optimization
-
-React is smart about re-renders, but you can optimize further:
+`useState` updates are usually cheap, but two patterns are worth knowing:
 
 ```javascript
-// Use functional updates when new state depends on old state
+// functional update when new state depends on old state
 setCount((prevCount) => prevCount + 1);
 
-// Use callback version of useState for expensive initialization
+// lazy initializer for expensive first-render work
 const [state, setState] = useState(() => {
 	const initialState = someExpensiveComputation();
 	return initialState;
 });
 ```
 
-<Note title="useRef doesn't need optimization">
-Since `useRef` doesn't trigger re-renders, there's no performance concern with updating it frequently. That's actually one of its key benefits!
+<Note title="useRef doesn't need any of this">
+Since writing to `.current` never triggers a render, there's nothing to optimize. Update it as often as you want, in a loop, on every frame, React won't notice or care.
 </Note>
 
-## wrapping up
+## the checklist
 
-The distinction between `useState` and `useRef` is fundamental to React:
+- reach for `useState` when the value is on screen: form fields, toggles, fetched data, anything the JSX reads directly
+- reach for `useRef` when the value is bookkeeping: DOM/native handles, timer and interval ids, previous-value tracking, a mounted flag
+- if changing the value should repaint something, it's `useState`
+- if changing the value should quietly persist and nothing more, it's `useRef`
+- if you're not sure, ask whether the value appears anywhere in your `return` statement, that's usually the whole answer
 
-- **`useState`** is for **reactive data** that affects your UI
-- **`useRef`** is for **non-reactive data** and **direct element access**
+**Bottom line:** `useState` is for anything the user is meant to see change, `useRef` is for anything your component needs to remember without bothering the screen. My timer bug was one misplaced value away from working correctly, and once you've felt that bug once, you stop mixing the two up.
 
-Think of `useState` as your component's memory for things users see, and `useRef` as your component's memory for behind-the-scenes bookkeeping.
-
-Once this clicks, you'll find yourself naturally reaching for the right hook without even thinking about it. And your components will be more efficient and easier to understand.
-
-Now go forth and manage state like a pro! 🚀
+That's the whole distinction. Once it clicks you'll pick the right one without thinking about it, which is really all a hook's supposed to do.

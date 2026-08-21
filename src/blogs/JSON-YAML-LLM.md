@@ -1,5 +1,5 @@
 ---
-title: "YAML Over JSON in Large Language Model Applications"
+title: "JSON vs YAML for LLM Output: What the Tokens Actually Cost"
 date: 2025-10-15
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,86 +9,56 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Mobile Development"]
-excerpt: "Want to cut your LLM API costs by 56%? Try this one formatting change.\n No prompt hacks. No model switching. Just YAML instead of JSON.\n Here's what the data shows after analyzing production workloads and real-world benchmarks\n"
+excerpt: "A pipeline of mine kept asking an LLM for JSON and kept paying for every brace and quote in the reply. I switched the output format to YAML, then got curious and actually ran both through tiktoken to see what was true and what was just a stat floating around the internet. There's a real saving, and a catch nobody mentions: minified JSON beats YAML on raw tokens."
 coverImage: "/images/blog/JSON-YAML-LLM/cover.svg"
 ---
 
-## a deep dive into token efficiency and cost optimization
-
 <Lede>
-Large language models have revolutionized how we build applications, but the cost of API calls remains a significant concern for developers and organizations operating at scale. While most optimization discussions focus on prompt engineering or model selection, a frequently overlooked factor dramatically impacts both cost and reliability: the choice between JSON and YAML for structured data.
+I had a pipeline that asked an LLM to extract structured fields out of messy text, one call per record, a few hundred thousand records a month. Nothing fancy, just a prompt with a schema and "respond in JSON." The bill was fine until volume went up, and when I actually broke down where the tokens were going, a good chunk of every response was <code>{</code>, <code>}</code>, <code>"</code> and <code>,</code> characters that carried zero information. Someone on a team call said "just use YAML, it's like 50% fewer tokens," and I'd seen that exact number floating around blog posts for a year without anyone showing their work. So I opened a terminal, installed tiktoken, and counted.
 </Lede>
 
-This comprehensive technical analysis examines why YAML consistently outperforms JSON for LLM applications, backed by tokenization theory, real-world benchmarks, and production case studies.
-
-<Kpi cols={3}>
-<Stat value="56.6%" label="fewer tokens" tone="ok" />
-<Stat value="106 → 46" label="tokens per call" tone="accent" />
-<Stat value="$64,800" label="saved / year on Opus" tone="alt" />
-</Kpi>
+This post is that count, plus the mechanics of why it comes out the way it does, plus the one thing the "switch to YAML" advice usually leaves out: it's true against pretty-printed JSON, and it quietly stops being true the moment someone minifies.
 
 <Toc depth={2} />
 
----
+## the whole shape of this, in one table
 
-## understanding tokenization: the foundation of LLM costs
+| | pretty JSON | minified JSON | YAML |
+| --- | --- | --- | --- |
+| Structural tokens (braces, quotes, commas) | most | fewer, still there | almost none |
+| Raw token count, my measured payload | 565 | **317** | 400 |
+| Human-readable in logs / a debugger | yes | no | yes |
+| Model generation reliability | worst | worst | best |
+| Native `JSON.parse()` in JS | yes | yes | needs a library |
+| Schema validation ecosystem | mature (JSON Schema) | mature | convert first |
+| Best fit | prompts, examples | never generate this directly | LLM output |
 
-### how tokenizers work
+That middle column is the twist. Every "YAML saves tokens" post I'd read compared YAML against pretty-printed JSON, because pretty JSON is what people paste into examples. Nobody generates minified JSON by hand, so nobody was comparing against it. But an LLM doesn't care about indentation being annoying to type, and once you strip the whitespace, JSON gets a lot closer to YAML than the popular numbers suggest. More on that below, with actual counts.
 
-Modern LLMs employ Byte Pair Encoding (BPE) tokenization, a compression algorithm that breaks text into subword units called tokens. Originally developed in 1994 for data compression, BPE has become the standard for models from GPT-3.5 through GPT-5, Claude, and Llama 3.
+## how a tokenizer actually counts your braces
 
-The tokenization process follows these steps:
+Modern LLMs tokenize with byte pair encoding, originally a 1994 data-compression trick, repurposed as the standard for GPT-3.5 through GPT-5, Claude, and Llama. The process is roughly:
 
-1. **Byte initialization**: Text converts to UTF-8 bytes (256 possible values from 0-255), with each byte becoming a potential token
-2. **Pre-tokenization**: Text splits on whitespace and punctuation boundaries into "pretokens"
-3. **Iterative merging**: The algorithm identifies the most frequently occurring byte pairs and merges them into new tokens, building a vocabulary of common subwords
-4. **Token ID assignment**: Each merged unit receives a unique integer ID that the model processes
+1. Text becomes UTF-8 bytes.
+2. It gets pre-split on whitespace and punctuation boundaries into "pretokens."
+3. The most frequent byte pairs get merged into bigger tokens, built up from a training pass over huge amounts of text.
+4. Each merged unit gets an integer ID, which is what the model actually reads.
 
-For example, the GPT-2 tokenizer uses a vocabulary of 50,257 tokens, while GPT-4 expands to 100,256 tokens (cl100k_base encoding), and GPT-4o uses 199,997 tokens (o200k_base).
+GPT-2 used a 50,257-token vocabulary. GPT-4's `cl100k_base` doubled that. GPT-4o's `o200k_base` is roughly 200k. None of that matters for this post except for one consequence: every character is a candidate for its own token, so punctuation you'd never notice while reading is something you're paying for on every single call.
 
-### why every character matters
+## the punctuation tax, side by side
 
-Tokenizers count every element—whitespace, newlines, punctuation, and quotes—as potential tokens. A seemingly minor formatting choice cascades into significant token differences:
-
-- Each brace `{` or `}` typically becomes one token
-- Each comma `,` becomes one token
-- Each quote `"` becomes one token
-- Each colon `:` becomes one token
-- Whitespace and newlines become tokens
-
-Since LLM pricing scales linearly with tokens—Cost = (Input tokens / 10⁶) × P_in + (Output tokens / 10⁶) × P_out—every eliminated punctuation mark directly reduces costs.
-
----
-
-## the structural difference: JSON vs YAML
-
-### JSON's token-heavy syntax
-
-JSON requires explicit structural markers:
+Same data, two formats:
 
 ```json
 {
-	"user": {
-		"name": "John Doe",
-		"active": true,
-		"roles": ["admin", "developer"]
-	}
+  "user": {
+    "name": "John Doe",
+    "active": true,
+    "roles": ["admin", "developer"]
+  }
 }
 ```
-
-Token overhead includes:
-
-- **Braces**: `{` and `}` for objects (8 tokens in nested structures)
-- **Brackets**: `[` and `]` for arrays (2 tokens)
-- **Quotes**: Every key and string value (40 tokens for typical structures)
-- **Commas**: Between all elements (10 tokens)
-- **Colons**: After every key (12 tokens)
-
-For the example above, punctuation alone contributes approximately 60 tokens beyond the actual data values.
-
-### YAML's minimal syntax
-
-YAML eliminates most punctuation through indentation-based structure:
 
 ```yaml
 user:
@@ -99,411 +69,91 @@ user:
     - developer
 ```
 
-Token contributions:
+JSON pays for every brace, every bracket, every quote around a key or string, every comma. YAML drops nearly all of it, using indentation, which is whitespace the tokenizer would be counting anyway. The comparison holds for multiline strings too: JSON needs `\n` escape sequences (two tokens each: backslash and n), while YAML's block scalar (`|`) just uses real newlines.
 
-- **No braces or brackets** (0 tokens)
-- **No quotes on keys or most strings** (0 tokens)
-- **No commas** (0 tokens)
-- **Colons**: Only after keys (12 tokens, same as JSON)
-- **Indentation and dashes**: Use whitespace tokens already counted
+None of that is new information. What I wanted to know was the actual number for a payload shaped like the ones I was sending, not a toy `{name, active, roles}` example.
 
-<Important>
-The same data structure requires approximately 46 tokens in YAML versus 106 tokens in pretty-printed JSON—a 56.6% reduction.
-</Important>
+## I actually ran the tokens myself
 
----
+I built a payload that looks like what my pipeline was actually extracting: a list of 10 records with an id, a name, a category, a price, a stock flag and a tags array. Then I ran it through `tiktoken` three ways: pretty JSON, minified JSON, and YAML.
 
-## measured performance: real-world benchmarks
+```python
+import tiktoken, json, yaml
 
-### case study 1: better programming analysis
+payload = {"items": [
+    {"id": i, "name": f"Item {i}", "category": "electronics" if i % 2 == 0 else "books",
+     "price": round(19.99 + i * 3.5, 2), "in_stock": (i % 3 != 0),
+     "tags": ["sale", "new"] if i % 4 == 0 else ["clearance"]}
+    for i in range(1, 11)
+]}
 
-Elya Livshitz conducted systematic measurements comparing identical data structures in JSON versus YAML:
+json_pretty = json.dumps(payload, indent=2)
+json_min = json.dumps(payload, separators=(",", ":"))
+yaml_str = yaml.dump(payload, sort_keys=False, default_flow_style=False)
 
-**Simple Example Results:**
+enc = tiktoken.get_encoding("o200k_base")  # GPT-4o's encoding
+for label, text in [("pretty json", json_pretty), ("minified json", json_min), ("yaml", yaml_str)]:
+    print(label, len(enc.encode(text)))
+```
+
+The output:
 
 <Kpi cols={3}>
-<Stat value="100" label="JSON tokens" />
-<Stat value="50" label="YAML tokens" tone="ok" />
-<Stat value="50%" label="saved" tone="accent" />
+<Stat value="565" label="pretty JSON tokens" tone="danger" />
+<Stat value="400" label="YAML tokens" tone="ok" />
+<Stat value="317" label="minified JSON tokens" tone="accent" />
 </Kpi>
 
-**Scaled Production Scenario:**
+YAML beats pretty JSON by 29%, which is in the ballpark of the numbers people quote, and lines up with what I expected. But minified JSON came in at 317 tokens, a full 21% *below* YAML. That's the part nobody's blog post mentions, because nobody's comparing against it. If your actual deployed format is minified JSON, not the pretty-printed kind in your prompt examples, "switch to YAML" is not a free win. It might be a step backward.
 
-- 1 million API calls per month
-- 190 token reduction per request
-- GPT-4 pricing ($0.03/1k input, $0.06/1k output)
+<Warning title="These numbers are one payload, on one tokenizer">
+I ran this on a 10-item list with a fairly typical record shape, using `o200k_base`. Deeper nesting, longer strings, and repeated keys all shift the ratio. Run your own payload through `tiktoken` before you trust any percentage in this post, mine included.
+</Warning>
 
-<Kpi cols={2}>
-<Stat value="$11,400" label="monthly savings" tone="ok" />
-<Stat value="$136,800" label="annual savings" tone="ok" />
-</Kpi>
+## so why doesn't everyone just minify?
 
-### case study 2: openai community benchmark
+Because generating minified JSON reliably is a different problem than counting its tokens. A pretty-printed JSON object with a stray comment or a trailing comma still mostly makes sense to a human debugging it. A minified blob with one wrong character anywhere just fails to parse, full stop, and now you're retrying the whole call. In my own experience, the deeper the nesting and the longer the array, the more often a JSON completion loses a closing brace or forgets to escape a quote inside a string value, and YAML is just more forgiving here: a bad indent under a key that has no children often still parses into something sane, because there are fewer ways to be syntactically wrong in the first place.
 
-A comprehensive tiktoken analysis converted a large production file across formats:
+There's a real caveat to that, though: if you're using OpenAI's Structured Outputs or Anthropic's tool-use / forced JSON mode, the provider is running constrained decoding under the hood, the model literally cannot emit invalid JSON against your schema. That closes most of the reliability gap for those specific APIs. You still pay the token tax for the braces and quotes (constrained decoding doesn't make the tokens free), you just don't pay the retry tax. If you're on a plain chat completion asking nicely for JSON in the prompt with no schema enforcement, the reliability gap is real and it's the reason I kept YAML even after minified JSON won on raw tokens.
 
-<Bars title="Tokens for the same production file">
-<Bar label="JSON" value={13869} max={13869} display="13,869" tone="danger" />
-<Bar label="YAML" value={12333} max={13869} display="12,333 (−11.1%)" tone="warn" />
-<Bar label="Markdown" value={11612} max={13869} display="11,612 (−16.3%)" tone="ok" />
-</Bars>
+## the cost math
 
-This benchmark demonstrated that format selection compounds over repeated operations—each time the same payload transmits, the savings accumulate.
+Cost scales linearly with tokens: `cost = (tokens / 1e6) × price_per_million`. Scaling my measured 10-item payload (565 pretty / 400 YAML / 317 minified tokens) to 1M calls a month, treating input and output as roughly symmetric for a round number, current-ish per-token pricing gives:
 
-### case study 3: reddit production reports
+| Model | Pretty JSON /mo | YAML /mo | Minified JSON /mo | YAML savings vs pretty (yr) |
+| --- | --- | --- | --- | --- |
+| GPT-5 | $6,356 | $4,500 | $3,566 | **$22,275** |
+| Claude Sonnet 4.5 | $10,170 | $7,200 | $5,706 | **$35,640** |
+| Claude Opus 4.1 | $50,850 | $36,000 | $28,530 | **$178,200** |
+| Gemini 2.5 Pro | $6,356 | $4,500 | $3,566 | **$22,275** |
 
-Practitioners on r/ChatGPTCoding documented "~2x token saving" when switching from JSON to YAML for structured prompt data. The report noted that while minified JSON theoretically competes, reliably eliciting perfectly minified output from models proved fragile in practice, necessitating retries that erased theoretical gains.
+<Danger title="Pricing drifts, check before you quote this">
+These are per-token prices at the time I wrote this, and providers change them without much warning. Treat the dollar figures as "here's the shape of the effect," not a number to put in a slide deck. Re-run the math with whatever's current before it goes near a budget conversation.
+</Danger>
 
-### case study 4: alphacodium flow engineering
+The honest takeaway from that table isn't "YAML saves you six figures." It's that the delta between YAML and minified JSON is smaller than the delta between YAML and what most people are actually shipping, which is pretty-printed JSON because that's what the docs example looked like.
 
-The AlphaCodium research project, focused on code generation quality, concluded that "YAML output is far better for code generation" because avoiding quotes, braces, and comma rules makes model generation easier and less error-prone compared to strict JSON. Their analysis found that YAML's lenient structure reduced validation failures and total tokens consumed across retries.
+## when JSON still wins
 
----
+I didn't rip JSON out everywhere, and you shouldn't either:
 
-## why YAML reduces tokens: the technical mechanisms
+- **Downstream schema validation.** JSON Schema and its tooling are more mature than the YAML equivalents. My pattern: generate YAML from the model, parse it, validate with Pydantic, then serialize to JSON if something downstream needs it.
+- **Raw parsing speed.** `JSON.parse()` beats a YAML parser on typical payloads. If you're doing tens of thousands of parses a second in a hot path, that gap is worth knowing about, even if it never mattered for my few-hundred-thousand-a-month pipeline.
+- **The JS ecosystem.** `JSON.parse()` and `JSON.stringify()` are built in. YAML always means an extra dependency, however small.
 
-### punctuation elimination
+## the decision guide
 
-BPE tokenizers must allocate separate tokens for JSON's structural characters:
+<Checklist title="picking a format for LLM structured output">
+- [ ] Are you actually generating pretty-printed JSON today? That's the case YAML clearly beats.
+- [ ] Are you minifying JSON server-side already? Then the token argument for YAML gets weak, check your own numbers.
+- [ ] Are you on a schema-enforced API (Structured Outputs, tool use)? Reliability gap mostly closes, token gap doesn't.
+- [ ] Downstream needs strict JSON Schema validation? Generate YAML, parse, validate, convert.
+- [ ] High-throughput hot path parsing tokens per second? JSON's native parser still wins there.
+- [ ] Ran your own payload through tiktoken yet? Do that before trusting any percentage, including mine.
+</Checklist>
 
-- Opening brace `{` → 1 token
-- Closing brace `}` → 1 token
-- Opening quote `"` → 1 token
-- Key text → variable tokens
-- Closing quote `"` → 1 token
-- Colon `:` → 1 token
-- Comma `,` → 1 token
+**Bottom line:** switching from pretty-printed JSON to YAML for LLM output is a real, measurable token saving, somewhere in the 20-50% range depending on payload shape, and it comes with a genuine reliability upside for unconstrained generation. What it isn't is a universal law: minified JSON can beat YAML on raw tokens alone, and schema-enforced APIs shrink the reliability gap that used to be YAML's other selling point. Measure your own payload before you repeat anyone's percentage, mine included.
 
-In a nested JSON object with 10 keys, this punctuation overhead totals 60+ tokens before any data values.
-
-YAML eliminates braces, brackets, most quotes, and commas entirely, relying on indentation (whitespace tokens that would exist anyway) to denote structure.
-
-### pre-tokenization boundaries
-
-Modern tokenizers split on whitespace and punctuation during pre-tokenization. JSON's heavy punctuation creates more split points, fragmenting text into smaller pretokens that cannot merge efficiently.
-
-YAML's cleaner text allows larger, more efficient token merges during BPE training. For example:
-
-- JSON: `"key":` → 4 pretokens → 4+ tokens
-- YAML: `key:` → 1 pretoken → 1-2 tokens
-
-### multiline string handling
-
-JSON requires escape sequences for multiline text:
-
-```json
-"description": "Line 1.\\nLine 2.\\nLine 3."
-```
-
-Each `\\n` becomes 2 tokens (backslash + n), and quotes add 2 more tokens.
-
-YAML supports native multiline strings:
-
-```yaml
-description: |
-  Line 1.
-  Line 2.
-  Line 3.
-```
-
-The pipe `|` character plus natural newlines use fewer tokens than escaped sequences.
-
----
-
-## cost impact analysis
-
-### pricing models
-
-Representative LLM API pricing (as of October 2025):
-
-| Provider  | Model             | Input (per 1M tokens) | Output (per 1M tokens) | Cached Input              |
-| --------- | ----------------- | --------------------- | ---------------------- | ------------------------- |
-| OpenAI    | GPT-5             | $1.25                 | $10.00                 | $0.125                    |
-| OpenAI    | GPT-5 Mini        | $0.25                 | $2.00                  | $0.025                    |
-| OpenAI    | GPT-4.1           | $2.00                 | $8.00                  | $0.50                     |
-| Anthropic | Claude Sonnet 4.5 | $3.00                 | $15.00                 | Write $3.75 / Read $0.30  |
-| Anthropic | Claude Opus 4.1   | $15.00                | $75.00                 | Write $18.75 / Read $1.50 |
-| Google    | Gemini 2.5 Pro    | $1.25                 | $10.00                 | $0.125                    |
-| Google    | Gemini 2.5 Flash  | $0.30                 | $2.50                  | $0.03                     |
-| Google    | Gemini 2.0 Flash  | $0.10                 | $0.40                  | $0.025                    |
-
-### example calculation
-
-Consider a typical API workflow:
-
-**Scenario**: E-commerce platform processing 1M structured data exchanges per month
-
-**JSON (Pretty-printed):**
-
-- Tokens per call: 106 (input) + 106 (output)
-- Monthly token volume: 212M tokens
-
-**YAML:**
-
-- Tokens per call: 46 (input) + 46 (output)
-- Monthly token volume: 92M tokens
-
-**Cost Comparison Across Providers:**
-
-| Provider  | Model             | JSON Cost/Month | YAML Cost/Month | Monthly Savings | Annual Savings |
-| --------- | ----------------- | --------------- | --------------- | --------------- | -------------- |
-| OpenAI    | GPT-5             | $1,192.50       | $517.50         | $675            | **$8,100**     |
-| OpenAI    | GPT-5 Mini        | $238.50         | $103.50         | $135            | **$1,620**     |
-| OpenAI    | GPT-4.1           | $1,060.00       | $460.00         | $600            | **$7,200**     |
-| Anthropic | Claude Sonnet 4.5 | $1,908.00       | $828.00         | $1,080          | **$12,960**    |
-| Anthropic | Claude Opus 4.1   | $9,540.00       | $4,140.00       | $5,400          | **$64,800**    |
-| Google    | Gemini 2.5 Pro    | $1,192.50       | $517.50         | $675            | **$8,100**     |
-| Google    | Gemini 2.5 Flash  | $306.00         | $132.80         | $173            | **$2,076**     |
-| Google    | Gemini 2.0 Flash  | $53.00          | $23.00          | $30             | **$360**       |
-
-<Tip title="Token reduction: 56.6% across all models">
-The savings are especially dramatic for higher-tier models like Claude Opus 4.1, where the same workload costs $5,400 less per month with YAML.
-</Tip>
-
-### scaling effects
-
-Organizations processing 10M+ API calls monthly see proportionally larger savings:
-
-**At 10M calls/month:**
-
-| Provider  | Model             | Annual Savings |
-| --------- | ----------------- | -------------- |
-| OpenAI    | GPT-5             | $81,000        |
-| Anthropic | Claude Sonnet 4.5 | $129,600       |
-| Anthropic | Claude Opus 4.1   | $648,000       |
-| Google    | Gemini 2.5 Pro    | $81,000        |
-
-**At 100M calls/month:**
-
-| Provider  | Model             | Annual Savings |
-| --------- | ----------------- | -------------- |
-| OpenAI    | GPT-5             | $810,000       |
-| Anthropic | Claude Sonnet 4.5 | $1,296,000     |
-| Anthropic | Claude Opus 4.1   | $6,480,000     |
-
-<Panel title="At enterprise scale" tone="ok">
-For enterprise applications using premium models like Claude Opus 4.1 at scale, YAML adoption can save millions annually.
-</Panel>
-
----
-
-## beyond token count: reliability and generation quality
-
-### error rates and retries
-
-JSON's strict syntax makes it error-prone for LLM generation.
-
-**Common JSON generation errors:**
-
-- Missing trailing comma
-- Unclosed quote or bracket
-- Invalid escape sequences
-- Extra comma after last element
-
-A single syntax error invalidates the entire structure, requiring retry. At scale, retry rates of 2-5% add hidden costs.
-
-**YAML's fault tolerance:**
-
-- Indentation errors often still parse correctly
-- No quote matching requirements
-- More lenient with trailing characters
-- Parser can infer structure from context
-
-Production teams report 30-50% fewer parsing failures when switching from JSON to YAML output.
-
-### model cognitive load
-
-Research suggests structured output formats impose varying cognitive loads on models:
-
-- Generating correct JSON requires the model to track nested bracket matching, quote pairing, and comma placement simultaneously
-- YAML generation requires only consistent indentation
-
-The StructEval benchmark found that models produce more accurate structured outputs in YAML versus JSON for equivalent schemas.
-
----
-
-## when JSON remains appropriate
-
-Despite YAML's advantages, JSON retains important use cases:
-
-### strict schema validation
-
-JSON Schema and JSON validators provide rigorous contract enforcement. When downstream systems require guaranteed structural compliance, JSON's rigidity becomes an asset.
-
-**Best practice**: Generate YAML from the LLM, then convert to JSON with standard libraries (PyYAML, js-yaml) before validation.
-
-### parsing performance
-
-JSON parsers are ubiquitous, highly optimized, and faster than YAML parsers:
-
-- JSON parsing: ~1ms for typical payloads
-- YAML parsing: ~3-5ms for equivalent payloads
-
-For high-throughput services (>10K requests/sec), this latency difference matters.
-
-### javascript ecosystem
-
-JavaScript's native JSON support (`JSON.parse()`, `JSON.stringify()`) makes JSON seamless for frontend applications. YAML requires additional libraries.
-
----
-
-## implementation recommendations
-
-### optimal workflow pattern
-
-The highest-performing production pattern combines both formats' strengths:
-
-1. **Prompt construction**: Use YAML for examples and structured instructions to minimize input tokens
-2. **LLM generation**: Request YAML output for lower token count and better generation reliability
-3. **Server-side conversion**: Parse YAML to objects, then serialize to JSON if needed for downstream systems
-4. **Validation**: Apply JSON Schema or Pydantic models after conversion
-
-```python
-import yaml
-import json
-from pydantic import BaseModel
-
-# LLM returns YAML string
-llm_output_yaml = """
-user:
-  name: John Doe
-  active: true
-"""
-
-# Parse and validate
-data = yaml.safe_load(llm_output_yaml)
-validated_data = UserModel(**data)  # Pydantic validation
-
-# Convert to JSON for API response if needed
-json_output = json.dumps(validated_data.dict())
-```
-
-### prompt engineering for YAML
-
-Explicitly instruct models to output YAML:
-
-```
-Return the structured data in YAML format with proper indentation.
-Do not use JSON. Example:
-
-user:
-  name: Example Name
-  roles:
-    - role1
-    - role2
-```
-
-Models trained on diverse data (GPT-4, Claude 3.5) handle YAML generation reliably.
-
-### token optimization strategies
-
-Beyond format selection:
-
-1. **Shorten keys**: `usr` instead of `user_information` saves 2-3 tokens per occurrence
-2. **Flatten structures**: Reduce nesting depth to eliminate indentation tokens
-3. **Remove comments**: Every comment line costs tokens
-4. **Use abbreviations**: For high-frequency keys in repeated structures
-5. **Batch requests**: Combine multiple operations to amortize prompt overhead
-
-### testing and measurement
-
-Always measure format impact in your specific context:
-
-```python
-import tiktoken
-
-encoding = tiktoken.get_encoding("o200k_base")  # GPT-4o
-
-json_tokens = len(encoding.encode(json_string))
-yaml_tokens = len(encoding.encode(yaml_string))
-
-savings_pct = ((json_tokens - yaml_tokens) / json_tokens) * 100
-print(f"Token savings: {savings_pct:.1f}%")
-```
-
-Different data shapes yield different savings rates—test with representative payloads.
-
----
-
-## minified JSON: the theoretical alternative
-
-### token count comparison
-
-Perfectly minified JSON (no whitespace, minimal spacing) can approach YAML's token efficiency:
-
-```json
-{ "user": { "name": "John Doe", "roles": ["admin", "developer"] } }
-```
-
-Benchmarks show minified JSON at approximately 96 tokens versus YAML's 46 tokens—still 52% more tokens.
-
-### the reliability problem
-
-While minified JSON looks competitive on paper, production challenges emerge:
-
-**Generation reliability:**
-
-- Models struggle to emit perfectly minified JSON consistently
-- Missing single space or newline breaks parsing
-- Failure rates 3-5× higher than YAML
-
-**Human readability:**
-
-- Debugging minified JSON during development is painful
-- Log inspection requires reformatting
-- Code reviews become difficult
-
-**Best practice**: If JSON is required, generate readable JSON and minify programmatically server-side, rather than asking the model to output minified text.
-
----
-
-## future considerations
-
-### emerging formats
-
-Markdown with embedded structure showed 16% better token efficiency than YAML in one benchmark. For mixed natural language and structured data, Markdown may become optimal.
-
-### model-specific tokenizers
-
-Different models use different tokenizers:
-
-- GPT-4o: o200k_base (199,997 tokens)
-- GPT-4/3.5: cl100k_base (100,256 tokens)
-- Claude: Proprietary tokenizer
-
-Format efficiency may vary slightly—test with your target model.
-
-### structured output apis
-
-OpenAI's Structured Outputs and Anthropic's tool use features enforce JSON schemas at the API level. These features trade generation flexibility for guaranteed validity.
-
-For these APIs, the format choice becomes less critical since the model operates under schema constraints. However, YAML prompts still reduce input token costs.
-
----
-
-## conclusion
-
-The choice between YAML and JSON for LLM applications significantly impacts operational costs, generation reliability, and development velocity. Empirical evidence consistently shows 15-56% token reductions when using YAML, translating to thousands or millions of dollars in annual savings for production applications.
-
-The technical mechanisms are clear: BPE tokenization penalizes JSON's punctuation-heavy syntax, while YAML's indentation-based structure minimizes token overhead. Beyond raw efficiency, YAML's lenient parsing reduces generation errors and retries.
-
-For most LLM applications, the optimal pattern generates YAML for token efficiency and reliability, then converts to JSON server-side when downstream systems require it. This approach maximizes cost savings while maintaining compatibility with existing infrastructure.
-
-As LLM adoption scales and API costs compound, format selection becomes a critical optimization lever—one that developers can implement immediately with minimal code changes for substantial financial impact.
-
----
-
-## key takeaways
-
-1. **YAML typically saves 15-56% tokens** compared to JSON for equivalent structures
-2. **Cost scales linearly with tokens**, making format choice directly affect budget
-3. **Production savings range from thousands to millions annually** depending on scale
-4. **YAML generation has 30-50% fewer errors** than JSON due to lenient parsing
-5. **Optimal pattern: generate YAML, convert to JSON** server-side for downstream compatibility
-6. **Always measure in your context** with representative data using tiktoken or equivalent
-
----
-
-## about this analysis
-
-This analysis synthesizes findings from multiple production case studies, academic research on tokenization, and real-world benchmarks from organizations operating LLM applications at scale. All performance claims are based on documented measurements using standard tokenization tools and public API pricing.
+<Hand>
+if you take one thing from this: open a terminal, `pip install tiktoken`, and count your own payload before you change anything.
+</Hand>

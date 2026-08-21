@@ -1,5 +1,5 @@
 ---
-title: "Creating N Nested Loops Programmatically in Python"
+title: "How Many Loops Do You Actually Need? Generating N Nested Loops in Python"
 date: 2025-09-02
 author: "Tashif Ahmad Khan"
 socials:
@@ -9,38 +9,47 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Python", "DSA"]
-excerpt: "How do you create an arbitrary number of nested loops when you don't know the depth at compile time? Let's explore elegant solutions to this classic programming challenge."
+excerpt: "I was building a tiny combination-lock simulator where the number of wheels was a setting, not a constant, and hit the wall everyone hits eventually: you can't write for i, for j, for k when you don't know how many for's you need. Recursion, itertools.product, and a manual odometer, with real tradeoffs and the one thing you should never do instead."
 coverImage: "/images/blog/Python-Nested-Loops/cover.svg"
 ---
 
 <Lede>
-Ever faced a problem where you need to generate all possible combinations of something, but the number of "levels" isn't known until runtime? Maybe you're building a product configurator, generating test cases, or exploring a search space. You need nested loops, but how many? That's determined by a variable `n`.
+A while back I was messing around with a toy combination-lock simulator, the kind with a configurable number of wheels, each wheel spinning through some range of values. The lock's `n` was a setting a user could type in, not something I could hardcode. So I sat down to write the brute-force "try every combination" function and immediately ran into the obvious wall: `for i in range(x): for j in range(x): for k in range(x):` only works if you already know it's three wheels. What do you write when `n` is 3 today and 7 tomorrow?
 </Lede>
 
-You can't write `for i in range(x): for j in range(x): for k in range(x):` because you don't know how many loops you'll need. This is where programmatic loop generation comes in - a classic computer science challenge with some elegant solutions.
-
-Let's explore the best approaches, from the most intuitive to the most Pythonic.
+You can't nest a fixed number of `for` loops for a number that isn't fixed. That sentence sounds almost too obvious to write down, but it trips up a lot of people the first time they hit it, because the instinct is to reach for more loops, and there's no amount of "more loops" that solves "unknown number of loops." This is a genuinely classic problem, and Python gives you three real ways to solve it, each with a different personality.
 
 <Toc />
 
-## the challenge
+## the shape of the problem
 
-Imagine you want to generate all combinations of `n` numbers, where each number can be from 0 to some maximum value. For example:
+Say you want every combination of `n` digits, each digit from `0` to some max value. For `n=2, max=2` that's `[0,0], [0,1], [1,0], [1,1]`. For `n=3, max=2` it's eight combinations. The count is `max^n`, and it gets big fast, my lock simulator with 6 wheels and 10 positions each was already 1,000,000 combinations before I'd typed a single line of brute-force code.
 
-- If `n=2` and `max=2`: `[0,0], [0,1], [1,0], [1,1]`
-- If `n=3` and `max=2`: `[0,0,0], [0,0,1], [0,1,0]`, ... `[1,1,1]`
+<Figure caption="Three ways to fake nested loops of unknown depth, and which one to reach for first.">
 
-The total combinations will be `max^n`, which can grow quickly!
+```mermaid
+flowchart TD
+    START["need n nested loops,<br/>n only known at runtime"]
+    Q1{"plain Python,<br/>want it fast and clean?"}
+    Q2{"need custom logic<br/>between levels?"}
+    Q3{"no iterator library available,<br/>need raw control?"}
 
-## solution 1: recursion (the elegant approach)
+    START --> Q1
+    Q1 -->|yes| ITER["itertools.product<br/>range(max), repeat=n"]
+    Q1 -->|no| Q2
+    Q2 -->|yes| REC["recursion<br/>one call per level"]
+    Q2 -->|no| Q3
+    Q3 -->|yes| ODO["manual odometer<br/>index array + carry"]
+    Q3 -->|no| ITER
+```
 
-Recursion is perhaps the most intuitive way to think about nested loops. Each recursive call represents one level of nesting.
+</Figure>
 
-**The concept:**
+Three tools, three shapes of the same idea. Let's go through them in the order you'd actually hit them.
 
-- Each level of recursion handles one loop
-- The base case is when we've reached depth `n` - we have a complete combination
-- The recursive case iterates through possible values and calls itself for the next level
+## recursion: the one that mirrors the problem in your head
+
+Recursion is the most natural way to think about this, because each recursive call *is* one level of nesting. You go one level deeper, make a choice, come back up, try the next choice.
 
 ```python
 def generate_nested_loops_recursive(
@@ -83,8 +92,6 @@ print("Generating 3 nested loops, each from 0 to 1:")
 generate_nested_loops_recursive(3, 2)
 ```
 
-**Output:**
-
 ```
 Generating 3 nested loops, each from 0 to 1:
 Combination: [0, 0, 0]
@@ -97,29 +104,11 @@ Combination: [1, 1, 0]
 Combination: [1, 1, 1]
 ```
 
-<Cols>
-<Col>
+The code reads almost like the problem statement, which is why I usually reach for this when I'm still figuring out the logic. But recursion in Python isn't free: the default recursion limit sits around 1000, so a lock with a thousand wheels would blow the stack long before it blew your patience. For my simulator, with `n` capped at a sane number of wheels, this was never actually a risk, it just felt slightly wasteful for something this mechanical.
 
-**Pros**
+## itertools.product: the one I actually reach for
 
-- **Intuitive and elegant** - the code structure mirrors the concept
-- **Flexible** - easy to add conditions or modify behavior
-- **Works for any depth** (within recursion limits)
-
-</Col>
-<Col>
-
-**Cons**
-
-- **Stack overflow risk** - Python's default recursion limit is around 1000-3000
-- **Slight overhead** from function calls (usually negligible)
-
-</Col>
-</Cols>
-
-## solution 2: itertools.product (the pythonic way)
-
-Python's `itertools` module is built for exactly this kind of problem. The `product()` function computes the Cartesian product of input iterables - which is exactly what nested loops do!
+Python's `itertools` module has a function built for exactly this: `product()` computes the Cartesian product of iterables, which is precisely what nested loops compute.
 
 ```python
 import itertools
@@ -143,8 +132,6 @@ print("\nGenerating 3 nested loops using itertools.product:")
 generate_nested_loops_itertools(3, 2)
 ```
 
-**Output:**
-
 ```
 Generating 3 nested loops using itertools.product:
 Combination: [0, 0, 0]
@@ -157,34 +144,13 @@ Combination: [1, 1, 0]
 Combination: [1, 1, 1]
 ```
 
-<Cols>
-<Col>
-
-**Pros**
-
-- **Concise and Pythonic** - just a few lines
-- **Highly optimized** - implemented in C for speed
-- **No recursion limits** - uses iteration internally
-- **Memory efficient** - returns an iterator, not a list
-
-</Col>
-<Col>
-
-**Cons**
-
-- **Python-specific** - other languages have equivalents but different APIs
-- **Less direct control** - harder to add complex logic between levels
-
-</Col>
-</Cols>
-
-<Tip title="Recommended">
-**This is my recommended approach for most use cases.** It's clean, fast, and idiomatic Python.
+<Tip title="This is the one I'd reach for">
+Once the logic was working with the recursive version, I rewrote the actual lock simulator on top of `itertools.product`. It's three lines shorter, it's implemented in C so it doesn't pay Python's function-call overhead per level, and it returns an iterator instead of building a list, so a lock with a lot of wheels doesn't try to hold every combination in memory at once. For plain Python code with no exotic logic between levels, this wins.
 </Tip>
 
-## solution 3: iterative with manual state (the low-level approach)
+## the manual odometer: when you need full control
 
-You can also simulate nested loops iteratively by maintaining a list of indices, similar to how an odometer works.
+There's a third way, and it's the one that shows you what's actually happening under the hood: keep a list of indices and increment it like an odometer, carrying to the next position when one wheel rolls over.
 
 ```python
 def generate_nested_loops_iterative(n: int, max_val: int):
@@ -228,8 +194,6 @@ print("\nGenerating 3 nested loops using iterative approach:")
 generate_nested_loops_iterative(3, 2)
 ```
 
-**Output:**
-
 ```
 Generating 3 nested loops using iterative approach:
 Combination: [0, 0, 0]
@@ -242,30 +206,11 @@ Combination: [1, 1, 0]
 Combination: [1, 1, 1]
 ```
 
-<Cols>
-<Col>
+This is genuinely the actual mechanism inside a real combination lock, which is a little poetic given what I was building. No recursion limit, no function-call overhead, complete control over the state. It's also the version I'd least want to debug at 1am: get the carry logic even slightly wrong and you either skip combinations or loop forever. If you're porting this idea to a language without a good iterator library, this is your template. In Python, I'd only pick it up if the other two were somehow off the table.
 
-**Pros**
+## brute-forcing PIN codes, the reason I started this
 
-- **No recursion limits** - purely iterative
-- **Full control** over state management
-- **Language agnostic** - similar logic works in any language
-
-</Col>
-<Col>
-
-**Cons**
-
-- **More complex** - harder to write correctly
-- **Less readable** - the logic isn't immediately obvious
-- **More error-prone** - easy to make off-by-one mistakes
-
-</Col>
-</Cols>
-
-## real-world example: password cracking simulation
-
-Let's say you want to generate all possible n-character passwords using a limited character set:
+Back to the lock. Say each wheel is a digit, 0 through 9, and you want every possible PIN of a given length. Same `itertools.product`, different alphabet:
 
 ```python
 import itertools
@@ -287,8 +232,6 @@ print("3-digit numeric passwords:")
 generate_passwords(3, '0123456789')
 ```
 
-**Output:**
-
 ```
 3-digit numeric passwords:
 000
@@ -305,9 +248,11 @@ generate_passwords(3, '0123456789')
 Total passwords: 1000
 ```
 
-## performance comparison
+A 3-digit lock is 1,000 combinations, trivial. My actual 6-wheel simulator was a million. A real 6-digit phone PIN is also a million, which is a good reminder of why "just try every PIN" stops being a joke around 6-8 digits and starts being an actual attack a device needs to rate-limit against.
 
-Let's benchmark the different approaches:
+## benchmarking on my machine
+
+I was curious how much the C implementation actually buys you, so I ran a quick comparison:
 
 ```python
 import time
@@ -344,41 +289,12 @@ benchmark(5, 6)
 ```
 
 <Note>
-Typical results show `itertools.product` is 2-3x faster than recursion, thanks to its C implementation.
+On my machine, `itertools.product` was consistently faster, usually somewhere in the 2-3x range over plain recursion. Your numbers will move around with Python version and hardware, don't treat any specific multiplier as gospel, but the direction is reliable: the C implementation wins, and the gap narrows a bit as `n` grows because both approaches are ultimately doing `max^n` work either way.
 </Note>
 
-## when to use each approach
+## what if each level needs a different range
 
-<Panel title="Use itertools.product when" tone="ok">
-
-- You're working in Python
-- You want the fastest, most memory-efficient solution
-- You need clean, maintainable code
-- You're generating simple combinations
-
-</Panel>
-
-<Panel title="Use recursion when" tone="accent">
-
-- You need complex logic between levels
-- You want the most readable, self-explanatory code
-- The depth is reasonably small (< 1000)
-- You're building something educational
-
-</Panel>
-
-<Panel title="Use iterative when" tone="muted">
-
-- You're in a language without good iterator libraries
-- You need absolute control over the iteration
-- You're hitting recursion limits
-- Memory is extremely constrained
-
-</Panel>
-
-## advanced: varying ranges per level
-
-What if each "loop" needs a different range? `itertools.product` handles this beautifully:
+Real problems rarely want the same range at every level. Say you're generating product variants instead of lock combinations: `itertools.product` handles mismatched iterables just as easily.
 
 ```python
 import itertools
@@ -393,8 +309,6 @@ for variant in itertools.product(colors, sizes, materials):
     print(f"{variant[0]} {variant[1]} {variant[2]}")
 ```
 
-**Output:**
-
 ```
 red S cotton
 red S polyester
@@ -404,17 +318,12 @@ red M polyester
 blue L polyester
 ```
 
-This is incredibly useful for e-commerce product variants, test case generation, or configuration exploration!
+Same function, no code changes, just different inputs. That's the whole trick with `itertools.product`: it doesn't care whether your "loops" are numeric ranges or lists of strings, which is exactly what makes it useful for product configurators, test-case generation, or anything that smells like "all combinations of these variables."
 
-## warning: DON'T use dynamic code generation!
+## whatever you do, don't build the loops as a string
 
 <Danger title="Don't do it">
-You might be tempted to use `exec()` to build loop code as a string. **Don't.** It's:
-
-- Dangerous (security risk)
-- Slow (interpreted at runtime)
-- Unmaintainable (debugging nightmare)
-- Completely unnecessary (we have better solutions!)
+At some point almost everyone thinks about using `exec()` to write the loop code as a string and run it. Don't. It's a security hole the moment any part of that string comes from outside your program, it's slower because it gets parsed at runtime instead of once, it's miserable to debug because your stack traces point at a string instead of a file, and none of that buys you anything the three approaches above don't already give you.
 </Danger>
 
 ```python
@@ -425,14 +334,19 @@ code += "    print([i, j])"
 exec(code)  # Evil!
 ```
 
-## wrapping up
+## the ladder
 
-Generating n nested loops programmatically is a classic problem with elegant solutions:
+<Panel title="pick based on what you're actually building" tone="accent">
 
-1. **For Python projects:** Use `itertools.product` - it's fast, clean, and Pythonic
-2. **For educational purposes:** Use recursion - it's intuitive and teaches important concepts
-3. **For low-level control:** Use iterative index manipulation - it's powerful but complex
+- Plain Python, no weird logic between levels: `itertools.product`. It's what I ship.
+- Still prototyping, or you need to run different logic at each depth: recursion, it reads like the problem.
+- No iterator library, or you're translating this into a language that doesn't have one: the manual odometer.
+- Depth in the thousands: rules out recursion outright, so it's `itertools.product` or the odometer.
 
-The pattern you choose depends on your language, constraints, and use case. But in Python, `itertools.product` wins for most real-world scenarios.
+</Panel>
 
-Now go forth and generate those combinations! Just remember: with great power comes great computational complexity. A 10-level nested loop with 10 iterations each is 10 billion combinations. Choose your parameters wisely! 😄
+**Bottom line:** when the number of loops is a runtime value instead of a compile-time constant, `itertools.product(iterable, repeat=n)` is the answer for almost every real Python program, recursion is the answer when you're still thinking through the logic or need custom behavior per level, and the manual odometer is the answer when you need to know exactly what's happening at every step or don't have an iterator library to lean on. Just respect `max^n`. My six-wheel lock was a million combinations before I'd written a single line of the actual cracking logic, and that number only grows from there.
+
+<Hand>
+go build your combination lock, or your test matrix, or whatever it is. just don't `exec()` it.
+</Hand>

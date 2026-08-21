@@ -9,28 +9,36 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Meta"]
-excerpt: "A reference for every document component the Markdown renderer understands — steps, meters, panels, tabs, diagrams and the rest — written in both the tag and the directive spelling."
+excerpt: "Every component the Markdown renderer supports, shown in both the tag spelling and the directive spelling: steps, meters, panels, tabs, diagrams, callouts. This page is also the test fixture, so a renderer regression shows up here first."
 coverImage: "/images/blog/component-gallery/cover.svg"
 ---
 
 <Lede>
-This post is the reference and the test fixture. Every component the renderer
-knows about appears below at least once, so if something breaks on one of the
-three sites that render these posts, it breaks here first and visibly.
+A `<Panel>` rendered clean on the blog and came out as a bare, unstyled `<div>`
+on the portfolio. Same Markdown file, same post, two different renders,
+because one site was a version behind on the shared renderer package. That's
+the actual bug that made this page necessary: one post that exercises every
+component in the registry, tag spelling and directive spelling both, so a
+drift like that shows up here, in public, before a reader ever sees it.
 </Lede>
 
 <Toc />
 
+That list above is the registry in one screen: layout, structure, data,
+marginalia, media, tabs, and two spellings for every one of them. Everything
+under a heading below has its own live demo.
+
 ## why components at all {#why}
 
-Plain Markdown gives you prose, lists, tables and code. That is enough for a
-tutorial and not enough for a plan, a comparison, or a postmortem — documents
-that want structure the reader can *see* rather than infer.
+Plain Markdown gets you prose, lists, tables, code. Fine for a tutorial. Not
+enough for a plan, a comparison, or a postmortem, the kind of document that
+wants structure the reader can *see* instead of infer from paragraph breaks.
 
-The renderer adds a closed set of components on top. They are not MDX: nothing
-is imported and nothing is evaluated. A tag either resolves against the
-registry or it stays ordinary HTML, which is what lets a post travel over the
-API as a plain string and still render the same in three places.
+So the renderer adds a closed set of components on top of that. Not MDX.
+Nothing gets imported, nothing gets evaluated, on purpose. A tag either
+resolves against the registry or it just sits there as ordinary HTML. That
+constraint is the whole point: it's what lets a post travel over the API as a
+plain string and still render the same way on three different sites.
 
 <Note title="Two spellings, one result">
 Everything here can be written as a tag (`<Steps>`) or as a directive
@@ -44,9 +52,10 @@ survive being read on GitHub, where an unknown tag would simply vanish.
 
 <Cols ratio="2:1">
 <Col>
-The wide column takes the argument, and the narrow one takes the aside. Below
-about 34rem of *container* width — not viewport, because posts render inside
-resizable windows — the columns stack and a rule appears between them.
+The wide column takes the argument, and the narrow one takes the aside. That
+break point is about 34rem of *container* width, not viewport, since posts
+render inside resizable windows. Below it the columns stack and a rule appears
+between them.
 
 Anything works in here: lists, code, even another component.
 </Col>
@@ -59,7 +68,7 @@ equal columns and fail the publish check.
 </Col>
 </Cols>
 
-Three equal columns — the feature-card layout:
+Three equal columns, the layout behind the feature cards:
 
 <Cols cols={3}>
 <Col>
@@ -93,15 +102,15 @@ the same post reads as a zine on one site and as a clean article on another.
 
 <Panel title="Heads up" tone="warn" icon="alert-triangle">
 Toned panels tint their border and background from the site's own palette
-rather than a hardcoded hue. Icons use the same stroke geometry as Lucide /
-react-icons lucide set — write `icon="zap"` the way you would import `Zap`.
+rather than a hardcoded hue. Icons use the same stroke geometry as Lucide's
+react-icons set, so write `icon="zap"` the way you would import `Zap`.
 </Panel>
 
-Standalone icons work anywhere:
+Icons work standalone too, not just inside a panel title:
 
 <Icon name="rocket" size={28} /> <Icon name="sparkles" /> <Icon name="cpu" />
 
-A strip of tape can also stand on its own, as pure decoration:
+Tape works solo too, with nothing under it, pure decoration:
 
 <Tape rotate={-6} />
 
@@ -169,7 +178,7 @@ Blog theme, API manifest, portfolio, editor palette.
 <Details summary="Why not just use MDX?">
 MDX compiles to JavaScript with arbitrary imports. The API serves Markdown
 text, the portfolio fetches it at build time, and the editor's reading pane
-renders a string — none of those can evaluate a module. A closed registry keeps
+renders a string. None of those can evaluate a module. A closed registry keeps
 the authoring ergonomics and drops the runtime.
 </Details>
 
@@ -222,8 +231,8 @@ Inline components sit inside a sentence: a <Mark>highlighted phrase</Mark>, a
 margin</Hand> where the handwriting face is enabled.
 
 <Hand>
-Standing alone, the same component becomes a block instead — a `span` cannot
-hold paragraphs, so the element follows the position.
+Standing alone, the same component becomes a block instead, since a `span`
+cannot hold paragraphs. The element follows the position.
 </Hand>
 
 ## media {#media}
@@ -239,9 +248,9 @@ hold paragraphs, so the element follows the position.
             (renders locally)                      (fetches at build)
 </Ascii>
 
-The body of an `Ascii` block is captured verbatim — the alignment, the pipes
-and the underscores all survive, which they would not if the content went
-through the Markdown parser.
+The body of an `Ascii` block is captured verbatim. The alignment, the pipes,
+the underscores, all of it survives untouched, because none of it passes
+through the Markdown parser the way a normal paragraph would.
 
 ### figures
 
@@ -260,9 +269,10 @@ flowchart LR
 
 ### embeds
 
-Only an allowlisted provider with a pattern-checked id ever becomes a frame,
-because this content crosses an API boundary and is rendered by two other
-sites.
+Only an allowlisted provider with a pattern-checked id ever turns into a
+frame. Anything else stays a plain link. This content crosses an API boundary
+and renders on two other sites I don't control frame by frame, so an
+arbitrary embed URL isn't a risk worth taking.
 
 <Embed type="youtube" id="dQw4w9WgXcQ" title="An allowlisted embed" />
 
@@ -286,13 +296,17 @@ pnpm add @tashif/markdown
 </Tab>
 </Tabs>
 
-Without JavaScript every panel stays visible under its own heading, which reads
-as a document rather than as a widget that failed to load.
+Kill the JavaScript and every panel just stays visible, stacked under its own
+heading. It reads like a document that happens to have subheadings, not like
+a widget that failed to load. That distinction is deliberate: a tab strip
+that goes blank without JS is a worse failure than no tabs at all.
 
 ## the directive spelling {#directives}
 
-Everything above also works with colons, which is what already-published posts
-use and what stays readable on GitHub:
+Everything demonstrated above also works written with colons instead of angle
+brackets. That's the syntax already-published posts use, and it's the one
+that stays readable if someone opens the raw file on GitHub instead of the
+rendered site:
 
 :::tip Still supported
 `:::tip` and `<Tip>` produce byte-identical HTML. The `two-col` name is kept as
@@ -350,3 +364,12 @@ The tag spelling and the directive spelling produce identical markup.
 > [!DANGER]
 > The GitHub alert spelling still rewrites into the same markup, so a post reads
 > correctly on GitHub as well as on both sites.
+
+**Bottom line:** this page is the documentation and the regression test in one
+file. Every component the renderer understands shows up here, in both
+spellings, across three sites that only ever receive this post as a plain
+Markdown string over an API. If one of them breaks, it breaks here first, in
+the open, not quietly on a reader's screen somewhere I'm not looking.
+
+That's the whole gallery. Next time a `<Panel>` misbehaves on one of the
+sites, this is the first page I open.
