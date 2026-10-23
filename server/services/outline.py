@@ -22,7 +22,7 @@ import re
 from typing import Any
 
 # Keep in step with RENDERER_VERSION in packages/markdown/outline.ts.
-RENDERER_VERSION = "md-3"
+RENDERER_VERSION = "md-4"
 
 WORDS_PER_MINUTE = 200
 
@@ -52,6 +52,9 @@ COMPONENT_SPELLINGS: dict[str, tuple[str, ...]] = {
     "Phase": ("phase",),
     "Checklist": ("checklist",),
     "Lede": ("lede",),
+    "Banner": ("banner", "risk-banner"),
+    "Quote": ("quote", "pull-quote"),
+    "Ticks": ("ticks", "list-check"),
     "Meters": ("meters",),
     "Meter": ("meter",),
     "Kpi": ("kpi",),
@@ -63,6 +66,10 @@ COMPONENT_SPELLINGS: dict[str, tuple[str, ...]] = {
     "Hand": ("hand",),
     "Tape": ("tape",),
     "Mark": ("mark",),
+    "Pill": ("pill",),
+    "Stamp": ("stamp",),
+    "Kbd": ("kbd",),
+    "Keys": ("keys",),
     "Figure": ("figure",),
     "Ascii": ("ascii",),
     "Embed": ("embed",),

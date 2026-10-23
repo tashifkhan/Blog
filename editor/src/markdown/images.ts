@@ -12,32 +12,62 @@
  * image at full size with `A diagram|400` as its alt text, rather than breaking.
  *
  * A pipe is legal in alt text, so the suffix only counts when what follows it is
- * digits — `![Rock|Paper](x.png)` keeps its alt text intact.
+ * a size — `![Rock|Paper](x.png)` keeps its alt text intact.
+ *
+ * dump.taf.sh's placement options stack on top: `|left` / `|right` float the
+ * figure so the next paragraphs wrap round it, `|center` centres it, and
+ * `|40%` sets its width as a share of the column.
  */
+
+export type ImagePlacement = 'left' | 'right' | 'center'
 
 export type ParsedImageAlt = {
   alt: string
   width?: number
   height?: number
+  /** dump.taf.sh placement: float left/right so text wraps, or centre. */
+  placement?: ImagePlacement
+  /** Width as a share of the column, from `|40%`. */
+  percent?: number
 }
 
-/** `|400` or `|400x260`, anchored to the end of the alt text. */
-const SIZE_SUFFIX = /\|\s*(\d{1,5})(?:\s*[x×]\s*(\d{1,5}))?\s*$/
+/** `400` or `400x260`: one `|option` with its pipe already removed. */
+const SIZE_SUFFIX = /^(\d{1,5})(?:\s*[x×]\s*(\d{1,5}))?$/
+const PERCENT_SUFFIX = /^(\d{1,3})%$/
+const PLACEMENTS = new Set(['left', 'right', 'center'])
 
+/**
+ * Peel `|option` suffixes off the end of the alt text, in any order:
+ * `![Chart|right|40%]`, `![Chart|400x260|center]`. Anything unrecognised stops
+ * the scan, so `![Rock|Paper](x.png)` keeps its alt text intact.
+ */
 export function parseImageAlt(raw: string): ParsedImageAlt {
-  const match = SIZE_SUFFIX.exec(raw)
-  if (!match) return { alt: raw }
+  const out: ParsedImageAlt = { alt: raw }
+  let rest = raw
 
-  const width = Number(match[1])
-  const height = match[2] ? Number(match[2]) : undefined
-  // `|0` is a typo rather than a request for a zero-width image.
-  if (!width) return { alt: raw }
+  while (true) {
+    const bar = rest.lastIndexOf('|')
+    if (bar === -1) break
+    const option = rest.slice(bar + 1).trim().toLowerCase()
 
-  return {
-    alt: raw.slice(0, match.index).trim(),
-    width,
-    ...(height ? { height } : {}),
+    const size = SIZE_SUFFIX.exec(option)
+    const percent = PERCENT_SUFFIX.exec(option)
+    // `|0` is a typo rather than a request for a zero-width image.
+    if (size && Number(size[1]) && out.width === undefined) {
+      out.width = Number(size[1])
+      if (size[2]) out.height = Number(size[2])
+    } else if (percent && Number(percent[1]) && out.percent === undefined) {
+      out.percent = Math.min(100, Number(percent[1]))
+    } else if (PLACEMENTS.has(option) && !out.placement) {
+      out.placement = option as ImagePlacement
+    } else {
+      break
+    }
+    rest = rest.slice(0, bar)
   }
+
+  out.alt = rest === raw ? raw : rest.trim()
+  return out
 }
 
 /** `width`/`height` attributes for an `<img>`, empty when unsized. */

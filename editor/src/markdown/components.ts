@@ -20,6 +20,7 @@
  */
 
 import { CALLOUT_ICONS, getIcon, ICON_NAMES, isIconName } from './icons'
+import { type Platform, resolveKey, splitKeys } from './keycaps'
 import { cx, type MarkdownTheme } from './theme'
 
 export { ICON_NAMES, isIconName, getIcon } from './icons'
@@ -154,8 +155,54 @@ const CALLOUT_LABELS: Record<string, string> = {
   danger: 'Danger',
 }
 
+/**
+ * Obsidian / dump.taf.sh callout aliases for the `> [!TYPE]` spelling. Each maps
+ * to one of the six colour families above plus the label it shows when the
+ * author gives no title. `quote` keeps its own muted look via `variant`.
+ */
+export const CALLOUT_ALIASES: Record<
+  string,
+  { family: CalloutName; label: string; variant?: string }
+> = {
+  info: { family: 'note', label: 'Info' },
+  todo: { family: 'note', label: 'To do' },
+  abstract: { family: 'note', label: 'Summary' },
+  summary: { family: 'note', label: 'Summary' },
+  tldr: { family: 'note', label: 'TL;DR' },
+  quote: { family: 'note', label: 'Quote', variant: 'quote' },
+  cite: { family: 'note', label: 'Quote', variant: 'quote' },
+  hint: { family: 'tip', label: 'Hint' },
+  success: { family: 'tip', label: 'Success' },
+  check: { family: 'tip', label: 'Check' },
+  done: { family: 'tip', label: 'Done' },
+  question: { family: 'important', label: 'Question' },
+  faq: { family: 'important', label: 'FAQ' },
+  help: { family: 'important', label: 'Help' },
+  example: { family: 'important', label: 'Example' },
+  attention: { family: 'warning', label: 'Attention' },
+  error: { family: 'danger', label: 'Error' },
+  failure: { family: 'danger', label: 'Failure' },
+  fail: { family: 'danger', label: 'Fail' },
+  missing: { family: 'danger', label: 'Missing' },
+  bug: { family: 'danger', label: 'Bug' },
+}
+
+/** Variants a callout may carry; anything else is dropped rather than echoed into a class. */
+const CALLOUT_VARIANTS = ['quote'] as const
+
 const TITLE_ATTR: Record<string, AttrSpec> = {
   title: { type: 'string', describe: 'Heading shown in the callout bar' },
+  fold: {
+    type: 'enum',
+    values: ['open', 'closed'],
+    describe: 'Make the callout collapsible, starting open or closed',
+  },
+  // Set by the `> [!TYPE]` parser for aliases, not by hand.
+  variant: {
+    type: 'enum',
+    values: CALLOUT_VARIANTS,
+    describe: 'Alias styling, e.g. quote',
+  },
 }
 
 /** Accent names components may tint themselves with, from the site's tokens. */
@@ -217,10 +264,26 @@ function calloutSpec(name: CalloutName): ComponentSpec {
     render: ({ attrs, theme }) => {
       const label = String(attrs.title || CALLOUT_LABELS[name])
       const icon = CALLOUT_ICONS[name] ?? CALLOUT_ICONS.note
+      const variant = attrs.variant ? ` md-callout--${attrs.variant}` : ''
+      const classes = `md-callout md-callout--${name}${variant}`
+      const heading = `${icon}<span>${escapeHtml(label)}</span>`
+
+      // `fold` (or `> [!NOTE]-` / `+`) turns the box into a native <details>,
+      // so collapsing needs no script. The title becomes the summary.
+      if (attrs.fold === 'open' || attrs.fold === 'closed') {
+        return {
+          open:
+            `<details class="${cx(`${classes} md-callout--fold`, theme.callout)}"${attrs.fold === 'open' ? ' open' : ''}>` +
+            `<summary class="${cx('md-callout-title', theme.calloutTitle)}">${heading}</summary>` +
+            `<div class="md-callout-body">`,
+          close: '</div></details>',
+        }
+      }
+
       return {
         open:
-          `<div class="${cx(`md-callout md-callout--${name}`, theme.callout)}">` +
-          `<div class="${cx('md-callout-title', theme.calloutTitle)}">${icon}<span>${escapeHtml(label)}</span></div>` +
+          `<div class="${cx(classes, theme.callout)}">` +
+          `<div class="${cx('md-callout-title', theme.calloutTitle)}">${heading}</div>` +
           `<div class="md-callout-body">`,
         // Two wrappers: the title must not inherit the body's typography.
         close: '</div></div>',
@@ -276,13 +339,23 @@ export const COMPONENTS: readonly ComponentSpec[] = [
     name: 'Col',
     directive: 'col',
     body: 'block',
-    attrs: {},
+    attrs: {
+      card: { type: 'boolean', describe: 'Frame the column as a dashed card' },
+      pick: {
+        type: 'boolean',
+        describe: 'The recommended option: a card with an accent edge',
+      },
+    },
     parents: ['Cols'],
     describe: 'One column inside Cols',
-    render: ({ theme }) => ({
-      open: `<div class="${cx('md-col', theme.col)}">`,
-      close: '</div>',
-    }),
+    render: ({ attrs, theme }) => {
+      const card = attrs.card || attrs.pick ? ' md-col--card' : ''
+      const pick = attrs.pick ? ' md-col--pick' : ''
+      return {
+        open: `<div class="${cx(`md-col${card}${pick}`, theme.col)}">`,
+        close: '</div>',
+      }
+    },
   },
   ...CALLOUT_NAMES.map(calloutSpec),
 
@@ -559,6 +632,78 @@ export const COMPONENTS: readonly ComponentSpec[] = [
       close: '</div>',
     }),
   },
+  {
+    name: 'Banner',
+    directive: 'banner',
+    aliases: ['risk-banner'],
+    body: 'block',
+    attrs: {
+      title: { type: 'string', describe: 'Bold lead-in, e.g. "Read this first"' },
+      tone: {
+        type: 'enum',
+        values: TONES,
+        default: 'danger',
+        describe: 'Accent colour',
+      },
+    },
+    positional: 'title',
+    describe: 'Centred verdict box for the top of a post',
+    render: ({ attrs, theme }) => ({
+      // The verdict a post opens on, so a skimmer who reads nothing else still
+      // gets the point.
+      open:
+        `<div class="${cx(`md-banner md-banner--${attrs.tone ?? 'danger'}`, theme.banner)}" role="note">` +
+        (attrs.title
+          ? `<div class="md-banner-title">${attrText(attrs.title)}</div>`
+          : '') +
+        `<div class="md-banner-body">`,
+      close: '</div></div>',
+    }),
+  },
+  {
+    name: 'Quote',
+    directive: 'quote',
+    aliases: ['pull-quote'],
+    body: 'block',
+    attrs: {
+      cite: { type: 'string', describe: 'Source line, e.g. "Docs, 2026"' },
+      tone: { type: 'enum', values: TONES, describe: 'Rule colour' },
+      pull: {
+        type: 'boolean',
+        describe: 'Framed pull quote, for the one line a section hangs on',
+      },
+    },
+    positional: 'cite',
+    describe: 'Quote with a coloured rule and an optional source',
+    render: ({ attrs, theme }) => {
+      const pull = attrs.pull ? ' md-quote-block--pull' : ''
+      const tone = attrs.tone ? ` md-quote-block--${attrs.tone}` : ''
+      // The close rule only sees attrs on block tokens, which is the only place
+      // a Quote can sit, so the caption can live in `close`.
+      const cite = attrs.cite
+        ? `<figcaption class="md-quote-block-cite">${attrText(attrs.cite)}</figcaption>`
+        : ''
+      return {
+        open:
+          `<figure class="${cx(`md-quote-block${pull}${tone}`, theme.quoteBlock)}">` +
+          `<blockquote class="md-quote-block-body">`,
+        close: `</blockquote>${cite}</figure>`,
+      }
+    },
+  },
+  {
+    name: 'Ticks',
+    directive: 'ticks',
+    aliases: ['list-check'],
+    body: 'block',
+    attrs: {},
+    describe: 'A list with check-mark bullets, for wins and features',
+    render: ({ theme }) => ({
+      // The list's own `md-li-bullet` span is restyled into the check mark.
+      open: `<div class="${cx('md-ticks', theme.ticks)}">`,
+      close: '</div>',
+    }),
+  },
 
   // ---- data ---------------------------------------------------------------
   {
@@ -787,6 +932,128 @@ export const COMPONENTS: readonly ComponentSpec[] = [
       return {
         open: `<mark class="${cx(`md-mark${tone}`, theme.mark)}">`,
         close: '</mark>',
+      }
+    },
+  },
+  {
+    name: 'Pill',
+    directive: 'pill',
+    body: 'block',
+    placement: 'inline',
+    attrs: {
+      kind: {
+        type: 'enum',
+        values: ['yes', 'no', 'partial', 'info'],
+        default: 'info',
+        describe: 'Verdict colour: green, red, amber or neutral',
+      },
+    },
+    positional: 'kind',
+    describe: 'Small verdict chip, for table cells',
+    render: ({ attrs, theme }) => ({
+      open: `<span class="${cx(`md-pill md-pill--${attrs.kind ?? 'info'}`, theme.pill)}">`,
+      close: '</span>',
+    }),
+  },
+  {
+    name: 'Stamp',
+    directive: 'stamp',
+    body: 'block',
+    placement: 'both',
+    attrs: {
+      tone: {
+        type: 'enum',
+        values: ['ink', 'bad', 'ok'],
+        default: 'ink',
+        describe: 'Ink, red or green',
+      },
+      rotate: { type: 'number', describe: 'Rotation in degrees, -15 to 15' },
+    },
+    positional: 'tone',
+    describe: 'Big rotated verdict stamp, once per post at most',
+    render: ({ attrs, inline, theme }) => {
+      // Tilted by default; `rotate={0}` straightens it. Unlike the zine tilt
+      // this is not gated on `--md-rotate`: a straight stamp is just a badge.
+      const rotate = clamp(num(attrs.rotate, -4), -MAX_ROTATE, MAX_ROTATE)
+      const tag = inline ? 'span' : 'div'
+      const block = inline ? '' : ' md-stamp--block'
+      return {
+        open:
+          `<${tag} class="${cx(`md-stamp md-stamp--${attrs.tone ?? 'ink'}${block}`, theme.stamp)}"` +
+          `${styleVars({ '--md-stamp-rotate': rotate ? `${rotate}deg` : undefined })}>` +
+          `<span class="md-stamp-ink">`,
+        close: `</span></${tag}>`,
+      }
+    },
+  },
+  {
+    name: 'Kbd',
+    directive: 'kbd',
+    body: 'block',
+    placement: 'inline',
+    attrs: {
+      k: { type: 'string', describe: 'Key name: cmd, shift, enter, a, …' },
+      platform: {
+        type: 'enum',
+        values: ['mac', 'win'],
+        default: 'mac',
+        describe: 'Glyphs on mac, text caps on win',
+      },
+    },
+    positional: 'k',
+    describe: 'One keyboard key as a keycap',
+    render: ({ attrs, theme }) => {
+      // `<Kbd k="cmd" />` draws a glyph; `<Kbd>|</Kbd>` prints its body. The
+      // close token of an inline tag carries no attrs, so `close` must not
+      // depend on them.
+      if (!attrs.k) {
+        return { open: `<kbd class="${cx('md-kbd', theme.kbd)}">`, close: '</kbd>' }
+      }
+      const platform: Platform = attrs.platform === 'win' ? 'win' : 'mac'
+      const { glyph, title, mod } = resolveKey(String(attrs.k), platform)
+      return {
+        open: `<kbd class="${cx(`md-kbd${mod ? ' md-kbd--mod' : ''}`, theme.kbd)}" title="${escapeHtml(title)}">${escapeHtml(glyph)}`,
+        close: '</kbd>',
+      }
+    },
+  },
+  {
+    name: 'Keys',
+    directive: 'keys',
+    body: 'none',
+    placement: 'inline',
+    attrs: {
+      keys: {
+        type: 'string',
+        required: true,
+        describe: 'Space-separated key names, e.g. "cmd shift p"',
+      },
+      platform: {
+        type: 'enum',
+        values: ['mac', 'win'],
+        default: 'mac',
+        describe: 'Glyphs on mac, text caps on win',
+      },
+      sep: { type: 'string', default: '+', describe: 'Joiner between caps' },
+    },
+    positional: 'keys',
+    describe: 'A shortcut: keycaps joined by +',
+    render: ({ attrs, theme }) => {
+      const platform: Platform = attrs.platform === 'win' ? 'win' : 'mac'
+      const sep = typeof attrs.sep === 'string' ? attrs.sep : '+'
+      // `prefix` renders as a named PREFIX cap, for tmux-style chords.
+      const caps = splitKeys(String(attrs.keys ?? ''))
+        .map((key) => resolveKey(key, platform))
+        .map(
+          (cap) =>
+            `<kbd class="${cx(`md-kbd${cap.mod ? ' md-kbd--mod' : ''}`, theme.kbd)}" title="${escapeHtml(cap.title)}">${escapeHtml(cap.glyph)}</kbd>`,
+        )
+      const joiner = sep
+        ? `<span class="md-keys-sep" aria-hidden="true">${escapeHtml(sep)}</span>`
+        : ''
+      return {
+        open: `<span class="${cx('md-keys', theme.keys)}">${caps.join(joiner)}</span>`,
+        close: '',
       }
     },
   },

@@ -18,7 +18,7 @@
 import { CALLOUT_NAMES, COMPONENTS, type HeadingEntry } from './components'
 import { extractHeadings } from './render'
 
-export const RENDERER_VERSION = 'md-3'
+export const RENDERER_VERSION = 'md-4'
 
 /** Words per minute, matching what tashif.codes already assumes. */
 const WORDS_PER_MINUTE = 200

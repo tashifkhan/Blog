@@ -14,6 +14,7 @@
 import MarkdownIt from 'markdown-it'
 
 import { calloutsPlugin } from './callouts'
+import { marksPlugin } from './marks'
 import {
   COMPONENTS,
   escapeHtml,
@@ -362,6 +363,7 @@ function createParser(): MarkdownIt {
   md.use(jsxPlugin)
   md.use(calloutsPlugin)
   md.use(taskListsPlugin)
+  md.use(marksPlugin)
 
   // `gh:`, `yt:`, `tw:`, `wp:`, … are shorthand for common-site URLs. linkify-it
   // does not know the schemes, so bare occurrences in prose are registered
@@ -392,6 +394,11 @@ function createParser(): MarkdownIt {
     const info = tokens[idx].meta as DirectiveInfo
     return info.spec.render(directiveCtx(tokens[idx], info, env(rawEnv))).close
   }
+
+  // `==highlight==`, the same mark the <Mark> component draws.
+  rules.mark_open = (_t: any[], _i: number, _o: any, rawEnv: any) =>
+    `<mark class="${cx('md-mark', env(rawEnv).theme.mark)}">`
+  rules.mark_close = () => '</mark>'
 
   // A `body: 'raw'` component's contents, escaped but otherwise untouched.
   rules.component_raw = (tokens: any[], idx: number) =>
@@ -598,10 +605,14 @@ function createParser(): MarkdownIt {
 
     if (!asFigure) return image
 
-    const caption = alt
-      ? `<figcaption class="md-image-caption">${md.utils.escapeHtml(alt)}</figcaption>`
+    // A quoted title wins as the caption, the way dump.taf.sh reads it.
+    const captionText = token.attrGet('title') || alt
+    const caption = captionText
+      ? `<figcaption class="md-image-caption">${md.utils.escapeHtml(captionText)}</figcaption>`
       : ''
-    return `<figure class="${cx('md-figure', theme.imageWrap)}">${image}${caption}</figure>`
+    const placed = parsed.placement ? ` md-figure--${parsed.placement}` : ''
+    const width = parsed.percent ? ` style="--md-fig-w: ${parsed.percent}%"` : ''
+    return `<figure class="${cx(`md-figure${placed}`, theme.imageWrap)}"${width}>${image}${caption}</figure>`
   }
 
   rules.link_open = (
