@@ -90,7 +90,7 @@ Common things that trigger it:
 The fix that would have saved me an afternoon is simple: batch the writes. Instead of touching layout-affecting styles one at a time, change a class once and let the browser compute the result in a single pass.
 
 <Cols cols={2}>
-<Col>
+<Col card>
 
 Multiple reflows, one per line:
 
@@ -101,7 +101,7 @@ element.style.margin = "10px";
 ```
 
 </Col>
-<Col>
+<Col pick>
 
 One reflow, via a class swap:
 
@@ -121,7 +121,7 @@ And if you actually need to read layout values, read all of them first, then wri
 
 Things that trigger a repaint without a reflow: `background-color`, `background-image`, text `color`, `visibility` (since it still reserves layout space unlike `display: none`), `box-shadow`, `text-shadow`, `outline`, `border-radius` when it doesn't change the border's width, and `opacity`.
 
-The properties worth actually animating are the ones that skip both stages: `transform` and `opacity`. Both can get their own compositor layer, handed to the GPU, moved or faded independently of everything underneath. Everything else you animate is either a reflow or a repaint on the main thread, competing with whatever else the page is doing that frame.
+==The properties worth actually animating are the ones that skip both stages: `transform` and `opacity`.== Both can get their own compositor layer, handed to the GPU, moved or faded independently of everything underneath. Everything else you animate is either a reflow or a repaint on the main thread, competing with whatever else the page is doing that frame.
 
 ## the mental model, compressed
 

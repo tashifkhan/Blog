@@ -198,7 +198,7 @@ If training did <code>StandardScaler → PCA → LogisticRegression</code> and y
 
 ## the part where I scare you: pickle is eval
 
-sklearn's docs say it. Pyodide's FAQ says it. Python's docs say it. Loading an untrusted pickle is arbitrary code execution. A malicious `.pkl` runs Python *on unpickle*, before `predict()` is even a thought.
+sklearn's docs say it. Pyodide's FAQ says it. Python's docs say it. ==Loading an untrusted pickle is arbitrary code execution.== A malicious `.pkl` runs Python *on unpickle*, before `predict()` is even a thought.
 
 <Danger title="Threat model, browser edition">
 Yes, WASM sandboxes it to the page origin. No, that doesn't save you. Code running in the page origin can read JS-reachable storage, exfiltrate whatever the user types, mine crypto, or just freeze the tab. And if your model CDN gets compromised, Path A is game over. Rules: only ship models you built, serve them over HTTPS with immutable caching (SRI if you can), never unpickle a user-uploaded <code>.pkl</code> "for convenience," and if third-party models are a requirement, look at skops.io, or better, take Path B so there's no pickle surface at all.
@@ -291,7 +291,7 @@ Same machine, same browser (Chrome, desktop), same model task. These are real nu
 | Total transfer on first load | ~49 MB | ~17.6 MB |
 | Test accuracy | 93.6% | 93.4% |
 | Models agree on test set | n/a | 97.7% |
-| Pickle RCE surface | Yes | No |
+| Pickle RCE surface | <Pill kind="no">yes</Pill> | <Pill kind="yes">no</Pill> |
 | Version coupling | Train ≡ browser, exactly | Graph self-contained |
 
 The load numbers are the interesting part, and they *flip* depending on cache state, which is why the table has two rows for them. First run ever: ONNX cold start (~16 s) is worse than Pyodide (~7.3 s), because the 13.5 MB WASM runtime ships from my own origin and has to download *and* compile, while Pyodide's whole stack streams from jsDelivr's CDN. But once the runtime is in the browser cache, ONNX's load collapses to **3.9 s**. Pyodide never gets that win: it sits at 7–8.5 s either way, because ~27 MB of wheels + WordNet still has to be fetched, unpacked and imported on every cold boot. Caching helps it far less than you'd hope.
@@ -341,7 +341,7 @@ Serve over HTTP(S). Copy all onnxruntime-web <code>*.wasm</code> + <code>*.mjs</
 
 ## what I actually shipped sitewide
 
-So which one won? **ONNX.** Not because the benchmark alone said so, but because the site made the decision for me.
+So which one won? <Stamp tone="ok">ONNX</Stamp> Not because the benchmark alone said so, but because the site made the decision for me.
 
 Once the client-side classifier left the lab and had to run on the *whole news feed*, every article on the home page, the search results, and the category pages, the numbers stopped being academic:
 

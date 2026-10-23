@@ -91,7 +91,7 @@ That subdomain one is the case that catches everyone, man. `api.yoursite.dev` fe
 
 ## same-origin policy: the default, and the problem it creates
 
-The same-origin policy is what the browser does before you've configured anything: a page loaded from one origin cannot read the response of a request made to a different origin. Not "cannot send the request," specifically "cannot read what comes back." MDN's phrasing is close to exact: a script can only request resources from the origin it was loaded from, and reads from anywhere else get withheld.
+The same-origin policy is what the browser does before you've configured anything: a page loaded from one origin cannot read the response of a request made to a different origin. Not "cannot send the request," specifically =="cannot read what comes back."== MDN's phrasing is close to exact: a script can only request resources from the origin it was loaded from, and reads from anywhere else get withheld.
 
 Here's why that default exists. Say there were no such restriction. You've got your bank open in one tab, logged in, cookies set. In another tab you open some link a friend sent you, and that page runs:
 
@@ -370,7 +370,7 @@ app.get("/api/weather/:city", (req, res) => {
 });
 ```
 
-The rule of thumb that actually holds: wildcard for public data with no session behind it, exact origin the instant a cookie or bearer token enters the request.
+The rule of thumb that actually holds: ==wildcard for public data with no session behind it, exact origin the instant a cookie or bearer token enters the request.==
 
 ## challenge 4: custom headers need to be on the list too
 

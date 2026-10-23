@@ -43,7 +43,7 @@ flowchart TD
 
 A Service is one of Android's four core component types, alongside Activities, Content Providers, and Broadcast Receivers, and its whole job is running work with no UI attached. That's the entire distinction from an Activity: no screen, no layout, just a component that keeps executing whether or not the user is looking at your app.
 
-The detail that gets people, and got me: a Service runs on your app's main thread by default. It is not a background thread. Nothing about the word "service" implies "off the UI thread", it just means "no UI." Spotify keeping music playing while you switch apps, WhatsApp syncing messages, Google Maps tracking your route with the screen off, all of that is a Service, and none of it gets a free pass on doing heavy work on the main thread.
+The detail that gets people, and got me: ==a Service runs on your app's main thread by default.== It is not a background thread. Nothing about the word "service" implies "off the UI thread", it just means "no UI." Spotify keeping music playing while you switch apps, WhatsApp syncing messages, Google Maps tracking your route with the screen off, all of that is a Service, and none of it gets a free pass on doing heavy work on the main thread.
 
 ## the three types, and which problem each one solves
 
@@ -63,7 +63,7 @@ This is the type that broke my run tracker, so let's be precise about it. A back
 
 On Android 8 and later, calling `startService()` to launch something that's going to run in the background throws an `IllegalStateException`, full stop, no exceptions for "but my use case is different." The only sanctioned way to run something in the background now is to make it a foreground service via `startForegroundService()`, which obligates you to call `startForeground()` with a notification within a few seconds or the system kills you anyway. My run tracker was doing neither, it was a plain started service quietly assuming Android 7 rules, and once the screen locked, the system had every right to reclaim it.
 
-The honest fix, most of the time, isn't "make it a foreground service." It's "don't use a service for this at all." **WorkManager** is the actual recommended path for deferred, guaranteed background work, it survives a device reboot, understands constraints like "only on WiFi" or "only while charging", and is the right tool for periodic sync, uploads, and backups. **JobScheduler** covers the same territory at a lower level if you want fine-grained control over the scheduling conditions yourself.
+The honest fix, most of the time, isn't "make it a foreground service." It's =="don't use a service for this at all."== **WorkManager** is the actual recommended path for deferred, guaranteed background work, it survives a device reboot, understands constraints like "only on WiFi" or "only while charging", and is the right tool for periodic sync, uploads, and backups. **JobScheduler** covers the same territory at a lower level if you want fine-grained control over the scheduling conditions yourself.
 
 ### bound services: the two-way ones
 
@@ -123,7 +123,7 @@ Declare foreground service types honestly. `mediaPlayback`, `location`, `dataSyn
 
 ## the decision guide
 
-<Checklist title="pick the right tool, not just \"a service\"">
+<Checklist title="pick the right tool, not just 'a service'">
 - [ ] Music, navigation, an active call, or anything the user explicitly expects to keep running with the screen off → **foreground service**, with the correct declared type
 - [ ] Periodic sync, backups, or any deferred work that should survive a reboot → **WorkManager**
 - [ ] Scheduled work where you want direct control over the trigger constraints → **JobScheduler**

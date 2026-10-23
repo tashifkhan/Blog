@@ -55,7 +55,7 @@ my_instance = MyClass()
 print(type(my_instance))  # <class '__main__.MyClass'>
 ```
 
-`type` is to `MyClass` what `MyClass` is to `my_instance`. A specific car is an instance of the `Car` class, and `Car` itself is an instance of `type`. It's the same relationship, one level up.
+==`type` is to `MyClass` what `MyClass` is to `my_instance`.== A specific car is an instance of the `Car` class, and `Car` itself is an instance of `type`. It's the same relationship, one level up.
 
 ## what actually happens when python hits `class`
 
@@ -286,7 +286,9 @@ This circularity isn't something the interpreter special-cases at runtime for yo
 Most of the time, no. Tim Peters, one of Python's core developers, put it better than I could:
 </Caution>
 
-> "Metaclasses are deeper magic than 99% of users should ever worry about. If you wonder whether you need them, you don't."
+<Quote cite="Tim Peters" pull>
+Metaclasses are deeper magic than 99% of users should ever worry about. If you wonder whether you need them, you don't.
+</Quote>
 
 I didn't need one for that plugin loader, a decorator that appends to a registry list would've been five lines and obvious to anyone reading it later. Metaclasses earn their keep in framework code: Django's ORM uses one to turn model class bodies into database table definitions, and anything building a small DSL inside Python leans on the same trick. For everyday application code, a decorator, a classmethod, or plain inheritance covers nearly everything a metaclass would, with a fraction of the surprise.
 

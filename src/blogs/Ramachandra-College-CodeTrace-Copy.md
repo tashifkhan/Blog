@@ -81,6 +81,8 @@ phc_xxpoU7jHjt4nK…AsrdBcZC
 
 Identical. Character for character. I've trimmed the middle here, but the two bundles carry the same 48-character string.
 
+<Stamp tone="bad">confirmed</Stamp>
+
 Here it is in their page source, loaded straight off PostHog's CDN, on their RCEE-branded leaderboard:
 
 ![DevTools on the copied site's leaderboard, showing the PostHog script tag loading my project key from eu-assets.i.posthog.com, with the canonical codetrace.xyz link visible above it|720](/images/blog/Ramachandra-College-CodeTrace-Copy/sptracker-copy.png)
@@ -101,7 +103,9 @@ The missing attribution is a licensing problem. The leaked analytics key is a *p
 
 Here's the part that makes this whole thing avoidable. MIT is about as permissive as licenses get. It says you can do basically anything: copy it, remix it, sell it, whatever. The one condition, and I'll quote it because it's short:
 
-> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+<Quote cite="The MIT License" tone="accent" pull>
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+</Quote>
 
 That's it. One sentence. Somewhere on the site, in a footer or a README or an about page, credit the original. That's the whole deal.
 
@@ -111,10 +115,14 @@ The copied site's footer says "© 2026 Student Performance." No link to CodeTrac
 
 I want to be fair here, because "it's a copy" undersells what they built. I poked around the current site and it's genuinely evolved:
 
+<Ticks>
+
 - A **login-gated app** behind the landing page, where placement office staff sign in to see student dossiers
 - A **leaderboard** ranking students by a weighted "Fame XP": coding 20%, readiness 12%, communication 12%, aptitude 10%, verbal 10%…
 - **Pass-out year cohorts** (2027–2030) with per-student readiness and comm scores
 - The seven coding-platform integrations still humming underneath
+
+</Ticks>
 
 This isn't a skin swap. Someone put real work into building a placement product. That's the frustrating part: the work is good. They just skipped the one line of credit, and the one key swap, that would have made it entirely legitimate.
 
