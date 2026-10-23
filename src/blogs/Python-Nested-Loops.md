@@ -345,7 +345,7 @@ exec(code)  # Evil!
 
 </Panel>
 
-**Bottom line:** when the number of loops is a runtime value instead of a compile-time constant, `itertools.product(iterable, repeat=n)` is the answer for almost every real Python program, recursion is the answer when you're still thinking through the logic or need custom behavior per level, and the manual odometer is the answer when you need to know exactly what's happening at every step or don't have an iterator library to lean on. Just respect `max^n`. My six-wheel lock was a million combinations before I'd written a single line of the actual cracking logic, and that number only grows from there.
+**Bottom line:** when the number of loops is a runtime value instead of a compile-time constant, ==`itertools.product(iterable, repeat=n)` is the answer for almost every real Python program==, recursion is the answer when you're still thinking through the logic or need custom behavior per level, and the manual odometer is the answer when you need to know exactly what's happening at every step or don't have an iterator library to lean on. Just respect `max^n`. My six-wheel lock was a million combinations before I'd written a single line of the actual cracking logic, and that number only grows from there.
 
 <Hand>
 go build your combination lock, or your test matrix, or whatever it is. just don't `exec()` it.

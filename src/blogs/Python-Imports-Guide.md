@@ -17,7 +17,7 @@ coverImage: "/images/blog/Python-Imports-Guide/cover.svg"
 I was working on one of my scraper projects and wanted to sanity-check a single fetcher module without booting the whole FastAPI app. Obvious move, right, just run the file directly: `python fetchers/tanishq_fetcher.py`. Python's response was `ImportError: attempted relative import with no known parent package`, which, at the time, meant nothing to me. The module imported fine everywhere else. Just not like this. Turns out the error was correct and I was the one who didn't understand what "running a file" actually does to Python's notion of packages.
 </Lede>
 
-The import system has a reputation for being confusing, and it kind of is, until you see the one distinction that explains almost every error people hit: a file you run directly is not the same thing as a file that gets imported, even if it's the exact same file.
+The import system has a reputation for being confusing, and it kind of is, until you see the one distinction that explains almost every error people hit: ==a file you run directly is not the same thing as a file that gets imported, even if it's the exact same file.==
 
 <Toc />
 

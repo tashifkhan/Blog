@@ -46,6 +46,13 @@ flowchart TD
 
 Three of those checkpoints are the official Core Web Vitals: LCP for loading, INP for responsiveness, CLS for stability. FCP and TTFB aren't official Vitals anymore, but they're upstream of LCP, so ignoring them just means guessing at why LCP is slow.
 
+| metric | <Pill kind="yes">good</Pill> | <Pill kind="partial">needs improvement</Pill> | <Pill kind="no">poor</Pill> |
+| --- | --- | --- | --- |
+| FCP | ≤ 1.8s | 1.8s to 3s | over 3s |
+| LCP | ≤ 2.5s | 2.5s to 4s | over 4s |
+| INP | ≤ 200ms | 200ms to 500ms | over 500ms |
+| CLS | ≤ 0.1 | 0.1 to 0.25 | over 0.25 |
+
 ## first contentful paint: proving something's happening
 
 FCP is the moment a user sees *anything*, not the final layout, just proof the page isn't dead. Google's guideline is under 1.8 seconds for "good," and the fix is almost entirely a backend problem: get bytes to the browser fast, and don't make the first paint wait on anything it doesn't need.
@@ -147,7 +154,7 @@ Astro optimizes images at build time and generates the right formats and sizes w
 </Tab>
 </Tabs>
 
-The pattern is identical across frameworks even though the API differs: find the actual LCP element with DevTools' Performance panel, then make sure that one specific element is exempt from every lazy-loading default you've set up for everything else.
+The pattern is identical across frameworks even though the API differs: find the actual LCP element with DevTools' Performance panel, then make sure ==that one specific element is exempt from every lazy-loading default== you've set up for everything else.
 
 ## interaction to next paint: every click counts now
 

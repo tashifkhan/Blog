@@ -81,7 +81,7 @@ Now the guide part. Each section is a challenge you'll hit scraping anything non
 
 This is the single biggest mindset shift, so it goes first. People look for a public API, find none, and conclude they need to parse HTML. Wrong instinct, man.
 
-**If a site is a modern React/Next/Vue app, it has an API, it's just "internal."** The SPA in your browser has to get its data from somewhere, and that somewhere is almost always clean JSON: GraphQL resolvers, REST calculator endpoints, third-party search SaaS, or a hydration blob serialized into the page. The frontend bundle even ships the API keys it uses.
+==**If a site is a modern React/Next/Vue app, it has an API, it's just "internal."**== The SPA in your browser has to get its data from somewhere, and that somewhere is almost always clean JSON: GraphQL resolvers, REST calculator endpoints, third-party search SaaS, or a hydration blob serialized into the page. The frontend bundle even ships the API keys it uses.
 
 So step zero of scraping anything, before writing a single selector:
 

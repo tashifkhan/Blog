@@ -167,7 +167,7 @@ Running `git rebase main` from `feature-x` does this:
 
 `D'` and `E'` carry the same diffs as `D` and `E`, but their parent is now `C` instead of `B`. Different parent means different hash, full stop, even though nothing about the actual code changed.
 
-That's exactly the mechanism that ate my feature branch at the start of this post. `drop` in an interactive rebase just means "don't replay this one," and the original commit object doesn't stop existing, it just stops being reachable from any ref. `git reflog` still remembers where `HEAD` pointed a moment ago, which is how I got it back.
+That's exactly the mechanism that ate my feature branch at the start of this post. `drop` in an interactive rebase just means "don't replay this one," and ==the original commit object doesn't stop existing, it just stops being reachable from any ref.== `git reflog` still remembers where `HEAD` pointed a moment ago, which is how I got it back.
 
 <Cols cols={2}>
 <Col>

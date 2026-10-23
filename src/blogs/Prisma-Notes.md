@@ -301,7 +301,7 @@ main()
 	});
 ```
 
-The one rule that actually matters: use a single `PrismaClient` instance per process. Each instance manages its own connection pool, and instantiating a new one per request is the fastest way to exhaust your database's connection limit. Everything is async, so `async/await` is the natural way to write this, and disconnecting on shutdown is good hygiene even though Node usually cleans it up on exit anyway.
+The one rule that actually matters: ==use a single `PrismaClient` instance per process==. Each instance manages its own connection pool, and instantiating a new one per request is the fastest way to exhaust your database's connection limit. Everything is async, so `async/await` is the natural way to write this, and disconnecting on shutdown is good hygiene even though Node usually cleans it up on exit anyway.
 
 ## challenge 6: writing data, and the include/select trap
 
@@ -461,7 +461,7 @@ await prisma.user.deleteMany({
 }); // { count: 1 }
 ```
 
-Passing an empty `where: {}` to `deleteMany` wipes the whole table, so that's not a line you want to run by accident.
+==Passing an empty `where: {}` to `deleteMany` wipes the whole table==, so that's not a line you want to run by accident.
 
 ## challenge 9: pagination, and the gotcha that only shows up later
 

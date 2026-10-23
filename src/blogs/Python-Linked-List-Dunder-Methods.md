@@ -328,7 +328,7 @@ py_list = list(my_list)
 total = sum(LinkedList([10, 20, 30]))  # 60
 ```
 
-That last line is the actual point of this whole exercise. `sum()` has never heard of `LinkedList`. It just calls `iter()` on whatever you hand it and keeps calling `next()` until `StopIteration`. Once `__iter__` and `__next__` exist, every built-in that accepts an iterable accepts your object for free: `sum`, `max`, `sorted`, `list`, comprehensions, unpacking, all of it.
+That last line is the actual point of this whole exercise. `sum()` has never heard of `LinkedList`. It just calls `iter()` on whatever you hand it and keeps calling `next()` until `StopIteration`. Once `__iter__` and `__next__` exist, ==every built-in that accepts an iterable accepts your object for free==: `sum`, `max`, `sorted`, `list`, comprehensions, unpacking, all of it.
 
 ## challenge 9: `__del__`, the dunder method you should barely touch
 
@@ -524,7 +524,7 @@ None of this is free. Here's the honest complexity, method by method:
 | `__contains__` (`in`) | O(n) |
 | `__len__` | O(1) |
 
-That O(n) row for `__getitem__` is the one that trips people coming from arrays: a Python `list` gives you O(1) random access because it's backed by contiguous memory. A linked list never will, no matter how clever the dunder methods look on the surface. If your workload is index-heavy, a linked list is the wrong structure, dunder methods or not. What they buy you is that the *syntax* looks the same, not that the *performance* does. Don't let a nice `__getitem__` implementation talk you out of that.
+That O(n) row for `__getitem__` is the one that trips people coming from arrays: a Python `list` gives you O(1) random access because it's backed by contiguous memory. A linked list never will, no matter how clever the dunder methods look on the surface. If your workload is index-heavy, a linked list is the wrong structure, dunder methods or not. ==What they buy you is that the *syntax* looks the same, not that the *performance* does.== Don't let a nice `__getitem__` implementation talk you out of that.
 
 ## the checklist
 

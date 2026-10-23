@@ -27,9 +27,9 @@ This post is that count, plus the mechanics of why it comes out the way it does,
 | --- | --- | --- | --- |
 | Structural tokens (braces, quotes, commas) | most | fewer, still there | almost none |
 | Raw token count, my measured payload | 565 | **317** | 400 |
-| Human-readable in logs / a debugger | yes | no | yes |
+| Human-readable in logs / a debugger | <Pill kind="yes">yes</Pill> | <Pill kind="no">no</Pill> | <Pill kind="yes">yes</Pill> |
 | Model generation reliability | worst | worst | best |
-| Native `JSON.parse()` in JS | yes | yes | needs a library |
+| Native `JSON.parse()` in JS | <Pill kind="yes">yes</Pill> | <Pill kind="yes">yes</Pill> | <Pill kind="partial">needs a library</Pill> |
 | Schema validation ecosystem | mature (JSON Schema) | mature | convert first |
 | Best fit | prompts, examples | never generate this directly | LLM output |
 
@@ -104,7 +104,7 @@ The output:
 <Stat value="317" label="minified JSON tokens" tone="accent" />
 </Kpi>
 
-YAML beats pretty JSON by 29%, which is in the ballpark of the numbers people quote, and lines up with what I expected. But minified JSON came in at 317 tokens, a full 21% *below* YAML. That's the part nobody's blog post mentions, because nobody's comparing against it. If your actual deployed format is minified JSON, not the pretty-printed kind in your prompt examples, "switch to YAML" is not a free win. It might be a step backward.
+YAML beats pretty JSON by 29%, which is in the ballpark of the numbers people quote, and lines up with what I expected. But ==minified JSON came in at 317 tokens, a full 21% *below* YAML.== That's the part nobody's blog post mentions, because nobody's comparing against it. If your actual deployed format is minified JSON, not the pretty-printed kind in your prompt examples, "switch to YAML" is not a free win. It might be a step backward.
 
 <Warning title="These numbers are one payload, on one tokenizer">
 I ran this on a 10-item list with a fairly typical record shape, using `o200k_base`. Deeper nesting, longer strings, and repeated keys all shift the ratio. Run your own payload through `tiktoken` before you trust any percentage in this post, mine included.

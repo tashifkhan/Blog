@@ -120,7 +120,7 @@ Fabric replaces the old UI Manager and Shadow Tree. It's a C++ layer that manage
 TurboModules are the JSI-era replacement for Native Modules, and the difference you feel immediately is synchronous calls:
 
 <Cols>
-<Col>
+<Col card>
 
 old way, asynchronous
 
@@ -131,7 +131,7 @@ NativeModules.BatteryModule.getBatteryLevel().then((level) =>
 ```
 
 </Col>
-<Col>
+<Col pick>
 
 new way, synchronous via TurboModules
 
@@ -165,10 +165,14 @@ Codegen is a build-time tool that reads your module or component definitions and
 
 Back to the chat screen. After the app moved onto the New Architecture, the typing indicator stopped competing with scroll events for bridge time, because there was no bridge left to compete over. Concretely:
 
+<Ticks>
+
 - animations that used to skip frames under load held steady, because layout and native calls weren't queued behind JSON serialization anymore
 - scroll felt noticeably less laggy under the same list size
 - cold start was faster, since TurboModules only initialize what a screen actually uses
 - fewer "why did this native call return the wrong shape" bugs, because Codegen catches that mismatch before the app ships
+
+</Ticks>
 
 None of that required touching my chat component. The architecture change was structural, and my code got faster for free.
 

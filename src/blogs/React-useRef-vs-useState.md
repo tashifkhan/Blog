@@ -153,9 +153,9 @@ function Stopwatch() {
 | --- | --- | --- |
 | purpose | reactive state the UI depends on | mutable storage the UI doesn't depend on |
 | returns | `[value, setter]` | `{ current: value }` |
-| triggers re-render | yes | no |
+| triggers re-render | <Pill kind="yes">yes</Pill> | <Pill kind="no">no</Pill> |
 | how you change it | call the setter | write `.current` directly |
-| persists across renders | yes | yes |
+| persists across renders | <Pill kind="yes">yes</Pill> | <Pill kind="yes">yes</Pill> |
 | typical use | form data, API results, toggles | DOM refs, timer ids, previous values |
 
 ## react native: same rules, different targets
@@ -244,7 +244,7 @@ function ScrollableContent() {
 Not my interval bug this time, the other direction: reaching for `useRef` because "I don't want a re-render" when the value is literally the thing being displayed.
 
 <Cols>
-<Col>
+<Col card>
 
 bad, the UI never moves
 
@@ -268,7 +268,7 @@ function BrokenCounter() {
 ```
 
 </Col>
-<Col>
+<Col pick>
 
 correct, this repaints
 

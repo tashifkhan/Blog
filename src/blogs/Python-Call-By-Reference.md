@@ -202,7 +202,7 @@ Compressed down to a ladder, in the order I actually check them:
 
 None of this is Python being difficult for its own sake. Returning values keeps data flow visible instead of hidden inside a mutation you have to go find. And once mutable versus immutable clicks, the rest of the behavior stops being a special case you memorize and starts being the obvious consequence of "everything is an object, some objects can change themselves and some can't."
 
-**Bottom line:** Python passes object references by assignment, full stop, there's no separate reference-passing mode to look for. Whether a function's changes are visible outside it depends entirely on whether you handed it something mutable. For a bare counter, return the new value. For shared state, wrap it in something mutable, ideally a small class once it's got more than one field. Save `global` for the rare thing that's actually global.
+**Bottom line:** Python passes object references by assignment, full stop, there's no separate reference-passing mode to look for. ==Whether a function's changes are visible outside it depends entirely on whether you handed it something mutable.== For a bare counter, return the new value. For shared state, wrap it in something mutable, ideally a small class once it's got more than one field. Save `global` for the rare thing that's actually global.
 
 <Hand>
 if a value won't update across a function call, check whether you're holding an int before you check anything else.
