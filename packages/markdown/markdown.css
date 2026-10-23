@@ -28,12 +28,17 @@
   --md-code-fg: #abb2bf;
   --md-code-fg-muted: #7f848e;
 
-  --md-callout-note: #3b82f6;
-  --md-callout-tip: #22c55e;
-  --md-callout-important: #a855f7;
-  --md-callout-warning: #f59e0b;
-  --md-callout-caution: #ef4444;
-  --md-callout-danger: #dc2626;
+  /*
+   * Earth tones mixed toward the text colour, so one set works on light and
+   * dark themes: the mix darkens them on paper and lifts them on black.
+   * `important` takes the host accent rather than a stock purple.
+   */
+  --md-callout-note: color-mix(in oklab, #6b7c8c 75%, var(--md-fg));
+  --md-callout-tip: color-mix(in oklab, #6f9a5c 75%, var(--md-fg));
+  --md-callout-important: var(--md-accent);
+  --md-callout-warning: color-mix(in oklab, #c08a2a 75%, var(--md-fg));
+  --md-callout-caution: color-mix(in oklab, #c27a45 75%, var(--md-fg));
+  --md-callout-danger: color-mix(in oklab, #d4342c 88%, var(--md-fg));
 
   /*
    * Component tones. Named for meaning rather than hue so a site can map them
@@ -172,7 +177,7 @@
 }
 
 /*
- * An icon badge plus a plain label, rather than the whole title inside a pill.
+ * An icon plus a plain label, rather than the whole title inside a pill.
  * A pill reads as a tag — something you could click or filter by — where this
  * is the callout's heading.
  */
@@ -189,14 +194,11 @@
   text-transform: uppercase;
 }
 
+/* A bare stroke icon in the callout colour. A tinted badge behind it read as an app tile. */
 .md-callout-title .md-icon {
   flex-shrink: 0;
-  box-sizing: content-box;
   width: 1rem;
   height: 1rem;
-  padding: 0.25rem;
-  border-radius: 0.4rem;
-  background: color-mix(in oklab, var(--md-callout-color) 16%, transparent);
   color: var(--md-callout-color);
 }
 
@@ -583,14 +585,12 @@
 
 /* ---------- quotes, rules, media ---------- */
 
+/* A straight accent rail and nothing else. Rounding a one-sided border bends it into a crescent. */
 .md-quote {
   margin: 2rem 0;
-  padding: 1rem 1.5rem;
-  border-left: 4px solid color-mix(in oklab, var(--md-accent) 45%, transparent);
-  border-radius: 0 var(--md-radius) var(--md-radius) 0;
-  background: var(--md-surface-muted);
-  color: var(--md-fg-muted);
-  font-style: italic;
+  padding: 0.125rem 0 0.125rem 1.25rem;
+  border-left: 2px solid var(--md-accent);
+  color: color-mix(in oklab, var(--md-fg) 90%, transparent);
 }
 
 .md-hr {
@@ -1733,44 +1733,80 @@ div.md-hand {
 .md-quote-block {
   --md-tone: var(--md-accent);
   margin: 1.75rem 0;
-  padding: 0.125rem 0 0.125rem 1.125rem;
-  border-left: 3px solid color-mix(in oklab, var(--md-tone) 70%, transparent);
+  padding: 0.125rem 0 0.125rem 1.25rem;
+  border-left: 2px solid var(--md-tone);
 }
 
 .md-quote-block-body {
   margin: 0;
   padding: 0;
   border: 0;
+  color: var(--md-fg);
+  font-size: 1.125em;
   font-style: normal;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+/* Hosts size and tint `.md-p` for prose; inside a quote the block sets both. */
+.md-quote-block .md-quote-block-body .md-p {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .md-quote-block-body > :first-child { margin-top: 0; }
 .md-quote-block-body > :last-child { margin-bottom: 0; }
 
+/* Source line: small mono caps after a short rule. */
 .md-quote-block-cite {
-  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
   color: var(--md-fg-muted);
-  font-size: 0.875rem;
+  font-family: var(--md-mono-font, ui-monospace, monospace);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
 }
 
 .md-quote-block-cite::before {
-  content: "— ";
+  content: "";
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1px;
+  background: currentColor;
 }
 
+/* `pull`: no box and no rail, a large opening mark hung in the gutter. */
 .md-quote-block--pull {
-  padding: 1.5rem 1.75rem;
-  border: 1px solid var(--md-border);
-  border-left: 3px solid var(--md-tone);
-  border-radius: var(--md-radius);
-  background: var(--md-surface);
+  position: relative;
+  margin: 2.25rem 0;
+  padding: 0.25rem 0 0 2.75rem;
+  border-left: 0;
+}
+
+.md-quote-block--pull::before {
+  content: "\201C";
+  position: absolute;
+  top: -0.875rem;
+  left: -0.125rem;
+  color: var(--md-tone);
+  font-family: var(--md-display-font);
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .md-quote-block--pull .md-quote-block-body {
   font-family: var(--md-display-font);
-  font-size: 1.25rem;
-  font-weight: 600;
-  line-height: 1.45;
-  letter-spacing: -0.01em;
+  font-size: 1.375em;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  text-wrap: pretty;
 }
 
 /* ---------- Ticks ---------- */
