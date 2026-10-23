@@ -225,12 +225,6 @@
   font-size: calc(var(--reader-font-scale, 1) * 0.75rem);
 }
 
-.markdown-body .md-callout-title .md-icon {
-  padding: 0.1875rem;
-  border-radius: 3px;
-  background: color-mix(in oklab, var(--md-callout-color) 22%, transparent);
-}
-
 .markdown-body .md-callout-body {
   padding: 0.875rem;
   font-size: calc(var(--reader-font-scale, 1) * 1rem);
