@@ -235,6 +235,32 @@ Standing alone, the same component becomes a block instead, since a `span`
 cannot hold paragraphs. The element follows the position.
 </Hand>
 
+### verdicts and shortcuts
+
+These came over from dump.taf.sh so a note moved between the two keeps its
+look. A <Pill kind="yes">ship</Pill> or <Pill kind="no">drop</Pill> chip fits
+in a table cell. A <Stamp tone="ok">checked</Stamp> stamp tilts four degrees
+unless told otherwise. Shortcuts render as keycaps: <Keys keys="cmd shift p" />
+opens the palette, then <Kbd k="enter" /> runs it. Plain Markdown gets two
+more marks: ==a highlighter== and LaTeX arrows, so `load \to parse` reads as
+load \to parse.
+
+<Banner title="Read this first." tone="warn">
+A banner is the verdict a post opens on, for the reader who stops after one
+paragraph.
+</Banner>
+
+<Quote cite="the registry docs" tone="accent">
+A tag resolves against the registry or it stays raw HTML.
+</Quote>
+
+<Ticks>
+
+- one table drives the parser, renderer, validator and palette
+- both spellings render the same bytes
+
+</Ticks>
+
 ## media {#media}
 
 ### diagrams that markdown would mangle
@@ -364,6 +390,11 @@ The tag spelling and the directive spelling produce identical markup.
 > [!DANGER]
 > The GitHub alert spelling still rewrites into the same markup, so a post reads
 > correctly on GitHub as well as on both sites.
+
+> [!BUG]- Obsidian aliases fold too
+> `[!BUG]`, `[!TLDR]`, `[!QUOTE]` and friends map onto the six colours. Text
+> after the marker becomes the title, and a trailing `-` or `+` makes the
+> callout collapsible, starting closed or open.
 
 **Bottom line:** this page is the documentation and the regression test in one
 file. Every component the renderer understands shows up here, in both

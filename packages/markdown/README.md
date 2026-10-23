@@ -58,7 +58,16 @@ Equal columns: `<Cols cols={2|3|4}>` (default 2). Unequal tracks via `ratio`:
 more. Callouts: `note`, `tip`, `important`, `warning`, `caution`, `danger`,
 each taking an optional title as either `:::tip Performance` or
 `:::tip{title="Performance"}`. GitHub's `> [!NOTE]` blockquote form renders
-identically, so posts still read correctly on GitHub.
+identically, so posts still read correctly on GitHub. That form also takes
+Obsidian's extras: alias types (`[!BUG]`, `[!TLDR]`, `[!QUOTE]`, mapped onto
+the six colours), a title after the marker (`> [!TIP] Shortcut`), and a fold
+sign (`[!NOTE]-` starts closed, `[!NOTE]+` open) that renders a native
+`<details>`. The tag spelling folds with `fold="closed"` or `fold="open"`.
+
+Two inline marks come from dump.taf.sh as well: `==highlight==` renders the
+same `<mark>` as `<Mark>`, and LaTeX arrow commands in prose (`\to`,
+`$\Rightarrow$`, `\nearrow`) become arrow glyphs with an `aria-label`. Code
+spans and fences keep them literal.
 
 Panels (and steps, phases, stats) accept a Lucide-style `icon` attribute —
 `icon="arrow-up-right"`, `icon="languages"`, `icon="zap"` — rendered as inline
@@ -84,8 +93,13 @@ it loads. `max-width: 100%` still scales it down inside a narrow column, and
 `height: auto` keeps the ratio while it does — a 900px image in a 300px column
 renders at 300px wide, not squashed.
 
-A pipe is legal in alt text, so the suffix only applies when digits follow it:
-`![Rock|Paper](x.png)` keeps its alt text.
+Placement stacks on top, in any order: `|left` and `|right` float the figure
+so the next paragraphs wrap round it, `|center` centres it, and `|40%` sets its
+width as a share of the column (`![Chart|right|40%](x.png)`). A quoted image
+title, when present, is used as the caption instead of the alt text.
+
+A pipe is legal in alt text, so a suffix only applies when it is a size, a
+percentage or a placement: `![Rock|Paper](x.png)` keeps its alt text.
 
 Images work inside columns, and combine with sizing:
 
@@ -181,9 +195,9 @@ lets `:::tip Performance` work without braces.
 | Group | Components |
 | --- | --- |
 | Layout | `Cols` / `Col`, `Panel`, `InkBand`, `Strips` |
-| Structure | `Toc`, `Steps` / `Step`, `Phases` / `Phase`, `Checklist`, `Lede`, `Details` |
+| Structure | `Toc`, `Steps` / `Step`, `Phases` / `Phase`, `Checklist`, `Lede`, `Banner`, `Quote`, `Ticks`, `Details` |
 | Data | `Meters` / `Meter`, `Kpi` / `Stat`, `Bars` / `Bar`, `Legend` |
-| Marginalia | `Sticker`, `Hand`, `Tape`, `Mark`, `Icon` |
+| Marginalia | `Sticker`, `Hand`, `Tape`, `Mark`, `Pill`, `Stamp`, `Kbd`, `Keys`, `Icon` |
 | Media | `Figure`, `Ascii`, `Embed` |
 | Interaction | `Tabs` / `Tab` |
 | Callouts | `Note`, `Tip`, `Important`, `Warning`, `Caution`, `Danger` |

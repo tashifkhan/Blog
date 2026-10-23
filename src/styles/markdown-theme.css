@@ -237,6 +237,39 @@
 }
 
 /*
+ * A title-only callout (`> [!IMPORTANT] Ship it`) is just the title bar, so
+ * its bottom rule would sit on the callout's own border as a double line.
+ */
+.markdown-body .md-callout-title:has(+ .md-callout-body:not(:has(*))) {
+  border-bottom: 0;
+}
+
+/*
+ * `> [!NOTE]-` folds into a <details>. markdown.css flattens the summary so
+ * the generic `details` box does not re-wrap it, which here would also strip
+ * the title bar. Put the bar back; its rule only shows once the body does.
+ */
+.markdown-body details.md-callout.md-callout--fold {
+  margin: 2rem 0;
+}
+
+.markdown-body details.md-callout.md-callout--fold > summary.md-callout-title {
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border: 0;
+  background: color-mix(in oklab, var(--md-callout-color) 14%, var(--theme-muted));
+}
+
+.markdown-body details.md-callout.md-callout--fold[open] > summary.md-callout-title {
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.markdown-body details.md-callout.md-callout--fold > .md-callout-body {
+  margin: 0;
+  padding: 0.875rem;
+}
+
+/*
  * markdown.css sets these first, so its `> :last-child { margin-bottom: 0 }`
  * loses the tie to `.markdown-body .md-p` above and every callout and column
  * ends with a stray gap. Same specificity, later in the cascade, so this wins.
@@ -336,6 +369,44 @@
 
 .markdown-body .md-panel-body {
   padding: 0.875rem;
+}
+
+/*
+ * markdown.css sets an icon beside the title as a grid badge. With the title
+ * drawn as a full-width bar, the icon cell joins the bar: same fill, same
+ * bottom rule, no gap, so the icon reads as the window's title icon.
+ */
+.markdown-body .md-panel--icon {
+  column-gap: 0;
+}
+
+.markdown-body .md-panel--icon > .md-panel-icon {
+  align-self: stretch;
+  margin: 0;
+  padding: 0.375rem 0 0.375rem 0.875rem;
+  border-bottom: 1px solid var(--theme-border);
+  border-radius: 0;
+  background: var(--theme-muted);
+}
+
+.markdown-body .md-panel--icon > .md-panel-icon .md-icon {
+  box-sizing: content-box;
+  padding: 0.1875rem;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--md-tone, var(--md-fg)) 18%, transparent);
+}
+
+.markdown-body .md-panel--icon > .md-panel-title {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding-left: 0.625rem;
+}
+
+/* An icon with no title still gets a bar to sit in. */
+.markdown-body .md-panel--icon > .md-panel-icon:has(+ .md-panel-body) {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
 }
 
 .markdown-body .md-panel-body > :last-child {

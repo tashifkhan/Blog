@@ -6,13 +6,20 @@
  * path and share one set of styles. Keeping the blockquote form working matters
  * because posts and project READMEs are also read on GitHub, where `:::note`
  * would show as literal colons.
+ *
+ * The Obsidian / dump.taf.sh extras work too: alias types (`[!BUG]`,
+ * `[!TLDR]`, …), a title after the marker (`> [!TIP] Shortcut`), and a fold
+ * sign (`[!NOTE]-` starts closed, `[!NOTE]+` starts open).
  */
 
-import { CALLOUT_NAMES, findByDirective } from './components'
+import { CALLOUT_ALIASES, CALLOUT_NAMES, findByDirective } from './components'
 import { type DirectiveInfo } from './directives'
 
+const TYPES = [...CALLOUT_NAMES, ...Object.keys(CALLOUT_ALIASES)]
+
+/** `[!TYPE]`, an optional fold sign, then the rest of the first line. */
 const ALERT_PATTERN = new RegExp(
-  `^\\[!(${CALLOUT_NAMES.join('|')})\\]\\s*`,
+  `^\\[!(${TYPES.join('|')})\\]([+-]?)[ \\t]*([^\\n]*)\\n?`,
   'i',
 )
 
@@ -53,8 +60,16 @@ export function calloutsPlugin(md: any): void {
       if (closeIndex === -1) continue
 
       const name = match[1].toLowerCase()
-      const spec = findByDirective(name)
+      const alias = CALLOUT_ALIASES[name]
+      const spec = findByDirective(alias?.family ?? name)
       if (!spec) continue
+
+      const attrs: Record<string, string> = {}
+      const title = match[3].trim()
+      if (title) attrs.title = title
+      else if (alias) attrs.title = alias.label
+      if (match[2]) attrs.fold = match[2] === '-' ? 'closed' : 'open'
+      if (alias?.variant) attrs.variant = alias.variant
 
       // The same shape the `:::` rule produces, so both spellings reach the
       // renderer as one kind of token.
@@ -62,19 +77,12 @@ export function calloutsPlugin(md: any): void {
         name: spec.name,
         raw: name,
         spec,
-        attrs: {},
+        attrs,
       }
 
-      // Strip the marker from both the inline token and its first child; the
-      // renderer reads children, but `inline.content` is what other core rules
-      // and the anchor logic see.
+      // Strip the marker line, title included. This runs before the core
+      // `inline` rule, which parses `inline.content` into children afterwards.
       inline.content = inline.content.replace(ALERT_PATTERN, '')
-      if (inline.children?.[0]) {
-        inline.children[0].content = inline.children[0].content.replace(
-          ALERT_PATTERN,
-          '',
-        )
-      }
 
       // If the marker was the whole first line, the leading paragraph is now
       // empty and would render as a blank gap above the body.

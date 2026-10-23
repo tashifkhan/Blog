@@ -80,6 +80,13 @@ export type MarkdownTheme = {
   hand?: string
   tape?: string
   mark?: string
+  pill?: string
+  stamp?: string
+  kbd?: string
+  keys?: string
+  banner?: string
+  quoteBlock?: string
+  ticks?: string
 
   // Media
   ascii?: string
