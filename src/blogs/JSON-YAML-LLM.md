@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Mobile Development"]
+tags: ["Data & ML"]
 excerpt: "A pipeline of mine kept asking an LLM for JSON and kept paying for every brace and quote in the reply. I switched the output format to YAML, then got curious and actually ran both through tiktoken to see what was true and what was just a stat floating around the internet. There's a real saving, and a catch nobody mentions: minified JSON beats YAML on raw tokens."
 coverImage: "/images/blog/JSON-YAML-LLM/cover.svg"
 ---

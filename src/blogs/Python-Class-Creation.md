@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Python", "OOPs", "Low Level"]
+tags: ["Python", "Low Level"]
 excerpt: "I built a plugin loader that was supposed to auto-register every class dropped in a folder, reached for a metaclass instead of a decorator because it felt like the 'proper' way, and then couldn't explain why it worked. So I went and figured out what actually happens when Python hits a class statement, and what type really is underneath it all."
 coverImage: "/images/blog/Python-Class-Creation/cover.svg"
 ---

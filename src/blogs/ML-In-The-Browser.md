@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Machine Learning", "Web"]
+tags: ["Data & ML", "Web"]
 excerpt: "I took a real XGBoost news-bias classifier and made it run entirely in the browser two different ways: Pyodide unpickling the original .pkl, and ONNX via onnxruntime-web. Same model, same task, wildly different perf. Here's what actually happened, with numbers, the trap that almost broke it, and which one I finally shipped across the whole site."
 coverImage: "/images/blog/ML-In-The-Browser/cover.svg"
 ---

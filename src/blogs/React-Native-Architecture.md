@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["React Native", "Low Level"]
+tags: ["React & Mobile", "Low Level"]
 excerpt: "A chat screen with a typing indicator and a fast scroll was enough to make an old-architecture React Native app visibly stutter. The cause wasn't my code, it was JSON crossing a bridge sixty times a second. Here's what the new JSI-based architecture actually replaces, and why the old one had to go."
 coverImage: "/images/blog/React-Native-Architecture/cover.svg"
 ---

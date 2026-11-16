@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Mobile Development"]
+tags: ["React & Mobile"]
 excerpt: "I was building a run-tracker side project and the GPS updates just stopped the moment the screen locked. Turned out I'd built a background service the way Android used to allow, and the OS doesn't allow that anymore. Here's the full picture: foreground, background, and bound services, the lifecycle that governs all three, and what modern Android actually wants you to do instead."
 coverImage: "/images/blog/Android-Service/cover.svg"
 ---

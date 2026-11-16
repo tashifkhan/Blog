@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Web", "Next.js", "Astro", "React"]
+tags: ["Web"]
 excerpt: "I pushed a new build of my portfolio, tested it on my laptop over wifi, and it felt instant. Then I ran it through PageSpeed Insights on a throttled connection and watched the largest-contentful-paint number come back embarrassing. This is the walkthrough of fixing FCP, LCP, INP and CLS across a FastAPI backend and Next.js/Astro frontends, with the code that actually moved each number."
 coverImage: "/images/blog/Web-Vitals-Guide/cover.svg"
 ---

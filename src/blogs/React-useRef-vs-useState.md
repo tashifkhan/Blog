@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["React", "React Native", "Low Level"]
+tags: ["React & Mobile", "Low Level"]
 excerpt: "I stashed a setInterval handle in useState and watched a simple countdown widget stutter every tick. The fix is one hook swap, but understanding why it works is the actual lesson: which of your values need to repaint the screen, and which are just bookkeeping."
 coverImage: "/images/blog/React-useRef-vs-useState/cover.svg"
 ---

@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["DBMS"]
+tags: ["Data & ML"]
 excerpt: "I built a tiny shared blog for a few friends and used it as an excuse to actually learn Prisma properly instead of copy-pasting from the docs. This is what happened: the schema file, migrations, relations, and every gotcha along the way, from the include-vs-select trap to pagination that quietly reshuffles itself when you forget orderBy."
 coverImage: "/images/blog/Prisma-Notes/cover.svg"
 ---

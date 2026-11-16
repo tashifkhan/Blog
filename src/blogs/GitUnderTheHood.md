@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Git"]
+tags: ["Open Source & Tools", "Low Level"]
 excerpt: "A rebase gone wrong taught me that git never really deletes anything, it just moves pointers around. Here's what blobs, trees, commits, refs, merges and rebases actually are under the hood."
 coverImage: "/images/blog/GitUnderTheHood/cover.svg"
 ---
