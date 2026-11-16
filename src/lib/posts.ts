@@ -56,6 +56,15 @@ export async function getAllPosts() {
   );
 }
 
+/**
+ * `unlisted: true` in frontmatter keeps a post out of lists and feeds while its
+ * page still builds, so direct links keep working. The component gallery uses
+ * it: it is a renderer fixture, not an article.
+ */
+export function isListed(post: LoadedPost): boolean {
+  return post.frontmatter?.unlisted !== true;
+}
+
 export async function getPostBySlug(slug: string) {
   const posts = await getAllPosts();
   return posts.find((p) => p.slug === slug);

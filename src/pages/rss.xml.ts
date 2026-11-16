@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPosts, isListed } from "@/lib/posts";
 
 // Blog posts are authored in src/blogs/*.md, so the feed is derived from the
 // same source as every listing page — no backend round-trip. The full
@@ -29,7 +29,7 @@ export const GET: APIRoute = async () => {
 	const posts = await getAllPosts();
 
 	const items = posts
-		.filter((post) => post.frontmatter?.title)
+		.filter((post) => post.frontmatter?.title && isListed(post))
 		.map((post) => {
 			const { frontmatter } = post;
 			const url = `${SITE}/blog/${post.slug}`;
