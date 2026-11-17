@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Web Scraping", "Python"]
+tags: ["Python", "Web"]
 excerpt: "My friend Amresh was building Pitaara, a live gold-rates app, and needed data from brands that really don't want to be scraped. I've done this dance before, so I helped. Here's the project walkthrough, plus the general guide to scraping sites that swear they don't have APIs."
 coverImage: "/images/blog/Scraping-Live-Data/cover.svg"
 ---

@@ -9,6 +9,7 @@ socials:
     "https://tashif.codes",
   ]
 tags: ["Meta"]
+unlisted: true
 excerpt: "Every component the Markdown renderer supports, shown in both the tag spelling and the directive spelling: steps, meters, panels, tabs, diagrams, callouts. This page is also the test fixture, so a renderer regression shows up here first."
 coverImage: "/images/blog/component-gallery/cover.svg"
 ---

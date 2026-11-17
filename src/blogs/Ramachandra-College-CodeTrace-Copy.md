@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Open Source", "Licensing", "Story"]
+tags: ["Open Source & Tools"]
 excerpt: "Ramachandra College of Engineering rebuilt my MIT-licensed CodeTrace into a placement portal, and shipped it with my PostHog key still inside. Here's the whole story, the evidence, and what the MIT license actually asked of them."
 coverImage: "/images/blog/Ramachandra-College-CodeTrace-Copy/cover.svg"
 ---

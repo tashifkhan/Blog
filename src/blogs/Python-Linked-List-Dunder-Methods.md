@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Python", "DSA", "Low Level", "OPPs"]
+tags: ["Python", "DSA"]
 excerpt: "I was grinding linked-list problems for interview prep and got sick of writing ll.get_length() and ll.contains(x) by hand for every variant. So I built one general-purpose LinkedList and went through the dunder methods one at a time until list(my_ll), sum(my_ll) and for x in my_ll just worked. Here's every method, in the order I actually hit them, including the one (__del__) that I implemented wrong on the first try."
 coverImage: "/images/blog/Python-Linked-List-Dunder-Methods/cover.svg"
 ---

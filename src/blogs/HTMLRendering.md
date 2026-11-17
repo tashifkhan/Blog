@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["Web", "JS"]
+tags: ["Web", "Low Level"]
 excerpt: "A scroll-linked animation once pegged a phone's CPU at 100% and dropped it to 12fps. The bug was one line reading offsetHeight inside a loop that also wrote style.top. Here's the full pipeline that made that line so expensive, from HTML bytes to painted pixels."
 coverImage: "/images/blog/HTMLRendering/cover.svg"
 ---

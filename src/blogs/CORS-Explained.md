@@ -8,7 +8,7 @@ socials:
     "https://www.linkedin.com/in/tashif-ahmad-khan-982304244/",
     "https://tashif.codes",
   ]
-tags: ["CORS", "API"]
+tags: ["Web"]
 excerpt: "The first real fetch call I wrote against my own backend died in the console with a wall of red about CORS policy. Here's what an origin actually is, why browsers block it by default, and every real way CORS bites you afterward, in the order you'll actually hit them: preflight, credentials, wildcards, and the errors that follow."
 coverImage: "/images/blog/CORS-Explained/cover.svg"
 ---
