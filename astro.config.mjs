@@ -26,5 +26,13 @@ export default defineConfig({
   }),
   // Posts are plain Markdown rendered by packages/markdown; the MDX integration
   // was compiling every post to a component that nothing rendered.
-  integrations: [react(), sitemap()]
+  integrations: [
+    react(),
+    sitemap({
+      // Every HTML page is noindex, so list nothing. Keep the sitemap
+      // integration so the file still exists. Do not Disallow these paths
+      // in robots.txt: that would stop Google from seeing the noindex tag.
+      filter: () => false,
+    }),
+  ]
 });
