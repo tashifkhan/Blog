@@ -7,9 +7,11 @@ export interface Props {
 	description?: string;
 	/** Absolute URL or site-root path for social/OG preview images. */
 	image?: string;
+	/** When true (the default), emit noindex, follow. */
+	noindex?: boolean;
 }
 
-const { title, description, image } = Astro.props;
+const { title, description, image, noindex = true } = Astro.props;
 
 const siteOrigin = "https://blog.tashif.codes";
 const pageTitle = title
@@ -37,6 +39,10 @@ const ogImage = ogImagePath.startsWith("http")
 			content="BlogOS, Tashif, blog, web development, programming, technology, tutorials, articles"
 		/>
 		<meta name="author" content="Tashif" />
+		<meta
+			name="robots"
+			content={noindex ? "noindex, follow" : "index, follow"}
+		/>
 		<link rel="canonical" href="https://blog.tashif.codes/" />
 		<link
 			rel="alternate"
